@@ -8,6 +8,8 @@ let currentEditingItem = null;
 let currentEditingTask = null;
 let charts = {};
 let currentUser = null;
+let userWarehouse = 'net'; // User's assigned warehouse
+let isUserAdmin = false; // User's admin status
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', function() {
@@ -41,6 +43,94 @@ function waitForFirebaseFunctions() {
         };
         checkFirebase();
     });
+}
+
+// Permission checking functions
+function canManageWarehouse(warehouse) {
+    // Admin can manage all warehouses
+    if (isUserAdmin) {
+        return true;
+    }
+    // Regular users can only manage their assigned warehouse
+    return userWarehouse === warehouse;
+}
+
+function canViewWarehouse(warehouse) {
+    // Admin can view all warehouses
+    if (isUserAdmin) {
+        return true;
+    }
+    // Regular users can view their assigned warehouse
+    return userWarehouse === warehouse;
+}
+
+function canCreateItem(warehouse) {
+    return canManageWarehouse(warehouse);
+}
+
+function canEditItem(item) {
+    return canManageWarehouse(item.warehouse);
+}
+
+function canDeleteItem(item) {
+    return canManageWarehouse(item.warehouse);
+}
+
+function canCreateTask() {
+    // All authenticated users can create tasks
+    return currentUser !== null;
+}
+
+function canCreateTransfer() {
+    // All authenticated users can create transfers
+    return currentUser !== null;
+}
+
+function canConfirmTransfer(transfer) {
+    // Admin can confirm all transfers
+    if (isUserAdmin) {
+        return true;
+    }
+    // Regular users can confirm transfers involving their warehouse
+    return userWarehouse === transfer.fromWarehouse || userWarehouse === transfer.toWarehouse;
+}
+
+// Update UI based on user permissions
+function updateUIForPermissions() {
+    console.log('🔐 Updating UI for permissions:', { userWarehouse, isUserAdmin });
+    
+    // Update warehouse selector visibility
+    const warehouseSelector = document.getElementById('currentWarehouse');
+    if (warehouseSelector) {
+        if (isUserAdmin) {
+            // Admin can see all warehouses
+            warehouseSelector.style.display = 'block';
+            warehouseSelector.disabled = false;
+        } else {
+            // Regular users can only see their assigned warehouse
+            warehouseSelector.style.display = 'none';
+            warehouseSelector.disabled = true;
+        }
+    }
+    
+    // Update add item button visibility
+    const addItemBtn = document.getElementById('addItemBtn');
+    if (addItemBtn) {
+        if (canCreateItem(currentWarehouse)) {
+            addItemBtn.style.display = 'block';
+            addItemBtn.disabled = false;
+        } else {
+            addItemBtn.style.display = 'none';
+            addItemBtn.disabled = true;
+        }
+    }
+    
+    // Update inventory table
+    renderInventoryTable();
+    
+    // Update tasks and transfers
+    renderTasksList();
+    renderTransfersList();
 }
 
 // Initialize Application
@@ -199,11 +289,11 @@ async function loadAllDataFromFirebase() {
 
 // Dashboard Functions
 function updateDashboard() {
-    // Update warehouse stats
-    const netItems = inventoryData.filter(item => item.warehouse === 'net');
-    const infraItems = inventoryData.filter(item => item.warehouse === 'infrastructure');
+    // Update warehouse stats based on user permissions
+    const netItems = inventoryData.filter(item => item.warehouse === 'net' && canViewWarehouse('net'));
+    const infraItems = inventoryData.filter(item => item.warehouse === 'infrastructure' && canViewWarehouse('infrastructure'));
     
-    const netPending = transfersData.filter(t => t.toWarehouse === 'net' && t.status === 'pending').length;
+    const netPending = transfersData.filter(t => t.toWarehouse === 'net' && t.status === 'pending' && canConfirmTransfer(t)).length;
     const infraPending = tasksData.filter(t => t.status === 'pending').length;
     
     const netAvailable = netItems.filter(item => item.condition === 'available').length;
@@ -290,8 +380,11 @@ function renderInventoryTable() {
             item.serial.toLowerCase().includes(searchTerm) ||
             item.name.toLowerCase().includes(searchTerm) ||
             item.category.toLowerCase().includes(searchTerm);
+        
+        // Permission check: only show items from warehouses user can view
+        const canView = canViewWarehouse(item.warehouse);
 
-        return matchesWarehouse && matchesStatus && matchesSearch;
+        return matchesWarehouse && matchesStatus && matchesSearch && canView;
     });
 
     if (filteredData.length === 0) {
@@ -312,15 +405,19 @@ function renderInventoryTable() {
                 <td>${task ? task.name : '-'}</td>
                 <td>
                     <div class="action-buttons-table">
-                        <button class="btn btn-sm btn-primary" onclick="editItem(${item.id})" title="Chỉnh sửa">
-                            <i class="fas fa-edit"></i>
-                        </button>
+                        ${canEditItem(item) ? `
+                            <button class="btn btn-sm btn-primary" onclick="editItem(${item.id})" title="Chỉnh sửa">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        ` : ''}
                         <button class="btn btn-sm btn-info" onclick="viewItemHistory(${item.id})" title="Lịch sử">
                             <i class="fas fa-history"></i>
                         </button>
-                        <button class="btn btn-sm btn-warning" onclick="updateItemCondition(${item.id})" title="Cập nhật tình trạng">
-                            <i class="fas fa-tools"></i>
-                        </button>
+                        ${canEditItem(item) ? `
+                            <button class="btn btn-sm btn-warning" onclick="updateItemCondition(${item.id})" title="Cập nhật tình trạng">
+                                <i class="fas fa-tools"></i>
+                            </button>
+                        ` : ''}
                     </div>
                 </td>
             </tr>
@@ -383,7 +480,11 @@ function renderTransfersList() {
     let filteredTransfers = transfersData.filter(transfer => {
         const matchesStatus = statusFilter === 'all' || transfer.status === statusFilter;
         const matchesType = typeFilter === 'all' || transfer.type === typeFilter;
-        return matchesStatus && matchesType;
+        
+        // Permission check: only show transfers involving user's warehouse
+        const canView = canConfirmTransfer(transfer);
+        
+        return matchesStatus && matchesType && canView;
     });
 
     if (filteredTransfers.length === 0) {
@@ -415,7 +516,7 @@ function renderTransfersList() {
                     <p>${transfer.notes}</p>
                 </div>
                 <div class="transfer-actions">
-                    ${transfer.status === 'pending' ? `
+                    ${transfer.status === 'pending' && canConfirmTransfer(transfer) ? `
                         <button class="btn btn-sm btn-success" onclick="confirmTransfer(${transfer.id})">Xác nhận</button>
                     ` : ''}
                     <button class="btn btn-sm btn-primary" onclick="viewTransferDetails(${transfer.id})">Chi tiết</button>
@@ -569,6 +670,12 @@ async function handleItemSubmit(e) {
 
     if (!formData.serial || !formData.name || !formData.warehouse || !formData.condition) {
         showToast('error', 'Lỗi!', 'Vui lòng điền đầy đủ các trường bắt buộc.');
+        return;
+    }
+    
+    // Check permissions
+    if (!canCreateItem(formData.warehouse)) {
+        showToast('error', 'Lỗi quyền!', `Bạn không có quyền thêm vật tư vào ${getWarehouseName(formData.warehouse)}.`);
         return;
     }
 
@@ -992,17 +1099,36 @@ function updateTaskStatus(taskId) {
 
 function confirmTransfer(transferId) {
     const transfer = transfersData.find(t => t.id === transferId);
-    if (transfer) {
-        transfer.status = 'confirmed';
-        transfer.confirmedDate = new Date();
-        addLog('confirmation', 'Xác nhận chuyển kho', `Xác nhận chuyển kho #${transferId}`, getWarehouseName(currentWarehouse));
-        showToast('success', 'Xác nhận thành công!', 'Chuyển kho đã được xác nhận.');
-        updateDashboard();
-        renderTransfersList();
+    if (!transfer) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy chuyển kho.');
+        return;
     }
+    
+    if (!canConfirmTransfer(transfer)) {
+        showToast('error', 'Lỗi quyền!', 'Bạn không có quyền xác nhận chuyển kho này.');
+        return;
+    }
+    
+    transfer.status = 'confirmed';
+    transfer.confirmedDate = new Date();
+    addLog('confirmation', 'Xác nhận chuyển kho', `Xác nhận chuyển kho #${transferId}`, getWarehouseName(currentWarehouse));
+    showToast('success', 'Xác nhận thành công!', 'Chuyển kho đã được xác nhận.');
+    updateDashboard();
+    renderTransfersList();
 }
 
 function editItem(itemId) {
+    const item = inventoryData.find(i => i.id === itemId);
+    if (!item) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy vật tư.');
+        return;
+    }
+    
+    if (!canEditItem(item)) {
+        showToast('error', 'Lỗi quyền!', `Bạn không có quyền chỉnh sửa vật tư trong ${getWarehouseName(item.warehouse)}.`);
+        return;
+    }
+    
     showToast('info', 'Chỉnh sửa vật tư', `Chỉnh sửa vật tư #${itemId}`);
 }
 
@@ -1011,6 +1137,17 @@ function viewItemHistory(itemId) {
 }
 
 function updateItemCondition(itemId) {
+    const item = inventoryData.find(i => i.id === itemId);
+    if (!item) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy vật tư.');
+        return;
+    }
+    
+    if (!canEditItem(item)) {
+        showToast('error', 'Lỗi quyền!', `Bạn không có quyền cập nhật tình trạng vật tư trong ${getWarehouseName(item.warehouse)}.`);
+        return;
+    }
+    
     showToast('info', 'Cập nhật tình trạng', `Cập nhật tình trạng vật tư #${itemId}`);
 }
 
@@ -1146,6 +1283,11 @@ async function updateUserInterface(user) {
                 const warehouse = userData.warehouse || 'net';
                 const isAdmin = userData.admin || false;
                 
+                // Update global variables
+                userWarehouse = warehouse;
+                isUserAdmin = isAdmin;
+                currentWarehouse = warehouse;
+                
                 // Update user name display
                 userName.innerHTML = `
                     Xin chào, ${displayName}
@@ -1160,6 +1302,9 @@ async function updateUserInterface(user) {
                     currentWarehouseSelect.value = warehouse;
                     currentWarehouse = warehouse;
                 }
+                
+                // Update UI based on permissions
+                updateUIForPermissions();
                 
                 userInfo.style.display = 'block';
                 
