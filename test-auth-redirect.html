@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Auth Redirect</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔐 Test Authentication Redirect</h1>
+    
+    <div id="status" class="status warning">
+        ⏳ Đang kiểm tra authentication redirect...
+    </div>
+    
+    <div id="actions">
+        <h3>Test Actions:</h3>
+        <button onclick="testMainApp()">Test Main App (index.html)</button>
+        <button onclick="testAuthPage()">Test Auth Page (auth.html)</button>
+        <button onclick="checkAuthState()">Check Auth State</button>
+        <button onclick="simulateUnauthenticated()">Simulate Unauthenticated</button>
+    </div>
+    
+    <div id="results"></div>
+    
+    <h3>Debug Info:</h3>
+    <div id="debug"></div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { 
+            onAuthStateChange, 
+            getCurrentUser, 
+            isAuthenticated 
+        } from './auth-integration.js';
+        
+        let debugInfo = [];
+        
+        function addDebug(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugInfo.push(`${timestamp}: ${message}`);
+            updateDebugDisplay();
+            console.log(`[Auth Redirect Test] ${message}`);
+        }
+        
+        function updateDebugDisplay() {
+            document.getElementById('debug').innerHTML = '<pre>' + debugInfo.join('\n') + '</pre>';
+        }
+        
+        function showResult(message, type) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = 'status ' + type;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        // Test main app
+        function testMainApp() {
+            addDebug('Testing main app access...');
+            showResult('🔗 Mở ứng dụng chính: <a href="http://localhost:8000" target="_blank">http://localhost:8000</a><br><br>📋 <strong>Kết quả mong đợi:</strong><br>• Nếu chưa đăng nhập → Tự động chuyển hướng đến auth.html<br>• Nếu đã đăng nhập → Hiển thị ứng dụng chính', 'warning');
+        }
+        
+        // Test auth page
+        function testAuthPage() {
+            addDebug('Testing auth page access...');
+            showResult('🔗 Mở trang đăng nhập: <a href="http://localhost:8000/auth.html" target="_blank">http://localhost:8000/auth.html</a><br><br>📋 <strong>Kết quả mong đợi:</strong><br>• Hiển thị form đăng nhập/đăng ký<br>• Có thể đăng ký tài khoản mới<br>• Có thể đăng nhập với tài khoản có sẵn', 'success');
+        }
+        
+        // Check auth state
+        function checkAuthState() {
+            addDebug('Checking authentication state...');
+            
+            const user = getCurrentUser();
+            const authenticated = isAuthenticated();
+            
+            if (authenticated && user) {
+                addDebug('User is authenticated: ' + user.email);
+                showResult('✅ User đã đăng nhập: ' + user.email, 'success');
+            } else {
+                addDebug('User is not authenticated');
+                showResult('❌ User chưa đăng nhập', 'error');
+            }
+        }
+        
+        // Simulate unauthenticated
+        function simulateUnauthenticated() {
+            addDebug('Simulating unauthenticated access...');
+            showResult('🔗 <strong>Test case:</strong><br>1. Mở tab ẩn danh (Incognito/Private)<br>2. Truy cập: <a href="http://localhost:8000" target="_blank">http://localhost:8000</a><br>3. Kết quả: Tự động chuyển hướng đến auth.html<br><br>📋 <strong>Logic bảo mật:</strong><br>• script.js kiểm tra authentication state<br>• Nếu user = null → redirect đến auth.html<br>• Nếu user ≠ null → hiển thị ứng dụng chính', 'warning');
+        }
+        
+        // Setup auth state listener
+        onAuthStateChange((user) => {
+            if (user) {
+                addDebug('Auth state changed: User authenticated - ' + user.email);
+                document.getElementById('status').innerHTML = '✅ User đã đăng nhập: ' + user.email;
+                document.getElementById('status').className = 'status success';
+            } else {
+                addDebug('Auth state changed: User not authenticated');
+                document.getElementById('status').innerHTML = '❌ User chưa đăng nhập';
+                document.getElementById('status').className = 'status error';
+            }
+        });
+        
+        // Make functions global
+        window.testMainApp = testMainApp;
+        window.testAuthPage = testAuthPage;
+        window.checkAuthState = checkAuthState;
+        window.simulateUnauthenticated = simulateUnauthenticated;
+        
+        // Start
+        addDebug('Auth Redirect Test page loaded');
+        document.getElementById('status').innerHTML = '✅ Auth Redirect Test ready!';
+        document.getElementById('status').className = 'status success';
+    </script>
+</body>
+</html>
