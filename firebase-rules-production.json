@@ -1,0 +1,42 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid || root.child('users').child(auth.uid).child('admin').val() === true",
+        ".write": "$uid === auth.uid || root.child('users').child(auth.uid).child('admin').val() === true"
+      }
+    },
+    "inventory": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$itemId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "tasks": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$taskId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "transfers": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$transferId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "logs": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$logId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    }
+  }
+}
