@@ -12,14 +12,34 @@ let charts = {};
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
     setupEventListeners();
-    loadAllDataFromFirebase();
-    updateDashboard();
-    renderInventoryTable();
-    renderTasksList();
-    renderTransfersList();
-    renderLogsList();
-    initializeCharts();
+    
+    // Wait for Firebase functions to be available
+    waitForFirebaseFunctions().then(() => {
+        loadAllDataFromFirebase();
+        updateDashboard();
+        renderInventoryTable();
+        renderTasksList();
+        renderTransfersList();
+        renderLogsList();
+        initializeCharts();
+    });
 });
+
+// Wait for Firebase functions to be available
+function waitForFirebaseFunctions() {
+    return new Promise((resolve) => {
+        const checkFirebase = () => {
+            if (window.loadAllDataFromFirebase && window.saveInventoryToFirebase) {
+                console.log('✅ Firebase functions ready');
+                resolve();
+            } else {
+                console.log('⏳ Waiting for Firebase functions...');
+                setTimeout(checkFirebase, 100);
+            }
+        };
+        checkFirebase();
+    });
+}
 
 // Initialize Application
 function initializeApp() {
@@ -82,31 +102,94 @@ function getWarehouseName(warehouse) {
     return warehouse === 'net' ? 'Kho Net' : 'Kho Hạ Tầng';
 }
 
+// Sample Data Loading (fallback)
+function loadSampleData() {
+    // Sample inventory data
+    inventoryData = [
+        {
+            id: 1,
+            code: 'VT001',
+            name: 'Switch 24 port',
+            warehouse: 'net',
+            category: 'Thiết bị mạng',
+            condition: 'available',
+            source: 'Mới nhập kho',
+            dateAdded: new Date('2024-01-15'),
+            taskId: null,
+            description: 'Switch 24 port Gigabit Ethernet'
+        },
+        {
+            id: 2,
+            code: 'VT002',
+            name: 'Router WiFi',
+            warehouse: 'net',
+            category: 'Thiết bị mạng',
+            condition: 'available',
+            source: 'Mới nhập kho',
+            dateAdded: new Date('2024-01-14'),
+            taskId: null,
+            description: 'Router WiFi 6 băng tần kép'
+        }
+    ];
+
+    // Sample tasks data
+    tasksData = [
+        {
+            id: 1,
+            name: 'Lắp đặt trạm mới ABC',
+            type: 'lapdat',
+            description: 'Lắp đặt thiết bị mạng cho trạm mới tại khu vực ABC',
+            location: 'Trạm ABC - Quận 1',
+            priority: 'high',
+            status: 'in-progress',
+            createdDate: new Date('2024-01-10'),
+            deadline: new Date('2024-01-20'),
+            createdBy: 'Kho Hạ Tầng',
+            assignedItems: [],
+            completedItems: []
+        }
+    ];
+
+    // Sample transfers data
+    transfersData = [];
+
+    // Sample logs data
+    logsData = [
+        {
+            id: 1,
+            type: 'system',
+            action: 'Khởi động hệ thống',
+            details: 'Hệ thống đã được khởi động',
+            timestamp: new Date(),
+            user: 'System'
+        }
+    ];
+
+    console.log('📦 Sample data loaded');
+}
+
 // Firebase Data Loading
 async function loadAllDataFromFirebase() {
     try {
         showLoading();
         console.log('Loading all data from Firebase...');
         
-        await Promise.all([
-            loadInventoryFromRealtimeDB(),
-            loadTasksFromRealtimeDB(),
-            loadTransfersFromRealtimeDB(),
-            loadLogsFromRealtimeDB()
-        ]);
-        
-        console.log('All data loaded from Firebase');
-        updateDashboard();
-        renderInventoryTable();
-        renderTasksList();
-        renderTransfersList();
-        renderLogsList();
-        
-        showToast('success', 'Tải dữ liệu thành công!', 'Đã tải tất cả dữ liệu từ Firebase.');
+        // Check if Firebase functions are available
+        if (typeof window.loadAllDataFromFirebase === 'function') {
+            await window.loadAllDataFromFirebase();
+            console.log('All data loaded from Firebase');
+            showToast('success', 'Tải dữ liệu thành công!', 'Đã tải tất cả dữ liệu từ Firebase.');
+        } else {
+            console.log('Firebase functions not available, using sample data');
+            loadSampleData();
+            showToast('warning', 'Sử dụng dữ liệu mẫu', 'Firebase chưa sẵn sàng, sử dụng dữ liệu mẫu.');
+        }
         
     } catch (error) {
         console.error('Error loading data from Firebase:', error);
-        showToast('error', 'Lỗi tải dữ liệu!', 'Không thể tải dữ liệu từ Firebase.');
+        console.log('Falling back to sample data');
+        loadSampleData();
+        showToast('warning', 'Sử dụng dữ liệu mẫu', 'Lỗi Firebase, sử dụng dữ liệu mẫu.');
     } finally {
         hideLoading();
     }
@@ -486,14 +569,23 @@ async function handleItemSubmit(e) {
     };
 
     try {
-        // Save to Firebase
-        await saveInventoryToFirebase(newItem);
-        
-        // Update local data
-        inventoryData.push(newItem);
-        await addLog('inventory', 'Thêm vật tư', `Thêm vật tư: ${newItem.name} vào ${getWarehouseName(newItem.warehouse)}`, getWarehouseName(currentWarehouse));
-        
-        showToast('success', 'Thêm vật tư thành công!', 'Vật tư mới đã được thêm vào hệ thống và lưu vào Firebase.');
+        // Check if Firebase functions are available
+        if (typeof window.saveInventoryToFirebase === 'function') {
+            // Save to Firebase
+            await window.saveInventoryToFirebase(newItem);
+            
+            // Update local data
+            inventoryData.push(newItem);
+            await addLog('inventory', 'Thêm vật tư', `Thêm vật tư: ${newItem.name} vào ${getWarehouseName(newItem.warehouse)}`, getWarehouseName(currentWarehouse));
+            
+            showToast('success', 'Thêm vật tư thành công!', 'Vật tư mới đã được thêm vào hệ thống và lưu vào Firebase.');
+        } else {
+            // Fallback: just update local data
+            inventoryData.push(newItem);
+            addLog('inventory', 'Thêm vật tư', `Thêm vật tư: ${newItem.name} vào ${getWarehouseName(newItem.warehouse)}`, getWarehouseName(currentWarehouse));
+            
+            showToast('warning', 'Thêm vật tư thành công!', 'Vật tư đã được thêm vào hệ thống (chưa lưu Firebase).');
+        }
         
         updateDashboard();
         renderInventoryTable();
@@ -589,8 +681,11 @@ async function addLog(type, action, details, user) {
     };
     
     try {
-        // Save to Firebase
-        await saveLogToFirebase(newLog);
+        // Check if Firebase functions are available
+        if (typeof window.saveLogToFirebase === 'function') {
+            // Save to Firebase
+            await window.saveLogToFirebase(newLog);
+        }
         
         // Update local data
         logsData.unshift(newLog); // Add to beginning
