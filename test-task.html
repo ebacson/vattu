@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Task Creation</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .form-group { margin: 10px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin: 20px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Task Creation</h1>
+    
+    <form id="testTaskForm">
+        <div class="form-group">
+            <label for="taskName">Tên Sự Vụ *</label>
+            <input type="text" id="taskName" value="Test Task" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="taskType">Loại Sự Vụ *</label>
+            <select id="taskType" required>
+                <option value="lapdat">Lắp đặt</option>
+                <option value="xuly">Xử lý</option>
+                <option value="swap">Swap</option>
+                <option value="nangcap">Nâng cấp</option>
+                <option value="baotri">Bảo trì</option>
+                <option value="khac">Khác</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="taskDescription">Mô Tả *</label>
+            <textarea id="taskDescription" required>Test task description</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="taskLocation">Địa Điểm</label>
+            <input type="text" id="taskLocation" value="Test Location">
+        </div>
+        
+        <div class="form-group">
+            <label for="taskPriority">Ưu Tiên</label>
+            <select id="taskPriority">
+                <option value="low">Thấp</option>
+                <option value="medium" selected>Trung bình</option>
+                <option value="high">Cao</option>
+                <option value="urgent">Khẩn cấp</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="taskDeadline">Hạn Hoàn Thành</label>
+            <input type="date" id="taskDeadline">
+        </div>
+        
+        <button type="submit">Tạo Sự Vụ Test</button>
+    </form>
+    
+    <div id="result"></div>
+    
+    <h3>Debug Info:</h3>
+    <div id="debug"></div>
+
+    <script>
+        // Mock data for testing
+        let tasksData = [];
+        let currentWarehouse = 'net';
+        
+        // Mock functions
+        function getWarehouseName(warehouse) {
+            return warehouse === 'net' ? 'Kho Net' : 'Kho Hạ Tầng';
+        }
+        
+        function showResult(message, type) {
+            const result = document.getElementById('result');
+            result.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+        
+        function addLog(type, action, details, user) {
+            console.log('Log:', { type, action, details, user });
+        }
+        
+        function updateDashboard() {
+            console.log('Dashboard updated');
+        }
+        
+        function renderTasksList() {
+            console.log('Tasks list rendered');
+        }
+        
+        function closeModal(modalId) {
+            console.log('Modal closed:', modalId);
+        }
+        
+        // Test task creation function
+        async function handleTaskSubmit(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('taskName').value,
+                type: document.getElementById('taskType').value,
+                description: document.getElementById('taskDescription').value,
+                location: document.getElementById('taskLocation').value,
+                priority: document.getElementById('taskPriority').value,
+                deadline: document.getElementById('taskDeadline').value ? new Date(document.getElementById('taskDeadline').value) : null
+            };
+
+            if (!formData.name || !formData.type || !formData.description) {
+                showResult('❌ Lỗi! Vui lòng điền đầy đủ các trường bắt buộc.', 'error');
+                return;
+            }
+
+            const newTask = {
+                id: tasksData.length > 0 ? Math.max(...tasksData.map(t => t.id), 0) + 1 : 1,
+                ...formData,
+                status: 'pending',
+                createdDate: new Date(),
+                createdBy: getWarehouseName(currentWarehouse),
+                assignedItems: [],
+                completedItems: []
+            };
+
+            try {
+                // Simulate Firebase save
+                if (typeof window.saveTaskToFirebase === 'function') {
+                    await window.saveTaskToFirebase(newTask);
+                    showResult('✅ Tạo sự vụ thành công và lưu vào Firebase!', 'success');
+                } else {
+                    showResult('⚠️ Tạo sự vụ thành công (chưa lưu Firebase - function không có)', 'success');
+                }
+                
+                // Update local data
+                tasksData.push(newTask);
+                addLog('task', 'Tạo sự vụ', `Tạo sự vụ: ${newTask.name}`, getWarehouseName(currentWarehouse));
+                
+                updateDashboard();
+                renderTasksList();
+                
+                // Show debug info
+                document.getElementById('debug').innerHTML = `
+                    <p><strong>Task created:</strong></p>
+                    <pre>${JSON.stringify(newTask, null, 2)}</pre>
+                    <p><strong>Total tasks:</strong> ${tasksData.length}</p>
+                `;
+                
+            } catch (error) {
+                console.error('Error saving task:', error);
+                showResult('❌ Lỗi! Không thể lưu sự vụ: ' + error.message, 'error');
+            }
+        }
+        
+        // Add event listener
+        document.getElementById('testTaskForm').addEventListener('submit', handleTaskSubmit);
+        
+        // Show initial debug info
+        document.getElementById('debug').innerHTML = `
+            <p><strong>Initial state:</strong></p>
+            <p>Tasks data: ${tasksData.length} items</p>
+            <p>Current warehouse: ${currentWarehouse}</p>
+            <p>Firebase function available: ${typeof window.saveTaskToFirebase === 'function' ? 'Yes' : 'No'}</p>
+        `;
+    </script>
+</body>
+</html>
