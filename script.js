@@ -1090,13 +1090,16 @@ async function setupAuthentication() {
             signOutUser, 
             getUserDisplayName, 
             getUserEmail,
-            isAuthenticated 
+            isAuthenticated,
+            getUserData,
+            getUserWarehouse,
+            isUserAdmin
         } = await import('./auth-integration.js');
         
         // Setup authentication state listener
-        onAuthStateChange((user) => {
+        onAuthStateChange(async (user) => {
             currentUser = user;
-            updateUserInterface(user);
+            await updateUserInterface(user);
             
             if (!user) {
                 // User not authenticated, redirect to login
@@ -1126,14 +1129,59 @@ async function setupAuthentication() {
 }
 
 // Update user interface based on authentication state
-function updateUserInterface(user) {
+async function updateUserInterface(user) {
     const userInfo = document.getElementById('userInfo');
     const userName = document.getElementById('userName');
+    const currentWarehouseSelect = document.getElementById('currentWarehouse');
     
     if (user && userInfo && userName) {
-        const displayName = user.displayName || user.email;
-        userName.textContent = `Xin chào, ${displayName}`;
-        userInfo.style.display = 'block';
+        try {
+            // Get user data from Firebase
+            const { getUserData, getUserWarehouse, isUserAdmin } = await import('./auth-integration.js');
+            const userDataResult = await getUserData();
+            
+            if (userDataResult.success) {
+                const userData = userDataResult.userData;
+                const displayName = userData.displayName || user.email;
+                const warehouse = userData.warehouse || 'net';
+                const isAdmin = userData.admin || false;
+                
+                // Update user name display
+                userName.innerHTML = `
+                    Xin chào, ${displayName}
+                    <br><small style="color: #666;">
+                        ${isAdmin ? '👑 Admin' : '👤 User'} | 
+                        Kho: ${warehouse === 'net' ? 'Net' : 'Hạ Tầng'}
+                    </small>
+                `;
+                
+                // Update warehouse selector to match user's warehouse
+                if (currentWarehouseSelect) {
+                    currentWarehouseSelect.value = warehouse;
+                    currentWarehouse = warehouse;
+                }
+                
+                userInfo.style.display = 'block';
+                
+                console.log('✅ User interface updated:', {
+                    displayName,
+                    warehouse,
+                    isAdmin,
+                    userData
+                });
+            } else {
+                // Fallback if user data not found
+                const displayName = user.displayName || user.email;
+                userName.textContent = `Xin chào, ${displayName}`;
+                userInfo.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('❌ Error updating user interface:', error);
+            // Fallback
+            const displayName = user.displayName || user.email;
+            userName.textContent = `Xin chào, ${displayName}`;
+            userInfo.style.display = 'block';
+        }
     } else if (userInfo) {
         userInfo.style.display = 'none';
     }

@@ -38,6 +38,7 @@ function initializeElements() {
     registerEmail = document.getElementById('registerEmail');
     registerPassword = document.getElementById('registerPassword');
     confirmPassword = document.getElementById('confirmPassword');
+    registerWarehouse = document.getElementById('registerWarehouse');
     forgotEmail = document.getElementById('forgotEmail');
     
     // Messages
@@ -141,8 +142,9 @@ async function handleRegister(e) {
     const email = registerEmail.value.trim();
     const password = registerPassword.value;
     const confirmPass = confirmPassword.value;
+    const warehouse = registerWarehouse.value;
     
-    if (!name || !email || !password || !confirmPass) {
+    if (!name || !email || !password || !confirmPass || !warehouse) {
         showError('Vui lòng nhập đầy đủ thông tin');
         return;
     }
@@ -160,12 +162,13 @@ async function handleRegister(e) {
     showLoading(true);
     clearMessages();
     
-    const result = await registerUser(email, password, name);
+    const result = await registerUser(email, password, name, warehouse);
     
     showLoading(false);
     
     if (result.success) {
-        showSuccess('Đăng ký thành công! Đang chuyển hướng...');
+        showSuccess('Đăng ký thành công! Dữ liệu người dùng đã được lưu vào Firebase. Đang chuyển hướng...');
+        console.log('✅ User data saved:', result.userData);
         // Redirect will be handled by auth state listener
     } else {
         showError(getErrorMessage(result.error));

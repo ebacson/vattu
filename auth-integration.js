@@ -1,7 +1,7 @@
 // Firebase Authentication Integration for Vattu Management System
 // This file provides Firebase Authentication functions
 
-import { auth } from './firebase-config.js';
+import { auth, database } from './firebase-config.js';
 import { 
     createUserWithEmailAndPassword, 
     signInWithEmailAndPassword, 
@@ -10,6 +10,7 @@ import {
     onAuthStateChanged,
     updateProfile
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { ref, set, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
 // Authentication state
 let currentUser = null;
@@ -28,7 +29,7 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // Register new user
-async function registerUser(email, password, displayName) {
+async function registerUser(email, password, displayName, warehouse = 'net') {
     try {
         console.log('🔄 Registering user:', email);
         
@@ -42,8 +43,24 @@ async function registerUser(email, password, displayName) {
             });
         }
         
+        // Save user data to Firebase Realtime Database
+        const userData = {
+            uid: user.uid,
+            email: email,
+            displayName: displayName,
+            admin: false,
+            warehouse: warehouse,
+            createdAt: new Date().toISOString(),
+            lastLogin: new Date().toISOString(),
+            isActive: true
+        };
+        
+        const userRef = ref(database, `users/${user.uid}`);
+        await set(userRef, userData);
+        
         console.log('✅ User registered successfully:', user.uid);
-        return { success: true, user: user };
+        console.log('✅ User data saved to Firebase:', userData);
+        return { success: true, user: user, userData: userData };
         
     } catch (error) {
         console.error('❌ Registration error:', error);
@@ -138,6 +155,76 @@ function getUserUID() {
     return currentUser ? currentUser.uid : null;
 }
 
+// Get user data from Firebase
+async function getUserData(uid = null) {
+    try {
+        const userId = uid || getUserUID();
+        if (!userId) {
+            return { success: false, error: 'No user ID provided' };
+        }
+        
+        const userRef = ref(database, `users/${userId}`);
+        const snapshot = await get(userRef);
+        
+        if (snapshot.exists()) {
+            const userData = snapshot.val();
+            console.log('✅ User data retrieved:', userData);
+            return { success: true, userData: userData };
+        } else {
+            console.log('❌ User data not found');
+            return { success: false, error: 'User data not found' };
+        }
+        
+    } catch (error) {
+        console.error('❌ Error getting user data:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// Update user data
+async function updateUserData(uid, updates) {
+    try {
+        const userRef = ref(database, `users/${uid}`);
+        await set(userRef, updates);
+        console.log('✅ User data updated:', updates);
+        return { success: true };
+        
+    } catch (error) {
+        console.error('❌ Error updating user data:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// Check if user is admin
+async function isUserAdmin(uid = null) {
+    try {
+        const result = await getUserData(uid);
+        if (result.success) {
+            return result.userData.admin === true;
+        }
+        return false;
+        
+    } catch (error) {
+        console.error('❌ Error checking admin status:', error);
+        return false;
+    }
+}
+
+// Get user warehouse
+async function getUserWarehouse(uid = null) {
+    try {
+        const result = await getUserData(uid);
+        if (result.success) {
+            return result.userData.warehouse || 'net';
+        }
+        return 'net';
+        
+    } catch (error) {
+        console.error('❌ Error getting user warehouse:', error);
+        return 'net';
+    }
+}
+
 // Export functions for use in other files
 export {
     registerUser,
@@ -149,5 +236,9 @@ export {
     onAuthStateChange,
     getUserDisplayName,
     getUserEmail,
-    getUserUID
+    getUserUID,
+    getUserData,
+    updateUserData,
+    isUserAdmin,
+    getUserWarehouse
 };
