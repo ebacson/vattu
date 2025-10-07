@@ -753,6 +753,11 @@ async function handleItemSubmit(e) {
 async function handleTransferSubmit(e) {
     e.preventDefault();
     
+    // Clear previous errors
+    if (typeof window.clearFormErrors === 'function') {
+        window.clearFormErrors('transferForm');
+    }
+    
     const formData = {
         type: document.getElementById('transferType').value,
         taskId: document.getElementById('transferTask').value ? parseInt(document.getElementById('transferTask').value) : null,
@@ -761,6 +766,11 @@ async function handleTransferSubmit(e) {
 
     if (!formData.type) {
         showToast('error', 'Lỗi!', 'Vui lòng chọn loại chuyển kho.');
+        return;
+    }
+    
+    if (!formData.taskId) {
+        showToast('error', 'Lỗi!', 'Vui lòng chọn sự vụ liên quan.');
         return;
     }
 
@@ -1119,6 +1129,61 @@ function showToast(type, title, message) {
     }, 5000);
 }
 
+// Show confirmation dialog
+function showConfirmDialog(title, message, confirmText = 'Xác nhận', cancelText = 'Hủy') {
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5); display: flex;
+            align-items: center; justify-content: center; z-index: 10000;
+        `;
+        
+        const dialog = document.createElement('div');
+        dialog.style.cssText = `
+            background: white; border-radius: 15px; max-width: 500px; width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        `;
+        
+        dialog.innerHTML = `
+            <div style="padding: 25px; border-bottom: 1px solid #e1e5e9;">
+                <h3 style="margin: 0; color: #2c3e50; font-size: 1.5rem;">
+                    <i class="fas fa-question-circle" style="color: #3498db; margin-right: 10px;"></i>
+                    ${title}
+                </h3>
+            </div>
+            <div style="padding: 25px; color: #555; line-height: 1.6;">${message}</div>
+            <div style="padding: 20px 25px; border-top: 1px solid #e1e5e9; display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="cancel-btn btn btn-secondary">${cancelText}</button>
+                <button class="confirm-btn btn btn-primary">${confirmText}</button>
+            </div>
+        `;
+        
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+        
+        const confirmBtn = dialog.querySelector('.confirm-btn');
+        const cancelBtn = dialog.querySelector('.cancel-btn');
+        
+        confirmBtn.addEventListener('click', () => {
+            overlay.remove();
+            resolve(true);
+        });
+        
+        cancelBtn.addEventListener('click', () => {
+            overlay.remove();
+            resolve(false);
+        });
+        
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.remove();
+                resolve(false);
+            }
+        });
+    });
+}
+
 // Placeholder functions for future implementation
 function viewTask(taskId) {
     showToast('info', 'Xem sự vụ', `Xem chi tiết sự vụ #${taskId}`);
@@ -1132,7 +1197,7 @@ function updateTaskStatus(taskId) {
     showToast('info', 'Cập nhật sự vụ', `Cập nhật trạng thái sự vụ #${taskId}`);
 }
 
-function confirmTransfer(transferId) {
+async function confirmTransfer(transferId) {
     const transfer = transfersData.find(t => t.id === transferId);
     if (!transfer) {
         showToast('error', 'Lỗi!', 'Không tìm thấy chuyển kho.');
@@ -1144,12 +1209,61 @@ function confirmTransfer(transferId) {
         return;
     }
     
-    transfer.status = 'confirmed';
-    transfer.confirmedDate = new Date();
-    addLog('confirmation', 'Xác nhận chuyển kho', `Xác nhận chuyển kho #${transferId}`, getWarehouseName(currentWarehouse));
-    showToast('success', 'Xác nhận thành công!', 'Chuyển kho đã được xác nhận.');
-    updateDashboard();
-    renderTransfersList();
+    // Show confirmation dialog
+    const confirmed = await showConfirmDialog(
+        'Xác nhận chuyển kho',
+        `Bạn có chắc muốn xác nhận chuyển kho này?<br><br>
+        <strong>Loại:</strong> ${getTransferTypeText(transfer.type)}<br>
+        <strong>Từ:</strong> ${getWarehouseName(transfer.fromWarehouse)}<br>
+        <strong>Đến:</strong> ${getWarehouseName(transfer.toWarehouse)}<br>
+        <strong>Ngày tạo:</strong> ${formatDateTime(transfer.createdDate)}<br>
+        ${transfer.notes ? `<strong>Ghi chú:</strong> ${transfer.notes}` : ''}`,
+        'Xác nhận',
+        'Hủy'
+    );
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    try {
+        // Update transfer status
+        transfer.status = 'confirmed';
+        transfer.confirmedDate = new Date();
+        transfer.confirmedBy = currentUser ? (currentUser.displayName || currentUser.email) : 'Unknown';
+        
+        // Update items in transfer if any
+        if (transfer.items && transfer.items.length > 0) {
+            transfer.items.forEach(itemId => {
+                const item = inventoryData.find(i => i.id === itemId);
+                if (item) {
+                    // Update item warehouse
+                    item.warehouse = transfer.toWarehouse;
+                    item.condition = 'in-use';
+                    item.taskId = transfer.taskId;
+                }
+            });
+        }
+        
+        // Save to Firebase
+        if (typeof window.saveTransferToFirebase === 'function') {
+            await window.saveTransferToFirebase(transfer);
+        }
+        
+        // Add detailed log
+        const logDetails = `Xác nhận chuyển kho #${transferId} (${getTransferTypeText(transfer.type)}) từ ${getWarehouseName(transfer.fromWarehouse)} sang ${getWarehouseName(transfer.toWarehouse)}. ${transfer.items ? `Số vật tư: ${transfer.items.length}` : ''}`;
+        await addLog('confirmation', 'Xác nhận chuyển kho', logDetails, getWarehouseName(currentWarehouse));
+        
+        showToast('success', 'Xác nhận thành công!', 'Chuyển kho đã được xác nhận và vật tư đã được cập nhật.');
+        
+        updateDashboard();
+        renderTransfersList();
+        renderInventoryTable();
+        
+    } catch (error) {
+        console.error('Error confirming transfer:', error);
+        showToast('error', 'Lỗi!', 'Không thể xác nhận chuyển kho.');
+    }
 }
 
 function editItem(itemId) {
