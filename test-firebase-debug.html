@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔥 Firebase Debug</h1>
+    
+    <div id="status" class="status warning">
+        ⏳ Đang khởi tạo Firebase...
+    </div>
+    
+    <div id="actions" style="display: none;">
+        <h3>Test Actions:</h3>
+        <button onclick="testSimpleWrite()">Test Simple Write</button>
+        <button onclick="testSimpleRead()">Test Simple Read</button>
+        <button onclick="testAuth()">Test Auth</button>
+        <button onclick="checkConsole()">Check Console</button>
+    </div>
+    
+    <div id="results"></div>
+    
+    <h3>Debug Info:</h3>
+    <div id="debug"></div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        let debugInfo = [];
+        
+        function addDebug(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugInfo.push(`${timestamp}: ${message}`);
+            updateDebugDisplay();
+            console.log(`[Firebase Debug] ${message}`);
+        }
+        
+        function updateDebugDisplay() {
+            document.getElementById('debug').innerHTML = '<pre>' + debugInfo.join('\n') + '</pre>';
+        }
+        
+        function showResult(message, type) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = 'status ' + type;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        // Test simple write
+        async function testSimpleWrite() {
+            try {
+                addDebug('Testing simple write...');
+                
+                // Import Firebase functions
+                const { initializeApp } = await import('firebase/app');
+                const { getDatabase, ref, set } = await import('firebase/database');
+                
+                // Firebase config
+                const firebaseConfig = {
+                    apiKey: "AIzaSyAoLWS5iRF9HalbcQQ7akw7iuVgNKM3SV4",
+                    authDomain: "project-6680116762664948229.firebaseapp.com",
+                    databaseURL: "https://project-6680116762664948229-default-rtdb.firebaseio.com",
+                    projectId: "project-6680116762664948229",
+                    storageBucket: "project-6680116762664948229.firebasestorage.app",
+                    messagingSenderId: "814890355043",
+                    appId: "1:814890355043:web:5b2dfd1a0223640c17eb56",
+                    measurementId: "G-CRXF2ZH941"
+                };
+                
+                addDebug('Firebase config loaded');
+                
+                // Initialize Firebase
+                const app = initializeApp(firebaseConfig);
+                const database = getDatabase(app);
+                
+                addDebug('Firebase initialized');
+                
+                // Test write
+                const testData = {
+                    message: 'Hello Firebase!',
+                    timestamp: new Date().toISOString(),
+                    testId: Date.now()
+                };
+                
+                const testRef = ref(database, 'debug/' + Date.now());
+                await set(testRef, testData);
+                
+                addDebug('Write successful');
+                showResult('✅ Write successful!', 'success');
+                
+            } catch (error) {
+                addDebug('Write failed: ' + error.message);
+                showResult('❌ Write failed: ' + error.message, 'error');
+                console.error('Firebase write error:', error);
+            }
+        }
+        
+        // Test simple read
+        async function testSimpleRead() {
+            try {
+                addDebug('Testing simple read...');
+                
+                // Import Firebase functions
+                const { initializeApp } = await import('firebase/app');
+                const { getDatabase, ref, get } = await import('firebase/database');
+                
+                // Firebase config
+                const firebaseConfig = {
+                    apiKey: "AIzaSyAoLWS5iRF9HalbcQQ7akw7iuVgNKM3SV4",
+                    authDomain: "project-6680116762664948229.firebaseapp.com",
+                    databaseURL: "https://project-6680116762664948229-default-rtdb.firebaseio.com",
+                    projectId: "project-6680116762664948229",
+                    storageBucket: "project-6680116762664948229.firebasestorage.app",
+                    messagingSenderId: "814890355043",
+                    appId: "1:814890355043:web:5b2dfd1a0223640c17eb56",
+                    measurementId: "G-CRXF2ZH941"
+                };
+                
+                // Initialize Firebase
+                const app = initializeApp(firebaseConfig);
+                const database = getDatabase(app);
+                
+                addDebug('Firebase initialized for read');
+                
+                // Test read
+                const testRef = ref(database, 'debug');
+                const snapshot = await get(testRef);
+                
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    addDebug('Read successful: ' + JSON.stringify(data));
+                    showResult('✅ Read successful! Data: ' + JSON.stringify(data), 'success');
+                } else {
+                    addDebug('No data found');
+                    showResult('⚠️ No data found', 'warning');
+                }
+                
+            } catch (error) {
+                addDebug('Read failed: ' + error.message);
+                showResult('❌ Read failed: ' + error.message, 'error');
+                console.error('Firebase read error:', error);
+            }
+        }
+        
+        // Test auth
+        async function testAuth() {
+            try {
+                addDebug('Testing authentication...');
+                
+                // Import Firebase functions
+                const { initializeApp } = await import('firebase/app');
+                const { getAuth, signInAnonymously } = await import('firebase/auth');
+                
+                // Firebase config
+                const firebaseConfig = {
+                    apiKey: "AIzaSyAoLWS5iRF9HalbcQQ7akw7iuVgNKM3SV4",
+                    authDomain: "project-6680116762664948229.firebaseapp.com",
+                    databaseURL: "https://project-6680116762664948229-default-rtdb.firebaseio.com",
+                    projectId: "project-6680116762664948229",
+                    storageBucket: "project-6680116762664948229.firebasestorage.app",
+                    messagingSenderId: "814890355043",
+                    appId: "1:814890355043:web:5b2dfd1a0223640c17eb56",
+                    measurementId: "G-CRXF2ZH941"
+                };
+                
+                // Initialize Firebase
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                
+                addDebug('Firebase initialized for auth');
+                
+                // Test auth
+                const userCredential = await signInAnonymously(auth);
+                addDebug('Auth successful: ' + userCredential.user.uid);
+                showResult('✅ Auth successful! UID: ' + userCredential.user.uid, 'success');
+                
+            } catch (error) {
+                addDebug('Auth failed: ' + error.message);
+                showResult('❌ Auth failed: ' + error.message, 'error');
+                console.error('Firebase auth error:', error);
+            }
+        }
+        
+        // Check console
+        function checkConsole() {
+            showResult('🔍 Mở browser console (F12) để xem chi tiết lỗi', 'warning');
+            addDebug('Console check requested');
+        }
+        
+        // Make functions global
+        window.testSimpleWrite = testSimpleWrite;
+        window.testSimpleRead = testSimpleRead;
+        window.testAuth = testAuth;
+        window.checkConsole = checkConsole;
+        
+        // Start
+        addDebug('Firebase Debug page loaded');
+        document.getElementById('status').innerHTML = '✅ Firebase Debug ready!';
+        document.getElementById('status').className = 'status success';
+        document.getElementById('actions').style.display = 'block';
+    </script>
+</body>
+</html>
