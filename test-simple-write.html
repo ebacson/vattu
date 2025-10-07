@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Simple Write</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+        .debug { background: #f8f9fa; padding: 10px; border: 1px solid #dee2e6; border-radius: 4px; margin: 10px 0; }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test Simple Write</h1>
+    
+    <div id="status" class="status warning">
+        ⏳ Testing simple write...
+    </div>
+    
+    <button onclick="testWrite()">Test Write</button>
+    <button onclick="testRead()">Test Read</button>
+    <button onclick="testUserWrite()">Test User Write</button>
+    <button onclick="clearDebug()">Clear Debug</button>
+    
+    <div class="debug">
+        <h3>Debug Info:</h3>
+        <div id="debug"></div>
+    </div>
+    
+    <div id="results"></div>
+
+    <script type="module">
+        let debugInfo = [];
+        
+        function addDebug(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugInfo.push(`${timestamp}: ${message}`);
+            updateDebugDisplay();
+            console.log(`[Simple Write Test] ${message}`);
+        }
+        
+        function updateDebugDisplay() {
+            document.getElementById('debug').innerHTML = '<pre>' + debugInfo.join('\n') + '</pre>';
+        }
+        
+        function showResult(message, type) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = 'status ' + type;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        function clearDebug() {
+            debugInfo = [];
+            updateDebugDisplay();
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // Test simple write
+        async function testWrite() {
+            addDebug('Testing simple write...');
+            try {
+                const { database } = await import('./firebase-config.js');
+                const { ref, set } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js');
+                
+                const testData = {
+                    test: 'Simple write test',
+                    timestamp: new Date().toISOString(),
+                    random: Math.random()
+                };
+                
+                const testRef = ref(database, 'test/simple');
+                addDebug('Writing to test/simple...');
+                addDebug('Data: ' + JSON.stringify(testData, null, 2));
+                
+                await set(testRef, testData);
+                addDebug('✅ Write successful!');
+                showResult('✅ Simple write successful!', 'success');
+                
+            } catch (error) {
+                addDebug('❌ Write error: ' + error.message);
+                addDebug('Error code: ' + error.code);
+                showResult('❌ Simple write failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Test read
+        async function testRead() {
+            addDebug('Testing read...');
+            try {
+                const { database } = await import('./firebase-config.js');
+                const { ref, get } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js');
+                
+                const testRef = ref(database, 'test/simple');
+                addDebug('Reading from test/simple...');
+                
+                const snapshot = await get(testRef);
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    addDebug('✅ Read successful!');
+                    addDebug('Data: ' + JSON.stringify(data, null, 2));
+                    showResult('✅ Read successful! Data: ' + JSON.stringify(data, null, 2), 'success');
+                } else {
+                    addDebug('❌ No data found');
+                    showResult('❌ No data found', 'error');
+                }
+                
+            } catch (error) {
+                addDebug('❌ Read error: ' + error.message);
+                addDebug('Error code: ' + error.code);
+                showResult('❌ Read failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Test user write
+        async function testUserWrite() {
+            addDebug('Testing user write...');
+            try {
+                const { auth, database } = await import('./firebase-config.js');
+                const { createUserWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+                const { ref, set } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js');
+                
+                const testEmail = 'test' + Date.now() + '@example.com';
+                const testPassword = '123456';
+                
+                addDebug('Creating test user: ' + testEmail);
+                const userCredential = await createUserWithEmailAndPassword(auth, testEmail, testPassword);
+                const user = userCredential.user;
+                addDebug('✅ Test user created: ' + user.uid);
+                
+                // Wait a bit
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                const userData = {
+                    uid: user.uid,
+                    email: testEmail,
+                    displayName: 'Test User',
+                    admin: false,
+                    warehouse: 'net',
+                    createdAt: new Date().toISOString(),
+                    lastLogin: new Date().toISOString(),
+                    isActive: true
+                };
+                
+                const userRef = ref(database, `users/${user.uid}`);
+                addDebug('Writing user data to users/' + user.uid);
+                addDebug('User data: ' + JSON.stringify(userData, null, 2));
+                
+                await set(userRef, userData);
+                addDebug('✅ User write successful!');
+                showResult('✅ User write successful!', 'success');
+                
+                // Try to read it back
+                setTimeout(async () => {
+                    addDebug('Reading user data back...');
+                    try {
+                        const snapshot = await get(userRef);
+                        if (snapshot.exists()) {
+                            const data = snapshot.val();
+                            addDebug('✅ User data read back successfully!');
+                            addDebug('Read data: ' + JSON.stringify(data, null, 2));
+                            showResult('✅ User data read back successfully!', 'success');
+                        } else {
+                            addDebug('❌ User data not found when reading back');
+                            showResult('❌ User data not found when reading back', 'error');
+                        }
+                    } catch (error) {
+                        addDebug('❌ Error reading user data back: ' + error.message);
+                        showResult('❌ Error reading user data back: ' + error.message, 'error');
+                    }
+                }, 2000);
+                
+            } catch (error) {
+                addDebug('❌ User write error: ' + error.message);
+                addDebug('Error code: ' + error.code);
+                showResult('❌ User write failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Make functions global
+        window.testWrite = testWrite;
+        window.testRead = testRead;
+        window.testUserWrite = testUserWrite;
+        window.clearDebug = clearDebug;
+        
+        // Start
+        addDebug('Simple Write Test page loaded');
+        document.getElementById('status').innerHTML = '✅ Simple Write Test ready!';
+        document.getElementById('status').className = 'status success';
+    </script>
+</body>
+</html>
