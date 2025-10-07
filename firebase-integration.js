@@ -1,12 +1,27 @@
 // Firebase Integration for Vattu Management System
 // This file provides Firebase Realtime Database functions
 
-import { database, DB_PATHS } from './firebase-config.js';
+import { database, DB_PATHS, isAuthenticated } from './firebase-config.js';
 import { ref, set, push, update, remove, onValue, off, query, orderByChild, orderByKey, limitToLast } from 'firebase/database';
+
+// Wait for Firebase authentication
+function waitForAuth() {
+    return new Promise((resolve) => {
+        const checkAuth = () => {
+            if (isAuthenticated) {
+                resolve();
+            } else {
+                setTimeout(checkAuth, 100);
+            }
+        };
+        checkAuth();
+    });
+}
 
 // Load all data from Firebase Realtime Database
 async function loadAllDataFromFirebase() {
     try {
+        await waitForAuth();
         console.log('🔄 Loading all data from Firebase...');
         
         await Promise.all([
@@ -134,6 +149,7 @@ async function loadLogsFromRealtimeDB() {
 // Save inventory item to Firebase
 async function saveInventoryToFirebase(item) {
     try {
+        await waitForAuth();
         const inventoryRef = ref(database, `${DB_PATHS.INVENTORY}/${item.id}`);
         await set(inventoryRef, {
             ...item,
@@ -150,6 +166,7 @@ async function saveInventoryToFirebase(item) {
 // Save task to Firebase
 async function saveTaskToFirebase(task) {
     try {
+        await waitForAuth();
         const tasksRef = ref(database, `${DB_PATHS.TASKS}/${task.id}`);
         await set(tasksRef, {
             ...task,
@@ -167,6 +184,7 @@ async function saveTaskToFirebase(task) {
 // Save transfer to Firebase
 async function saveTransferToFirebase(transfer) {
     try {
+        await waitForAuth();
         const transfersRef = ref(database, `${DB_PATHS.TRANSFERS}/${transfer.id}`);
         await set(transfersRef, {
             ...transfer,
@@ -184,6 +202,7 @@ async function saveTransferToFirebase(transfer) {
 // Save log to Firebase
 async function saveLogToFirebase(log) {
     try {
+        await waitForAuth();
         const logsRef = ref(database, `${DB_PATHS.LOGS}/${log.id}`);
         await set(logsRef, {
             ...log,
