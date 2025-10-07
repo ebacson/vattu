@@ -4,256 +4,473 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập - Quản lý Vật tư</title>
-    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .auth-container {
-            max-width: 400px;
-            margin: 50px auto;
-            padding: 30px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 900px;
+            min-height: 600px;
+        }
+
+        .auth-header {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .auth-header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .auth-header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .auth-content {
+            padding: 40px;
+        }
+
         .auth-tabs {
             display: flex;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f0f0f0;
         }
-        
+
         .auth-tab {
             flex: 1;
-            padding: 10px;
+            padding: 15px 20px;
             text-align: center;
             cursor: pointer;
             border: none;
             background: none;
             font-size: 16px;
-            color: #6c757d;
-            transition: all 0.3s;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s ease;
+            position: relative;
         }
-        
+
         .auth-tab.active {
             color: #007bff;
-            border-bottom: 2px solid #007bff;
+            background: #f8f9ff;
         }
-        
+
+        .auth-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #007bff;
+        }
+
+        .auth-tab:hover {
+            background: #f8f9ff;
+            color: #007bff;
+        }
+
         .auth-form {
             display: none;
+            animation: fadeIn 0.5s ease;
         }
-        
+
         .auth-form.active {
             display: block;
         }
-        
-        .form-group {
-            margin-bottom: 20px;
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
         .form-group label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
+            margin-bottom: 8px;
+            font-weight: 600;
             color: #333;
-        }
-        
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
             font-size: 14px;
-            transition: border-color 0.3s;
         }
-        
-        .form-group input:focus {
-            outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-        }
-        
+
+        .form-group input,
         .form-group select {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
             background: white;
-            transition: border-color 0.3s;
         }
-        
+
+        .form-group input:focus,
         .form-group select:focus {
             outline: none;
             border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
         }
-        
-        .btn-auth {
+
+        .form-group input::placeholder {
+            color: #999;
+        }
+
+        .btn {
             width: 100%;
-            padding: 12px;
-            background: #007bff;
-            color: white;
+            padding: 15px;
             border: none;
-            border-radius: 5px;
+            border-radius: 10px;
             font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
         }
-        
-        .btn-auth:hover {
-            background: #0056b3;
+
+        .btn-primary {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
         }
-        
-        .btn-auth:disabled {
-            background: #6c757d;
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 123, 255, 0.3);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
-        
-        .auth-links {
-            text-align: center;
-            margin-top: 20px;
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #666;
+            border: 2px solid #e1e5e9;
         }
-        
-        .auth-links a {
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            border-color: #007bff;
             color: #007bff;
-            text-decoration: none;
-            margin: 0 10px;
         }
-        
-        .auth-links a:hover {
-            text-decoration: underline;
-        }
-        
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 10px;
-            border-radius: 5px;
+
+        .message {
+            padding: 15px;
+            border-radius: 10px;
             margin-bottom: 20px;
+            font-weight: 500;
             display: none;
         }
-        
-        .success-message {
+
+        .message.success {
             background: #d4edda;
             color: #155724;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            display: none;
+            border: 1px solid #c3e6cb;
         }
-        
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .loading {
             display: none;
             text-align: center;
-            margin: 20px 0;
+            padding: 20px;
         }
-        
-        .loading i {
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
             animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
         }
-        
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .back-link a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.3s ease;
+        }
+
+        .back-link a:hover {
+            color: #0056b3;
+        }
+
+        .password-strength {
+            margin-top: 5px;
+            font-size: 12px;
+        }
+
+        .strength-weak { color: #dc3545; }
+        .strength-medium { color: #ffc107; }
+        .strength-strong { color: #28a745; }
+
+        @media (max-width: 768px) {
+            .auth-container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .auth-header {
+                padding: 30px 20px;
+            }
+            
+            .auth-header h1 {
+                font-size: 2em;
+            }
+            
+            .auth-content {
+                padding: 30px 20px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="auth-container">
-        <h2 style="text-align: center; margin-bottom: 30px; color: #333;">
-            <i class="fas fa-fire"></i> Quản lý Vật tư
-        </h2>
-        
-        <div class="auth-tabs">
-            <button class="auth-tab active" onclick="showTab('login')">Đăng nhập</button>
-            <button class="auth-tab" onclick="showTab('register')">Đăng ký</button>
+        <div class="auth-header">
+            <h1><i class="fas fa-boxes"></i> Quản lý Vật tư</h1>
+            <p>Hệ thống quản lý kho và sự vụ</p>
         </div>
-        
-        <div id="errorMessage" class="error-message"></div>
-        <div id="successMessage" class="success-message"></div>
-        
-        <div id="loading" class="loading">
-            <i class="fas fa-spinner"></i> Đang xử lý...
+
+        <div class="auth-content">
+            <!-- Tab Navigation -->
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="showTab('login')">
+                    <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                </button>
+                <button class="auth-tab" onclick="showTab('register')">
+                    <i class="fas fa-user-plus"></i> Đăng ký
+                </button>
+                <button class="auth-tab" onclick="showTab('forgot')">
+                    <i class="fas fa-key"></i> Quên mật khẩu
+                </button>
+            </div>
+
+            <!-- Messages -->
+            <div id="errorMessage" class="message error"></div>
+            <div id="successMessage" class="message success"></div>
+
+            <!-- Loading -->
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Đang xử lý...</p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form active">
+                <div class="form-group">
+                    <label for="loginEmail">Email:</label>
+                    <input type="email" id="loginEmail" placeholder="Nhập email của bạn" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="loginPassword">Mật khẩu:</label>
+                    <input type="password" id="loginPassword" placeholder="Nhập mật khẩu" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                </button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="auth-form">
+                <div class="form-group">
+                    <label for="registerName">Họ và tên:</label>
+                    <input type="text" id="registerName" placeholder="Nhập họ và tên" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerEmail">Email:</label>
+                    <input type="email" id="registerEmail" placeholder="Nhập email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerPassword">Mật khẩu:</label>
+                    <input type="password" id="registerPassword" placeholder="Nhập mật khẩu (ít nhất 6 ký tự)" required minlength="6">
+                    <div id="passwordStrength" class="password-strength"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">Xác nhận mật khẩu:</label>
+                    <input type="password" id="confirmPassword" placeholder="Nhập lại mật khẩu" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerWarehouse">Kho quản lý:</label>
+                    <select id="registerWarehouse" required>
+                        <option value="">-- Chọn kho --</option>
+                        <option value="net">Kho Net</option>
+                        <option value="infrastructure">Kho Hạ Tầng</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> Đăng ký
+                </button>
+            </form>
+
+            <!-- Forgot Password Form -->
+            <form id="forgotForm" class="auth-form">
+                <div class="form-group">
+                    <label for="forgotEmail">Email:</label>
+                    <input type="email" id="forgotEmail" placeholder="Nhập email để reset mật khẩu" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> Gửi email reset
+                </button>
+                
+                <button type="button" class="btn btn-secondary" onclick="showTab('login')">
+                    <i class="fas fa-arrow-left"></i> Quay lại đăng nhập
+                </button>
+            </form>
+
+            <!-- Back to App -->
+            <div class="back-link">
+                <a href="index.html">
+                    <i class="fas fa-home"></i> Về trang chủ
+                </a>
+            </div>
         </div>
-        
-        <!-- Đăng nhập -->
-        <form id="loginForm" class="auth-form active">
-            <div class="form-group">
-                <label for="loginEmail">Email:</label>
-                <input type="email" id="loginEmail" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="loginPassword">Mật khẩu:</label>
-                <input type="password" id="loginPassword" required>
-            </div>
-            
-            <button type="submit" class="btn-auth">Đăng nhập</button>
-            
-            <div class="auth-links">
-                <a href="#" onclick="showTab('forgot')">Quên mật khẩu?</a>
-            </div>
-        </form>
-        
-        <!-- Đăng ký -->
-        <form id="registerForm" class="auth-form">
-            <div class="form-group">
-                <label for="registerName">Họ tên:</label>
-                <input type="text" id="registerName" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="registerEmail">Email:</label>
-                <input type="email" id="registerEmail" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="registerPassword">Mật khẩu:</label>
-                <input type="password" id="registerPassword" required minlength="6">
-            </div>
-            
-            <div class="form-group">
-                <label for="confirmPassword">Xác nhận mật khẩu:</label>
-                <input type="password" id="confirmPassword" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="registerWarehouse">Kho quản lý:</label>
-                <select id="registerWarehouse" required>
-                    <option value="net">Kho Net</option>
-                    <option value="infrastructure">Kho Hạ Tầng</option>
-                </select>
-            </div>
-            
-            <button type="submit" class="btn-auth">Đăng ký</button>
-        </form>
-        
-        <!-- Quên mật khẩu -->
-        <form id="forgotForm" class="auth-form">
-            <div class="form-group">
-                <label for="forgotEmail">Email:</label>
-                <input type="email" id="forgotEmail" required>
-            </div>
-            
-            <button type="submit" class="btn-auth">Gửi email khôi phục</button>
-            
-            <div class="auth-links">
-                <a href="#" onclick="showTab('login')">Quay lại đăng nhập</a>
-            </div>
-        </form>
     </div>
 
-    <!-- Firebase SDK -->
-    <script type="module" src="firebase-config.js"></script>
-    <script type="module" src="auth-integration.js"></script>
-    <script type="module" src="auth.js"></script>
-    
-    <!-- Fallback for showTab function -->
-    <script>
-        // Ensure showTab function is available immediately
+    <script type="module">
+        // Import Firebase functions
+        let registerUser, signInUser, resetPassword;
+        
+        // Initialize Firebase functions
+        async function initFirebase() {
+            try {
+                const authModule = await import('./auth-integration.js');
+                registerUser = authModule.registerUser;
+                signInUser = authModule.signInUser;
+                resetPassword = authModule.resetPassword;
+                console.log('✅ Firebase functions loaded successfully');
+            } catch (error) {
+                console.error('❌ Error loading Firebase functions:', error);
+                showError('Lỗi khởi tạo hệ thống. Vui lòng tải lại trang.');
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initFirebase();
+            setupEventListeners();
+            setupPasswordStrength();
+        });
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Login form
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleLogin);
+            }
+
+            // Register form
+            const registerForm = document.getElementById('registerForm');
+            if (registerForm) {
+                registerForm.addEventListener('submit', handleRegister);
+            }
+
+            // Forgot password form
+            const forgotForm = document.getElementById('forgotForm');
+            if (forgotForm) {
+                forgotForm.addEventListener('submit', handleForgotPassword);
+            }
+        }
+
+        // Setup password strength indicator
+        function setupPasswordStrength() {
+            const passwordInput = document.getElementById('registerPassword');
+            const strengthDiv = document.getElementById('passwordStrength');
+            
+            if (passwordInput && strengthDiv) {
+                passwordInput.addEventListener('input', function() {
+                    const password = this.value;
+                    const strength = getPasswordStrength(password);
+                    strengthDiv.textContent = strength.text;
+                    strengthDiv.className = `password-strength strength-${strength.level}`;
+                });
+            }
+        }
+
+        // Get password strength
+        function getPasswordStrength(password) {
+            if (password.length < 6) {
+                return { level: 'weak', text: 'Mật khẩu quá ngắn' };
+            } else if (password.length < 8) {
+                return { level: 'medium', text: 'Mật khẩu trung bình' };
+            } else {
+                return { level: 'strong', text: 'Mật khẩu mạnh' };
+            }
+        }
+
+        // Show tab function
         function showTab(tabName) {
-            console.log('showTab called with:', tabName);
+            console.log('🔧 showTab called with:', tabName);
             
             // Hide all forms
             const forms = document.querySelectorAll('.auth-form');
@@ -267,31 +484,201 @@
             const selectedForm = document.getElementById(tabName + 'Form');
             if (selectedForm) {
                 selectedForm.classList.add('active');
-                console.log('Form shown:', tabName + 'Form');
+                console.log('✅ Form shown:', tabName + 'Form');
             } else {
-                console.error('Form not found:', tabName + 'Form');
+                console.error('❌ Form not found:', tabName + 'Form');
             }
             
             // Add active class to selected tab
             const selectedTab = document.querySelector(`[onclick="showTab('${tabName}')"]`);
             if (selectedTab) {
                 selectedTab.classList.add('active');
-                console.log('Tab activated:', tabName);
+                console.log('✅ Tab activated:', tabName);
             } else {
-                console.error('Tab not found:', tabName);
+                console.error('❌ Tab not found:', tabName);
             }
             
             // Clear messages
-            const errorMessage = document.getElementById('errorMessage');
-            const successMessage = document.getElementById('successMessage');
-            if (errorMessage) errorMessage.style.display = 'none';
-            if (successMessage) successMessage.style.display = 'none';
+            clearMessages();
         }
-        
-        // Make sure function is available on window
+
+        // Make showTab global
         window.showTab = showTab;
-        
-        console.log('showTab function loaded and available');
+
+        // Handle login
+        async function handleLogin(e) {
+            e.preventDefault();
+            showLoading(true);
+            clearMessages();
+
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                showError('Vui lòng nhập đầy đủ thông tin');
+                showLoading(false);
+                return;
+            }
+
+            try {
+                console.log('🔄 Attempting login for:', email);
+                const result = await signInUser(email, password);
+                
+                if (result.success) {
+                    showSuccess('Đăng nhập thành công! Đang chuyển hướng...');
+                    console.log('✅ Login successful');
+                    
+                    // Redirect to main app
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                } else {
+                    showError('Đăng nhập thất bại: ' + result.error);
+                    console.error('❌ Login failed:', result.error);
+                }
+            } catch (error) {
+                showError('Lỗi đăng nhập: ' + error.message);
+                console.error('❌ Login error:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Handle register
+        async function handleRegister(e) {
+            e.preventDefault();
+            showLoading(true);
+            clearMessages();
+
+            const name = document.getElementById('registerName').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const warehouse = document.getElementById('registerWarehouse').value;
+
+            console.log('🔄 Registration data:', { name, email, warehouse, passwordLength: password.length });
+
+            // Validation
+            if (!name || !email || !password || !confirmPassword || !warehouse) {
+                showError('Vui lòng nhập đầy đủ thông tin');
+                showLoading(false);
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showError('Mật khẩu xác nhận không khớp');
+                showLoading(false);
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('Mật khẩu phải có ít nhất 6 ký tự');
+                showLoading(false);
+                return;
+            }
+
+            try {
+                console.log('🔄 Calling registerUser...');
+                const result = await registerUser(email, password, name, warehouse);
+                
+                if (result.success) {
+                    showSuccess('Đăng ký thành công! Đang chuyển hướng...');
+                    console.log('✅ Registration successful:', result.userData);
+                    
+                    // Redirect to main app
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                } else {
+                    showError('Đăng ký thất bại: ' + result.error);
+                    console.error('❌ Registration failed:', result.error);
+                }
+            } catch (error) {
+                showError('Lỗi đăng ký: ' + error.message);
+                console.error('❌ Registration error:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Handle forgot password
+        async function handleForgotPassword(e) {
+            e.preventDefault();
+            showLoading(true);
+            clearMessages();
+
+            const email = document.getElementById('forgotEmail').value.trim();
+
+            if (!email) {
+                showError('Vui lòng nhập email');
+                showLoading(false);
+                return;
+            }
+
+            try {
+                console.log('🔄 Resetting password for:', email);
+                const result = await resetPassword(email);
+                
+                if (result.success) {
+                    showSuccess('Email reset mật khẩu đã được gửi! Vui lòng kiểm tra hộp thư.');
+                    console.log('✅ Password reset successful');
+                } else {
+                    showError('Gửi email reset thất bại: ' + result.error);
+                    console.error('❌ Password reset failed:', result.error);
+                }
+            } catch (error) {
+                showError('Lỗi gửi email reset: ' + error.message);
+                console.error('❌ Password reset error:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Show loading
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            if (loading) {
+                if (show) {
+                    loading.classList.add('show');
+                } else {
+                    loading.classList.remove('show');
+                }
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            if (errorDiv) {
+                errorDiv.textContent = message;
+                errorDiv.classList.add('show');
+            }
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            if (successDiv) {
+                successDiv.textContent = message;
+                successDiv.classList.add('show');
+            }
+        }
+
+        // Clear messages
+        function clearMessages() {
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            
+            if (errorDiv) {
+                errorDiv.classList.remove('show');
+            }
+            if (successDiv) {
+                successDiv.classList.remove('show');
+            }
+        }
+
+        // Debug: Log when page loads
+        console.log('🚀 Auth page loaded and ready');
     </script>
 </body>
 </html>
