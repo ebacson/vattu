@@ -1315,9 +1315,26 @@ async function updateUserInterface(user) {
                     userData
                 });
             } else {
-                // Fallback if user data not found
+                // User exists but no data in Firebase yet (new user)
+                console.log('ℹ️ User authenticated but no data in Firebase yet');
                 const displayName = user.displayName || user.email;
-                userName.textContent = `Xin chào, ${displayName}`;
+                userName.innerHTML = `
+                    Xin chào, ${displayName}
+                    <br><small style="color: #666;">
+                        👤 User | Kho: Net (mặc định)
+                    </small>
+                `;
+                
+                // Set default values
+                userWarehouse = 'net';
+                isUserAdmin = false;
+                currentWarehouse = 'net';
+                
+                if (currentWarehouseSelect) {
+                    currentWarehouseSelect.value = 'net';
+                }
+
+                updateUIForPermissions();
                 userInfo.style.display = 'block';
             }
         } catch (error) {
