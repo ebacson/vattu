@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Firebase Rules</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        .rules { background: #e9ecef; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🔥 Test Firebase Rules</h1>
+    
+    <div id="status" class="status warning">
+        ⏳ Đang kiểm tra Firebase Rules...
+    </div>
+    
+    <div class="rules">
+        <h3>📋 Firebase Rules cần thiết:</h3>
+        <pre>{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}</pre>
+        <p><strong>Lưu ý:</strong> Rules này chỉ dùng cho testing. Sau khi test xong, chuyển về rules có authentication.</p>
+    </div>
+    
+    <div id="actions" style="display: none;">
+        <h3>Test Actions:</h3>
+        <button onclick="testWrite()">Test Write</button>
+        <button onclick="testRead()">Test Read</button>
+        <button onclick="testMainApp()">Test Main App</button>
+        <button onclick="openFirebaseConsole()">Open Firebase Console</button>
+    </div>
+    
+    <div id="results"></div>
+    
+    <h3>Debug Info:</h3>
+    <div id="debug"></div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        let debugInfo = [];
+        
+        function addDebug(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugInfo.push(`${timestamp}: ${message}`);
+            updateDebugDisplay();
+            console.log(`[Firebase Rules Test] ${message}`);
+        }
+        
+        function updateDebugDisplay() {
+            document.getElementById('debug').innerHTML = '<pre>' + debugInfo.join('\n') + '</pre>';
+        }
+        
+        function showResult(message, type) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = 'status ' + type;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        // Test write
+        async function testWrite() {
+            try {
+                addDebug('Testing Firebase write...');
+                
+                // Import Firebase functions
+                const { initializeApp } = await import('firebase/app');
+                const { getDatabase, ref, set } = await import('firebase/database');
+                
+                // Firebase config
+                const firebaseConfig = {
+                    apiKey: "AIzaSyAoLWS5iRF9HalbcQQ7akw7iuVgNKM3SV4",
+                    authDomain: "project-6680116762664948229.firebaseapp.com",
+                    databaseURL: "https://project-6680116762664948229-default-rtdb.firebaseio.com",
+                    projectId: "project-6680116762664948229",
+                    storageBucket: "project-6680116762664948229.firebasestorage.app",
+                    messagingSenderId: "814890355043",
+                    appId: "1:814890355043:web:5b2dfd1a0223640c17eb56",
+                    measurementId: "G-CRXF2ZH941"
+                };
+                
+                // Initialize Firebase
+                const app = initializeApp(firebaseConfig);
+                const database = getDatabase(app);
+                
+                addDebug('Firebase initialized');
+                
+                // Test write
+                const testData = {
+                    message: 'Firebase Rules Test',
+                    timestamp: new Date().toISOString(),
+                    testId: Date.now()
+                };
+                
+                const testRef = ref(database, 'rules-test/' + Date.now());
+                await set(testRef, testData);
+                
+                addDebug('Write successful');
+                showResult('✅ Write successful! Firebase Rules đã được cấu hình đúng.', 'success');
+                
+            } catch (error) {
+                addDebug('Write failed: ' + error.message);
+                showResult('❌ Write failed: ' + error.message + '<br><br>🔧 <strong>Giải pháp:</strong><br>1. Mở Firebase Console<br>2. Chọn Realtime Database > Rules<br>3. Thay thế rules bằng:<br><pre>{\n  "rules": {\n    ".read": true,\n    ".write": true\n  }\n}</pre>4. Click Publish', 'error');
+                console.error('Firebase write error:', error);
+            }
+        }
+        
+        // Test read
+        async function testRead() {
+            try {
+                addDebug('Testing Firebase read...');
+                
+                // Import Firebase functions
+                const { initializeApp } = await import('firebase/app');
+                const { getDatabase, ref, get } = await import('firebase/database');
+                
+                // Firebase config
+                const firebaseConfig = {
+                    apiKey: "AIzaSyAoLWS5iRF9HalbcQQ7akw7iuVgNKM3SV4",
+                    authDomain: "project-6680116762664948229.firebaseapp.com",
+                    databaseURL: "https://project-6680116762664948229-default-rtdb.firebaseio.com",
+                    projectId: "project-6680116762664948229",
+                    storageBucket: "project-6680116762664948229.firebasestorage.app",
+                    messagingSenderId: "814890355043",
+                    appId: "1:814890355043:web:5b2dfd1a0223640c17eb56",
+                    measurementId: "G-CRXF2ZH941"
+                };
+                
+                // Initialize Firebase
+                const app = initializeApp(firebaseConfig);
+                const database = getDatabase(app);
+                
+                addDebug('Firebase initialized for read');
+                
+                // Test read
+                const testRef = ref(database, 'rules-test');
+                const snapshot = await get(testRef);
+                
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    addDebug('Read successful: ' + JSON.stringify(data));
+                    showResult('✅ Read successful! Dữ liệu: ' + JSON.stringify(data), 'success');
+                } else {
+                    addDebug('No data found');
+                    showResult('⚠️ No data found. Hãy test write trước.', 'warning');
+                }
+                
+            } catch (error) {
+                addDebug('Read failed: ' + error.message);
+                showResult('❌ Read failed: ' + error.message, 'error');
+                console.error('Firebase read error:', error);
+            }
+        }
+        
+        // Test main app
+        function testMainApp() {
+            showResult('🔗 Mở ứng dụng chính: <a href="http://localhost:8000" target="_blank">http://localhost:8000</a>', 'success');
+            addDebug('Main app link provided');
+        }
+        
+        // Open Firebase Console
+        function openFirebaseConsole() {
+            const url = 'https://console.firebase.google.com/project/project-6680116762664948229/database';
+            showResult('🔗 Mở Firebase Console: <a href="' + url + '" target="_blank">' + url + '</a>', 'success');
+            addDebug('Firebase Console URL provided');
+        }
+        
+        // Make functions global
+        window.testWrite = testWrite;
+        window.testRead = testRead;
+        window.testMainApp = testMainApp;
+        window.openFirebaseConsole = openFirebaseConsole;
+        
+        // Start
+        addDebug('Firebase Rules Test page loaded');
+        document.getElementById('status').innerHTML = '✅ Firebase Rules Test ready!';
+        document.getElementById('status').className = 'status success';
+        document.getElementById('actions').style.display = 'block';
+    </script>
+</body>
+</html>
