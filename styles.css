@@ -78,6 +78,19 @@ body {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
+    align-items: center;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-right: 10px;
+}
+
+.user-info span {
+    color: #2c3e50;
+    font-weight: 500;
 }
 
 /* Button Styles */

@@ -7,11 +7,13 @@ let currentWarehouse = 'net';
 let currentEditingItem = null;
 let currentEditingTask = null;
 let charts = {};
+let currentUser = null;
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
     setupEventListeners();
+    setupAuthentication();
     
     // Wait for Firebase functions to be available
     waitForFirebaseFunctions().then(() => {
@@ -1078,3 +1080,61 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Authentication Functions
+async function setupAuthentication() {
+    try {
+        // Import authentication functions
+        const { 
+            onAuthStateChange, 
+            signOutUser, 
+            getUserDisplayName, 
+            getUserEmail,
+            isAuthenticated 
+        } = await import('./auth-integration.js');
+        
+        // Setup authentication state listener
+        onAuthStateChange((user) => {
+            currentUser = user;
+            updateUserInterface(user);
+            
+            if (!user) {
+                // User not authenticated, redirect to login
+                window.location.href = 'auth.html';
+            }
+        });
+        
+        // Setup logout button
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async () => {
+                const result = await signOutUser();
+                if (result.success) {
+                    showToast('Đăng xuất thành công', 'success');
+                    window.location.href = 'auth.html';
+                } else {
+                    showToast('Lỗi đăng xuất: ' + result.error, 'error');
+                }
+            });
+        }
+        
+    } catch (error) {
+        console.error('❌ Authentication setup error:', error);
+        // If authentication fails, redirect to login
+        window.location.href = 'auth.html';
+    }
+}
+
+// Update user interface based on authentication state
+function updateUserInterface(user) {
+    const userInfo = document.getElementById('userInfo');
+    const userName = document.getElementById('userName');
+    
+    if (user && userInfo && userName) {
+        const displayName = user.displayName || user.email;
+        userName.textContent = `Xin chào, ${displayName}`;
+        userInfo.style.display = 'block';
+    } else if (userInfo) {
+        userInfo.style.display = 'none';
+    }
+}
