@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Firebase Direct</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔥 Test Firebase Direct</h1>
+    
+    <div id="status" class="status warning">
+        ⏳ Đang kiểm tra Firebase...
+    </div>
+    
+    <div id="actions" style="display: none;">
+        <h3>Test Actions:</h3>
+        <button onclick="testDirectSave()">Test Direct Save</button>
+        <button onclick="testDirectRead()">Test Direct Read</button>
+        <button onclick="checkAuth()">Check Auth Status</button>
+        <button onclick="checkDatabase()">Check Database</button>
+    </div>
+    
+    <div id="results"></div>
+    
+    <h3>Debug Info:</h3>
+    <div id="debug"></div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'firebase/app';
+        import { getDatabase, ref, set, get, push } from 'firebase/database';
+        import { getAuth, signInAnonymously } from 'firebase/auth';
+        
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyAoLWS5iRF9HalbcQQ7akw7iuVgNKM3SV4",
+            authDomain: "project-6680116762664948229.firebaseapp.com",
+            databaseURL: "https://project-6680116762664948229-default-rtdb.firebaseio.com",
+            projectId: "project-6680116762664948229",
+            storageBucket: "project-6680116762664948229.firebasestorage.app",
+            messagingSenderId: "814890355043",
+            appId: "1:814890355043:web:5b2dfd1a0223640c17eb56",
+            measurementId: "G-CRXF2ZH941"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const auth = getAuth(app);
+        
+        let isAuthenticated = false;
+        let debugInfo = [];
+        
+        function addDebug(message) {
+            debugInfo.push(new Date().toLocaleTimeString() + ': ' + message);
+            updateDebugDisplay();
+        }
+        
+        function updateDebugDisplay() {
+            document.getElementById('debug').innerHTML = '<pre>' + debugInfo.join('\n') + '</pre>';
+        }
+        
+        function showResult(message, type) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = 'status ' + type;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        // Authenticate
+        async function authenticate() {
+            try {
+                addDebug('Starting Firebase authentication...');
+                const userCredential = await signInAnonymously(auth);
+                isAuthenticated = true;
+                addDebug('Authentication successful: ' + userCredential.user.uid);
+                document.getElementById('status').innerHTML = '✅ Firebase đã sẵn sàng!';
+                document.getElementById('status').className = 'status success';
+                document.getElementById('actions').style.display = 'block';
+            } catch (error) {
+                addDebug('Authentication failed: ' + error.message);
+                showResult('❌ Authentication failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Test direct save
+        async function testDirectSave() {
+            if (!isAuthenticated) {
+                showResult('❌ Chưa authenticated!', 'error');
+                return;
+            }
+            
+            try {
+                addDebug('Testing direct save...');
+                const testData = {
+                    message: 'Hello Firebase!',
+                    timestamp: new Date().toISOString(),
+                    testId: Date.now()
+                };
+                
+                const testRef = ref(database, 'test/' + Date.now());
+                await set(testRef, testData);
+                
+                addDebug('Direct save successful');
+                showResult('✅ Direct save successful!', 'success');
+            } catch (error) {
+                addDebug('Direct save failed: ' + error.message);
+                showResult('❌ Direct save failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Test direct read
+        async function testDirectRead() {
+            if (!isAuthenticated) {
+                showResult('❌ Chưa authenticated!', 'error');
+                return;
+            }
+            
+            try {
+                addDebug('Testing direct read...');
+                const testRef = ref(database, 'test');
+                const snapshot = await get(testRef);
+                
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    addDebug('Direct read successful: ' + JSON.stringify(data));
+                    showResult('✅ Direct read successful! Data: ' + JSON.stringify(data), 'success');
+                } else {
+                    addDebug('No data found in test path');
+                    showResult('⚠️ No data found in test path', 'warning');
+                }
+            } catch (error) {
+                addDebug('Direct read failed: ' + error.message);
+                showResult('❌ Direct read failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Check auth status
+        function checkAuth() {
+            addDebug('Auth status: ' + (isAuthenticated ? 'Authenticated' : 'Not authenticated'));
+            showResult('Auth status: ' + (isAuthenticated ? '✅ Authenticated' : '❌ Not authenticated'), 
+                      isAuthenticated ? 'success' : 'error');
+        }
+        
+        // Check database
+        function checkDatabase() {
+            const url = 'https://console.firebase.google.com/project/project-6680116762664948229/database';
+            showResult('🔗 Mở Firebase Console: <a href="' + url + '" target="_blank">' + url + '</a>', 'success');
+            addDebug('Firebase Console URL provided');
+        }
+        
+        // Make functions global
+        window.testDirectSave = testDirectSave;
+        window.testDirectRead = testDirectRead;
+        window.checkAuth = checkAuth;
+        window.checkDatabase = checkDatabase;
+        
+        // Start authentication
+        addDebug('Starting Firebase test...');
+        authenticate();
+    </script>
+</body>
+</html>
