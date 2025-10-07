@@ -108,7 +108,7 @@ function loadSampleData() {
     inventoryData = [
         {
             id: 1,
-            code: 'VT001',
+            serial: 'SN001234567',
             name: 'Switch 24 port',
             warehouse: 'net',
             category: 'Thiết bị mạng',
@@ -120,7 +120,7 @@ function loadSampleData() {
         },
         {
             id: 2,
-            code: 'VT002',
+            serial: 'SN001234568',
             name: 'Router WiFi',
             warehouse: 'net',
             category: 'Thiết bị mạng',
@@ -285,7 +285,7 @@ function renderInventoryTable() {
         const matchesWarehouse = warehouseFilter === 'all' || item.warehouse === warehouseFilter;
         const matchesStatus = statusFilter === 'all' || item.condition === statusFilter;
         const matchesSearch = !searchTerm || 
-            item.code.toLowerCase().includes(searchTerm) ||
+            item.serial.toLowerCase().includes(searchTerm) ||
             item.name.toLowerCase().includes(searchTerm) ||
             item.category.toLowerCase().includes(searchTerm);
 
@@ -301,7 +301,7 @@ function renderInventoryTable() {
         const task = tasksData.find(t => t.id === item.taskId);
         return `
             <tr>
-                <td><strong>${item.code}</strong></td>
+                <td><strong>${item.serial}</strong></td>
                 <td>${item.name}</td>
                 <td><span class="warehouse-badge ${item.warehouse}">${getWarehouseName(item.warehouse)}</span></td>
                 <td><span class="status-badge ${item.condition}">${getConditionText(item.condition)}</span></td>
@@ -547,7 +547,7 @@ async function handleItemSubmit(e) {
     e.preventDefault();
     
     const formData = {
-        code: document.getElementById('itemCode').value,
+        serial: document.getElementById('itemSerial').value,
         name: document.getElementById('itemName').value,
         warehouse: document.getElementById('itemWarehouse').value,
         category: document.getElementById('itemCategory').value,
@@ -556,7 +556,7 @@ async function handleItemSubmit(e) {
         description: document.getElementById('itemDescription').value
     };
 
-    if (!formData.code || !formData.name || !formData.warehouse || !formData.condition) {
+    if (!formData.serial || !formData.name || !formData.warehouse || !formData.condition) {
         showToast('error', 'Lỗi!', 'Vui lòng điền đầy đủ các trường bắt buộc.');
         return;
     }

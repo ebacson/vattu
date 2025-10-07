@@ -38,7 +38,7 @@ function generateExcelFile(data, filename) {
     if (data.inventory && data.inventory.length > 0) {
         const inventorySheet = data.inventory.map(item => ({
             'ID': item.id,
-            'Mã VT': item.code,
+            'Serial': item.serial,
             'Tên Vật Tư': item.name,
             'Kho': item.warehouse,
             'Danh Mục': item.category || '',
