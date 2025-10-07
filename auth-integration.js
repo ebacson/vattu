@@ -43,6 +43,9 @@ async function registerUser(email, password, displayName, warehouse = 'net') {
             });
         }
         
+        // Wait a bit to ensure user is authenticated
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         // Save user data to Firebase Realtime Database
         const userData = {
             uid: user.uid,
@@ -55,6 +58,7 @@ async function registerUser(email, password, displayName, warehouse = 'net') {
             isActive: true
         };
         
+        console.log('🔄 Saving user data to Firebase:', userData);
         const userRef = ref(database, `users/${user.uid}`);
         await set(userRef, userData);
         
