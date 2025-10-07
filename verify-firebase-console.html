@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Firebase Console</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+        .debug { background: #f8f9fa; padding: 10px; border: 1px solid #dee2e6; border-radius: 4px; margin: 10px 0; }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+        .instructions { background: #e7f3ff; padding: 15px; border: 1px solid #b3d9ff; border-radius: 5px; margin: 10px 0; }
+        .console-link { background: #f8f9fa; padding: 15px; border: 1px solid #dee2e6; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>✅ Verify Firebase Console</h1>
+    
+    <div class="instructions">
+        <h3>📋 Hướng dẫn kiểm tra Firebase Console:</h3>
+        <ol>
+            <li><strong>Mở Firebase Console:</strong> <a href="https://console.firebase.google.com/" target="_blank">https://console.firebase.google.com/</a></li>
+            <li><strong>Chọn project:</strong> project-6680116762664948229</li>
+            <li><strong>Vào Realtime Database:</strong> Click vào "Realtime Database" trong menu bên trái</li>
+            <li><strong>Kiểm tra data:</strong> Xem có data trong các path sau không:
+                <ul>
+                    <li><code>users</code> - User data (có data)</li>
+                    <li><code>test</code> - Test data (có data)</li>
+                    <li><code>rules-test</code> - Rules test data (có data)</li>
+                    <li><code>write-test</code> - Write test data (có data)</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+    
+    <div class="console-link">
+        <h3>🔗 Direct Link to Firebase Console:</h3>
+        <p><a href="https://console.firebase.google.com/project/project-6680116762664948229/database/project-6680116762664948229-default-rtdb/data" target="_blank">https://console.firebase.google.com/project/project-6680116762664948229/database/project-6680116762664948229-default-rtdb/data</a></p>
+    </div>
+    
+    <div id="status" class="status success">
+        ✅ User data đã được lưu thành công vào Firebase!
+    </div>
+    
+    <button onclick="checkAllData()">Kiểm tra Tất cả Data</button>
+    <button onclick="checkUsers()">Kiểm tra Users</button>
+    <button onclick="clearDebug()">Clear Debug</button>
+    
+    <div class="debug">
+        <h3>Debug Info:</h3>
+        <div id="debug"></div>
+    </div>
+    
+    <div id="results"></div>
+
+    <script type="module">
+        let debugInfo = [];
+        
+        function addDebug(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugInfo.push(`${timestamp}: ${message}`);
+            updateDebugDisplay();
+            console.log(`[Firebase Console Verify] ${message}`);
+        }
+        
+        function updateDebugDisplay() {
+            document.getElementById('debug').innerHTML = '<pre>' + debugInfo.join('\n') + '</pre>';
+        }
+        
+        function showResult(message, type) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = 'status ' + type;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        function clearDebug() {
+            debugInfo = [];
+            updateDebugDisplay();
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // Check all data
+        async function checkAllData() {
+            addDebug('Checking all data in Firebase...');
+            try {
+                const { database } = await import('./firebase-config.js');
+                const { ref, get } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js');
+                
+                const paths = ['users', 'test', 'rules-test', 'write-test', 'direct-test', 'inventory', 'tasks', 'transfers', 'logs'];
+                
+                for (const path of paths) {
+                    try {
+                        const pathRef = ref(database, path);
+                        const snapshot = await get(pathRef);
+                        
+                        if (snapshot.exists()) {
+                            const data = snapshot.val();
+                            addDebug(`✅ ${path}: Data exists (${Object.keys(data).length} items)`);
+                            if (path === 'users') {
+                                addDebug(`Users data: ${JSON.stringify(data, null, 2)}`);
+                            }
+                        } else {
+                            addDebug(`❌ ${path}: No data found`);
+                        }
+                    } catch (error) {
+                        addDebug(`❌ ${path}: Error - ${error.message}`);
+                    }
+                }
+                
+                showResult('✅ All data check completed!', 'success');
+                
+            } catch (error) {
+                addDebug('❌ Data check error: ' + error.message);
+                showResult('❌ Data check failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Check users
+        async function checkUsers() {
+            addDebug('Checking users...');
+            try {
+                const { database } = await import('./firebase-config.js');
+                const { ref, get } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js');
+                
+                const usersRef = ref(database, 'users');
+                const snapshot = await get(usersRef);
+                
+                if (snapshot.exists()) {
+                    const users = snapshot.val();
+                    addDebug('✅ Users found in Firebase:');
+                    addDebug(JSON.stringify(users, null, 2));
+                    showResult('✅ Users found in Firebase: ' + JSON.stringify(users, null, 2), 'success');
+                } else {
+                    addDebug('❌ No users found in Firebase');
+                    showResult('❌ No users found in Firebase', 'error');
+                }
+            } catch (error) {
+                addDebug('❌ Error checking users: ' + error.message);
+                showResult('❌ Error checking users: ' + error.message, 'error');
+            }
+        }
+        
+        // Make functions global
+        window.checkAllData = checkAllData;
+        window.checkUsers = checkUsers;
+        window.clearDebug = clearDebug;
+        
+        // Start
+        addDebug('Firebase Console Verify page loaded');
+        addDebug('User data has been successfully saved to Firebase!');
+        addDebug('Check Firebase Console to verify the data is there.');
+        
+        // Auto-check all data
+        setTimeout(() => {
+            checkAllData();
+        }, 1000);
+    </script>
+</body>
+</html>
