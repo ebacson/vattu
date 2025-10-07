@@ -140,6 +140,11 @@ function initializeApp() {
     // Setup warehouse selector
     setupWarehouseSelector();
     
+    // Initialize form validation
+    if (typeof window.initializeFormValidation === 'function') {
+        window.initializeFormValidation();
+    }
+    
     showToast('success', 'Hệ thống đã sẵn sàng!', 'Chào mừng đến với hệ thống quản lý vật tư 2 kho với Firebase.');
 }
 
@@ -602,6 +607,11 @@ function updateTransferTaskOptions() {
 async function handleTaskSubmit(e) {
     e.preventDefault();
     
+    // Clear previous errors
+    if (typeof window.clearFormErrors === 'function') {
+        window.clearFormErrors('taskForm');
+    }
+    
     const formData = {
         name: document.getElementById('taskName').value,
         type: document.getElementById('taskType').value,
@@ -611,9 +621,19 @@ async function handleTaskSubmit(e) {
         deadline: document.getElementById('taskDeadline').value ? new Date(document.getElementById('taskDeadline').value) : null
     };
 
-    if (!formData.name || !formData.type || !formData.description) {
-        showToast('error', 'Lỗi!', 'Vui lòng điền đầy đủ các trường bắt buộc.');
-        return;
+    // Enhanced validation
+    if (typeof window.validateTaskForm === 'function') {
+        const errors = window.validateTaskForm(formData);
+        if (errors.length > 0) {
+            window.displayFormErrors(errors);
+            return;
+        }
+    } else {
+        // Fallback basic validation
+        if (!formData.name || !formData.type || !formData.description) {
+            showToast('error', 'Lỗi!', 'Vui lòng điền đầy đủ các trường bắt buộc.');
+            return;
+        }
     }
 
     const newTask = {
@@ -658,6 +678,11 @@ async function handleTaskSubmit(e) {
 async function handleItemSubmit(e) {
     e.preventDefault();
     
+    // Clear previous errors
+    if (typeof window.clearFormErrors === 'function') {
+        window.clearFormErrors('itemForm');
+    }
+    
     const formData = {
         serial: document.getElementById('itemSerial').value,
         name: document.getElementById('itemName').value,
@@ -668,9 +693,19 @@ async function handleItemSubmit(e) {
         description: document.getElementById('itemDescription').value
     };
 
-    if (!formData.serial || !formData.name || !formData.warehouse || !formData.condition) {
-        showToast('error', 'Lỗi!', 'Vui lòng điền đầy đủ các trường bắt buộc.');
-        return;
+    // Enhanced validation
+    if (typeof window.validateInventoryForm === 'function') {
+        const errors = await window.validateInventoryForm(formData, currentEditingItem ? currentEditingItem.id : null);
+        if (errors.length > 0) {
+            window.displayFormErrors(errors);
+            return;
+        }
+    } else {
+        // Fallback basic validation
+        if (!formData.serial || !formData.name || !formData.warehouse || !formData.condition) {
+            showToast('error', 'Lỗi!', 'Vui lòng điền đầy đủ các trường bắt buộc.');
+            return;
+        }
     }
     
     // Check permissions
