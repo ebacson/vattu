@@ -2,7 +2,7 @@
 // This file provides Firebase Realtime Database functions
 
 import { database, DB_PATHS, isAuthenticated } from './firebase-config.js';
-import { ref, set, push, update, remove, onValue, off, query, orderByChild, orderByKey, limitToLast } from 'firebase/database';
+import { ref, set, push, update, remove, onValue, off, query, orderByChild, orderByKey, limitToLast } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
 // Wait for Firebase authentication
 function waitForAuth() {
