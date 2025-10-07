@@ -514,7 +514,7 @@ async function handleTaskSubmit(e) {
     }
 
     const newTask = {
-        id: Math.max(...tasksData.map(t => t.id), 0) + 1,
+        id: tasksData.length > 0 ? Math.max(...tasksData.map(t => t.id), 0) + 1 : 1,
         ...formData,
         status: 'pending',
         createdDate: new Date(),
@@ -524,14 +524,23 @@ async function handleTaskSubmit(e) {
     };
 
     try {
-        // Save to Firebase
-        await saveTaskToFirebase(newTask);
-        
-        // Update local data
-        tasksData.push(newTask);
-        await addLog('task', 'Tạo sự vụ', `Tạo sự vụ: ${newTask.name}`, getWarehouseName(currentWarehouse));
-        
-        showToast('success', 'Tạo sự vụ thành công!', 'Sự vụ mới đã được tạo và lưu vào Firebase.');
+        // Check if Firebase functions are available
+        if (typeof window.saveTaskToFirebase === 'function') {
+            // Save to Firebase
+            await window.saveTaskToFirebase(newTask);
+            
+            // Update local data
+            tasksData.push(newTask);
+            await addLog('task', 'Tạo sự vụ', `Tạo sự vụ: ${newTask.name}`, getWarehouseName(currentWarehouse));
+            
+            showToast('success', 'Tạo sự vụ thành công!', 'Sự vụ mới đã được tạo và lưu vào Firebase.');
+        } else {
+            // Fallback: just update local data
+            tasksData.push(newTask);
+            addLog('task', 'Tạo sự vụ', `Tạo sự vụ: ${newTask.name}`, getWarehouseName(currentWarehouse));
+            
+            showToast('warning', 'Tạo sự vụ thành công!', 'Sự vụ đã được tạo (chưa lưu Firebase).');
+        }
         
         updateDashboard();
         renderTasksList();
@@ -562,7 +571,7 @@ async function handleItemSubmit(e) {
     }
 
     const newItem = {
-        id: Math.max(...inventoryData.map(i => i.id), 0) + 1,
+        id: inventoryData.length > 0 ? Math.max(...inventoryData.map(i => i.id), 0) + 1 : 1,
         ...formData,
         dateAdded: new Date(),
         taskId: null
@@ -622,7 +631,7 @@ async function handleTransferSubmit(e) {
     }
 
     const newTransfer = {
-        id: Math.max(...transfersData.map(t => t.id), 0) + 1,
+        id: transfersData.length > 0 ? Math.max(...transfersData.map(t => t.id), 0) + 1 : 1,
         ...formData,
         fromWarehouse,
         toWarehouse,
@@ -633,14 +642,23 @@ async function handleTransferSubmit(e) {
     };
 
     try {
-        // Save to Firebase
-        await saveTransferToFirebase(newTransfer);
-        
-        // Update local data
-        transfersData.push(newTransfer);
-        await addLog('transfer', 'Tạo chuyển kho', `Tạo chuyển kho ${getTransferTypeText(newTransfer.type)} từ ${getWarehouseName(fromWarehouse)} sang ${getWarehouseName(toWarehouse)}`, getWarehouseName(currentWarehouse));
-        
-        showToast('success', 'Tạo chuyển kho thành công!', 'Chuyển kho mới đã được tạo và lưu vào Firebase.');
+        // Check if Firebase functions are available
+        if (typeof window.saveTransferToFirebase === 'function') {
+            // Save to Firebase
+            await window.saveTransferToFirebase(newTransfer);
+            
+            // Update local data
+            transfersData.push(newTransfer);
+            await addLog('transfer', 'Tạo chuyển kho', `Tạo chuyển kho ${getTransferTypeText(newTransfer.type)} từ ${getWarehouseName(fromWarehouse)} sang ${getWarehouseName(toWarehouse)}`, getWarehouseName(currentWarehouse));
+            
+            showToast('success', 'Tạo chuyển kho thành công!', 'Chuyển kho mới đã được tạo và lưu vào Firebase.');
+        } else {
+            // Fallback: just update local data
+            transfersData.push(newTransfer);
+            addLog('transfer', 'Tạo chuyển kho', `Tạo chuyển kho ${getTransferTypeText(newTransfer.type)} từ ${getWarehouseName(fromWarehouse)} sang ${getWarehouseName(toWarehouse)}`, getWarehouseName(currentWarehouse));
+            
+            showToast('warning', 'Tạo chuyển kho thành công!', 'Chuyển kho đã được tạo (chưa lưu Firebase).');
+        }
         
         updateDashboard();
         renderTransfersList();
@@ -672,7 +690,7 @@ function handleTransferFilter() {
 // Utility Functions
 async function addLog(type, action, details, user) {
     const newLog = {
-        id: Math.max(...logsData.map(l => l.id), 0) + 1,
+        id: logsData.length > 0 ? Math.max(...logsData.map(l => l.id), 0) + 1 : 1,
         type,
         action,
         details,
