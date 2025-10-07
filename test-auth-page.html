@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Auth Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+        .debug { background: #f8f9fa; padding: 10px; border: 1px solid #dee2e6; border-radius: 4px; margin: 10px 0; }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+        .form-group { margin: 10px 0; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test Auth Page</h1>
+    
+    <div id="status" class="status warning">
+        ⏳ Testing auth page registration...
+    </div>
+    
+    <form id="testForm">
+        <div class="form-group">
+            <label for="testEmail">Email:</label>
+            <input type="email" id="testEmail" value="test@example.com" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="testPassword">Mật khẩu:</label>
+            <input type="password" id="testPassword" value="123456" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="testName">Tên:</label>
+            <input type="text" id="testName" value="Test User" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="testWarehouse">Kho:</label>
+            <select id="testWarehouse" required>
+                <option value="net">Kho Net</option>
+                <option value="infrastructure">Kho Hạ Tầng</option>
+            </select>
+        </div>
+        
+        <button type="submit">Test Đăng Ký với Auth Page Logic</button>
+    </form>
+    
+    <button onclick="testAuthIntegration()">Test Auth Integration</button>
+    <button onclick="checkUsers()">Kiểm tra Users</button>
+    <button onclick="clearDebug()">Clear Debug</button>
+    
+    <div class="debug">
+        <h3>Debug Info:</h3>
+        <div id="debug"></div>
+    </div>
+    
+    <div id="results"></div>
+
+    <script type="module">
+        let debugInfo = [];
+        
+        function addDebug(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugInfo.push(`${timestamp}: ${message}`);
+            updateDebugDisplay();
+            console.log(`[Auth Page Test] ${message}`);
+        }
+        
+        function updateDebugDisplay() {
+            document.getElementById('debug').innerHTML = '<pre>' + debugInfo.join('\n') + '</pre>';
+        }
+        
+        function showResult(message, type) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = 'status ' + type;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        function clearDebug() {
+            debugInfo = [];
+            updateDebugDisplay();
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // Test auth integration
+        async function testAuthIntegration() {
+            addDebug('Testing auth integration...');
+            try {
+                const { registerUser } = await import('./auth-integration.js');
+                addDebug('✅ auth-integration imported successfully');
+                
+                const testEmail = 'test' + Date.now() + '@example.com';
+                const testPassword = '123456';
+                const testName = 'Auth Integration Test User';
+                const testWarehouse = 'net';
+                
+                addDebug('Testing registration with auth-integration...');
+                addDebug(`Email: ${testEmail}`);
+                addDebug(`Name: ${testName}`);
+                addDebug(`Warehouse: ${testWarehouse}`);
+                
+                const result = await registerUser(testEmail, testPassword, testName, testWarehouse);
+                
+                if (result.success) {
+                    addDebug('✅ Registration successful!');
+                    addDebug('User data: ' + JSON.stringify(result.userData, null, 2));
+                    showResult('✅ Registration successful!', 'success');
+                    
+                    // Check if user data was saved
+                    setTimeout(() => {
+                        checkUsers();
+                    }, 2000);
+                } else {
+                    addDebug('❌ Registration failed: ' + result.error);
+                    showResult('❌ Registration failed: ' + result.error, 'error');
+                }
+            } catch (error) {
+                addDebug('❌ Auth integration error: ' + error.message);
+                showResult('❌ Auth integration error: ' + error.message, 'error');
+            }
+        }
+        
+        // Check users
+        async function checkUsers() {
+            addDebug('Checking users...');
+            try {
+                const { database } = await import('./firebase-config.js');
+                const { ref, get } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js');
+                
+                const usersRef = ref(database, 'users');
+                const snapshot = await get(usersRef);
+                
+                if (snapshot.exists()) {
+                    const users = snapshot.val();
+                    addDebug('✅ Users found in Firebase:');
+                    addDebug(JSON.stringify(users, null, 2));
+                    showResult('✅ Users found in Firebase: ' + JSON.stringify(users, null, 2), 'success');
+                } else {
+                    addDebug('❌ No users found in Firebase');
+                    showResult('❌ No users found in Firebase', 'error');
+                }
+            } catch (error) {
+                addDebug('❌ Error checking users: ' + error.message);
+                showResult('❌ Error checking users: ' + error.message, 'error');
+            }
+        }
+        
+        // Test registration with auth page logic
+        async function testRegistration() {
+            addDebug('Testing registration with auth page logic...');
+            
+            const email = document.getElementById('testEmail').value.trim();
+            const password = document.getElementById('testPassword').value;
+            const name = document.getElementById('testName').value.trim();
+            const warehouse = document.getElementById('testWarehouse').value;
+            
+            addDebug(`Registration data: ${name}, ${email}, ${password.length} chars, ${warehouse}`);
+            
+            if (!name || !email || !password || !warehouse) {
+                addDebug('❌ Missing required fields');
+                showResult('❌ Vui lòng nhập đầy đủ thông tin', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                addDebug('❌ Password too short');
+                showResult('❌ Mật khẩu phải có ít nhất 6 ký tự', 'error');
+                return;
+            }
+            
+            try {
+                addDebug('Importing auth-integration...');
+                const { registerUser } = await import('./auth-integration.js');
+                addDebug('✅ auth-integration imported successfully');
+                
+                addDebug('Calling registerUser...');
+                const result = await registerUser(email, password, name, warehouse);
+                
+                if (result.success) {
+                    addDebug('✅ Registration successful!');
+                    addDebug('User data: ' + JSON.stringify(result.userData, null, 2));
+                    showResult('✅ Đăng ký thành công! User Data: ' + JSON.stringify(result.userData, null, 2), 'success');
+                    
+                    // Check if user data was saved
+                    setTimeout(() => {
+                        addDebug('Checking if user data was saved...');
+                        checkUsers();
+                    }, 2000);
+                } else {
+                    addDebug('❌ Registration failed: ' + result.error);
+                    showResult('❌ Đăng ký thất bại: ' + result.error, 'error');
+                }
+            } catch (error) {
+                addDebug('❌ Registration error: ' + error.message);
+                addDebug('Error stack: ' + error.stack);
+                showResult('❌ Lỗi đăng ký: ' + error.message, 'error');
+            }
+        }
+        
+        // Setup form
+        document.getElementById('testForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            testRegistration();
+        });
+        
+        // Make functions global
+        window.testAuthIntegration = testAuthIntegration;
+        window.checkUsers = checkUsers;
+        window.clearDebug = clearDebug;
+        
+        // Start
+        addDebug('Auth Page Test loaded');
+        document.getElementById('status').innerHTML = '✅ Auth Page Test ready!';
+        document.getElementById('status').className = 'status success';
+        
+        // Auto-check existing users
+        setTimeout(() => {
+            checkUsers();
+        }, 1000);
+    </script>
+</body>
+</html>
