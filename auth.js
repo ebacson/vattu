@@ -13,7 +13,7 @@ import {
 // DOM elements
 let loginForm, registerForm, forgotForm;
 let loginEmail, loginPassword;
-let registerName, registerEmail, registerPassword, confirmPassword;
+let registerName, registerEmail, registerPassword, confirmPassword, registerWarehouse;
 let forgotEmail;
 let errorMessage, successMessage, loading;
 
