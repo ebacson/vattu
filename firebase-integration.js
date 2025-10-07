@@ -1,290 +1,248 @@
-// Firebase Integration for Vattu Management
-// This file extends the main script.js with Firebase functionality
+// Firebase Integration for Vattu Management System
+// This file provides Firebase Realtime Database functions
 
-// Firebase Integration Variables
-let firebaseApp = null;
-let isFirebaseReady = false;
+import { database, DB_PATHS } from './firebase-config.js';
+import { ref, set, push, update, remove, onValue, off, query, orderByChild, orderByKey, limitToLast } from 'firebase/database';
 
-// Wait for Firebase to be available
-function waitForFirebase() {
-    return new Promise((resolve) => {
-        const checkFirebase = () => {
-            if (window.firebaseApp) {
-                firebaseApp = window.firebaseApp;
-                isFirebaseReady = true;
-                console.log('🔥 Firebase integration ready');
-                resolve();
+// Load all data from Firebase Realtime Database
+async function loadAllDataFromFirebase() {
+    try {
+        console.log('🔄 Loading all data from Firebase...');
+        
+        await Promise.all([
+            loadInventoryFromRealtimeDB(),
+            loadTasksFromRealtimeDB(),
+            loadTransfersFromRealtimeDB(),
+            loadLogsFromRealtimeDB()
+        ]);
+        
+        console.log('✅ All data loaded from Firebase');
+        
+    } catch (error) {
+        console.error('❌ Error loading data from Firebase:', error);
+        throw error;
+    }
+}
+
+// Load inventory data from Firebase
+async function loadInventoryFromRealtimeDB() {
+    return new Promise((resolve, reject) => {
+        const inventoryRef = ref(database, DB_PATHS.INVENTORY);
+        
+        onValue(inventoryRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                // Convert Firebase object to array
+                inventoryData = Object.keys(data).map(key => ({
+                    id: key,
+                    ...data[key],
+                    dateAdded: data[key].dateAdded ? new Date(data[key].dateAdded) : new Date()
+                }));
+                console.log('📦 Loaded inventory data:', inventoryData.length, 'items');
             } else {
-                setTimeout(checkFirebase, 100);
+                inventoryData = [];
+                console.log('📦 No inventory data found');
             }
-        };
-        checkFirebase();
+            resolve();
+        }, (error) => {
+            console.error('❌ Error loading inventory:', error);
+            reject(error);
+        });
     });
 }
 
-// Enhanced form handlers with Firebase
-async function handleTaskSubmitWithFirebase(e) {
-    e.preventDefault();
-    
-    try {
-        showLoading();
+// Load tasks data from Firebase
+async function loadTasksFromRealtimeDB() {
+    return new Promise((resolve, reject) => {
+        const tasksRef = ref(database, DB_PATHS.TASKS);
         
-        const formData = new FormData(e.target);
-        const taskData = {
-            name: formData.get('taskName'),
-            type: formData.get('taskType'),
-            description: formData.get('taskDescription'),
-            location: formData.get('taskLocation') || '',
-            priority: formData.get('taskPriority') || 'medium',
-            status: 'pending',
-            createdDate: new Date(),
-            deadline: formData.get('taskDeadline') ? new Date(formData.get('taskDeadline')) : null,
-            createdBy: getWarehouseName(currentWarehouse),
-            assignedItems: [],
-            completedItems: [],
-            notes: formData.get('taskNotes') || ''
-        };
-        
-        // Save to Firebase
-        const taskId = await firebaseApp.saveTaskToFirebase(taskData);
-        taskData.id = taskId;
-        
-        // Add to local data
-        tasksData.push(taskData);
-        
-        // Add log
-        await firebaseApp.saveLogToFirebase({
-            type: 'task',
-            action: 'Tạo sự vụ',
-            details: `Tạo sự vụ: ${taskData.name}`,
-            timestamp: new Date(),
-            user: getWarehouseName(currentWarehouse)
+        onValue(tasksRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                tasksData = Object.keys(data).map(key => ({
+                    id: key,
+                    ...data[key],
+                    createdDate: data[key].createdDate ? new Date(data[key].createdDate) : new Date(),
+                    deadline: data[key].deadline ? new Date(data[key].deadline) : null
+                }));
+                console.log('📋 Loaded tasks data:', tasksData.length, 'tasks');
+            } else {
+                tasksData = [];
+                console.log('📋 No tasks data found');
+            }
+            resolve();
+        }, (error) => {
+            console.error('❌ Error loading tasks:', error);
+            reject(error);
         });
-        
-        showToast('success', 'Tạo sự vụ thành công!', 'Sự vụ mới đã được tạo và lưu vào Firebase.');
-        
-        updateDashboard();
-        renderTasksList();
-        closeModal('taskModal');
-        
-    } catch (error) {
-        console.error('Error creating task:', error);
-        showToast('error', 'Lỗi tạo sự vụ!', error.message);
-    } finally {
-        hideLoading();
-    }
+    });
 }
 
-async function handleItemSubmitWithFirebase(e) {
-    e.preventDefault();
-    
-    try {
-        showLoading();
+// Load transfers data from Firebase
+async function loadTransfersFromRealtimeDB() {
+    return new Promise((resolve, reject) => {
+        const transfersRef = ref(database, DB_PATHS.TRANSFERS);
         
-        const formData = new FormData(e.target);
-        const itemData = {
-            code: formData.get('itemCode'),
-            name: formData.get('itemName'),
-            warehouse: formData.get('itemWarehouse'),
-            category: formData.get('itemCategory') || '',
-            condition: formData.get('itemCondition'),
-            source: formData.get('itemSource') || '',
-            description: formData.get('itemDescription') || '',
-            dateAdded: new Date(),
-            taskId: null
-        };
-        
-        // Save to Firebase
-        const itemId = await firebaseApp.saveInventoryToFirebase(itemData);
-        itemData.id = itemId;
-        
-        // Add to local data
-        inventoryData.push(itemData);
-        
-        // Add log
-        await firebaseApp.saveLogToFirebase({
-            type: 'inventory',
-            action: 'Thêm vật tư',
-            details: `Thêm vật tư: ${itemData.name} vào ${getWarehouseName(itemData.warehouse)}`,
-            timestamp: new Date(),
-            user: getWarehouseName(currentWarehouse)
+        onValue(transfersRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                transfersData = Object.keys(data).map(key => ({
+                    id: key,
+                    ...data[key],
+                    createdDate: data[key].createdDate ? new Date(data[key].createdDate) : new Date(),
+                    confirmedDate: data[key].confirmedDate ? new Date(data[key].confirmedDate) : null
+                }));
+                console.log('🚚 Loaded transfers data:', transfersData.length, 'transfers');
+            } else {
+                transfersData = [];
+                console.log('🚚 No transfers data found');
+            }
+            resolve();
+        }, (error) => {
+            console.error('❌ Error loading transfers:', error);
+            reject(error);
         });
-        
-        showToast('success', 'Thêm vật tư thành công!', 'Vật tư mới đã được thêm và lưu vào Firebase.');
-        
-        updateDashboard();
-        renderInventoryTable();
-        closeModal('itemModal');
-        
-    } catch (error) {
-        console.error('Error creating item:', error);
-        showToast('error', 'Lỗi thêm vật tư!', error.message);
-    } finally {
-        hideLoading();
-    }
+    });
 }
 
-async function handleTransferSubmitWithFirebase(e) {
-    e.preventDefault();
-    
-    try {
-        showLoading();
+// Load logs data from Firebase
+async function loadLogsFromRealtimeDB() {
+    return new Promise((resolve, reject) => {
+        const logsRef = ref(database, DB_PATHS.LOGS);
         
-        const formData = new FormData(e.target);
-        const transferData = {
-            type: formData.get('transferType'),
-            taskId: formData.get('transferTaskId') || null,
-            fromWarehouse: formData.get('transferFrom'),
-            toWarehouse: formData.get('transferTo'),
-            items: JSON.parse(formData.get('transferItems') || '[]'),
-            notes: formData.get('transferNotes') || '',
-            status: 'pending',
-            createdDate: new Date(),
-            confirmedDate: null,
-            createdBy: getWarehouseName(currentWarehouse),
-            confirmedBy: null
-        };
-        
-        // Save to Firebase
-        const transferId = await firebaseApp.saveTransferToFirebase(transferData);
-        transferData.id = transferId;
-        
-        // Add to local data
-        transfersData.push(transferData);
-        
-        // Add log
-        await firebaseApp.saveLogToFirebase({
-            type: 'transfer',
-            action: 'Tạo chuyển kho',
-            details: `Tạo chuyển kho ${getTransferTypeText(transferData.type)} từ ${getWarehouseName(transferData.fromWarehouse)} sang ${getWarehouseName(transferData.toWarehouse)}`,
-            timestamp: new Date(),
-            user: getWarehouseName(currentWarehouse)
+        onValue(logsRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                logsData = Object.keys(data).map(key => ({
+                    id: key,
+                    ...data[key],
+                    timestamp: data[key].timestamp ? new Date(data[key].timestamp) : new Date()
+                }));
+                console.log('📝 Loaded logs data:', logsData.length, 'logs');
+            } else {
+                logsData = [];
+                console.log('📝 No logs data found');
+            }
+            resolve();
+        }, (error) => {
+            console.error('❌ Error loading logs:', error);
+            reject(error);
         });
-        
-        showToast('success', 'Tạo chuyển kho thành công!', 'Chuyển kho mới đã được tạo và lưu vào Firebase.');
-        
-        updateDashboard();
-        renderTransfersList();
-        closeModal('transferModal');
-        
-    } catch (error) {
-        console.error('Error creating transfer:', error);
-        showToast('error', 'Lỗi tạo chuyển kho!', error.message);
-    } finally {
-        hideLoading();
-    }
+    });
 }
 
-// Excel Export Function
-async function exportToExcel() {
+// Save inventory item to Firebase
+async function saveInventoryToFirebase(item) {
     try {
-        showLoading();
-        
-        const response = await fetch('http://localhost:3002/api/export/excel');
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        // Get filename from response headers
-        const contentDisposition = response.headers.get('content-disposition');
-        const filename = contentDisposition ? 
-            contentDisposition.split('filename=')[1].replace(/"/g, '') : 
-            'vattu-bao-cao.xlsx';
-        
-        // Create blob and download
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-        
-        showToast('success', 'Xuất Excel thành công!', `File ${filename} đã được tải về.`);
-        
+        const inventoryRef = ref(database, `${DB_PATHS.INVENTORY}/${item.id}`);
+        await set(inventoryRef, {
+            ...item,
+            dateAdded: item.dateAdded.toISOString()
+        });
+        console.log('✅ Inventory item saved to Firebase:', item.id);
+        return item.id;
     } catch (error) {
-        console.error('Error exporting Excel:', error);
-        showToast('error', 'Lỗi xuất Excel!', 'Không thể kết nối đến Excel server. Đảm bảo server đang chạy.');
-    } finally {
-        hideLoading();
+        console.error('❌ Error saving inventory item:', error);
+        throw error;
     }
 }
 
-// Initialize Firebase Integration
-async function initializeFirebaseIntegration() {
+// Save task to Firebase
+async function saveTaskToFirebase(task) {
     try {
-        // Wait for Firebase to be ready
-        await waitForFirebase();
-        
-        // Override existing form handlers
-        const taskForm = document.getElementById('taskForm');
-        const itemForm = document.getElementById('itemForm');
-        const transferForm = document.getElementById('transferForm');
-        
-        if (taskForm) {
-            taskForm.removeEventListener('submit', handleTaskSubmit);
-            taskForm.addEventListener('submit', handleTaskSubmitWithFirebase);
-        }
-        
-        if (itemForm) {
-            itemForm.removeEventListener('submit', handleItemSubmit);
-            itemForm.addEventListener('submit', handleItemSubmitWithFirebase);
-        }
-        
-        if (transferForm) {
-            transferForm.removeEventListener('submit', handleTransferSubmit);
-            transferForm.addEventListener('submit', handleTransferSubmitWithFirebase);
-        }
-        
-        // Update sync button
-        const syncBtn = document.getElementById('syncBtn');
-        if (syncBtn) {
-            syncBtn.innerHTML = '<i class="fas fa-file-excel"></i> Xuất báo cáo Excel';
-            syncBtn.removeEventListener('click', syncWithGoogleSheets);
-            syncBtn.addEventListener('click', exportToExcel);
-        }
-        
-        // Update auth status
-        updateFirebaseAuthStatus(true);
-        
-        console.log('✅ Firebase integration initialized successfully');
-        
+        const tasksRef = ref(database, `${DB_PATHS.TASKS}/${task.id}`);
+        await set(tasksRef, {
+            ...task,
+            createdDate: task.createdDate.toISOString(),
+            deadline: task.deadline ? task.deadline.toISOString() : null
+        });
+        console.log('✅ Task saved to Firebase:', task.id);
+        return task.id;
     } catch (error) {
-        console.error('❌ Firebase integration failed:', error);
-        updateFirebaseAuthStatus(false);
+        console.error('❌ Error saving task:', error);
+        throw error;
     }
 }
 
-// Update Firebase authentication status
-function updateFirebaseAuthStatus(isConnected) {
-    const authStatus = document.getElementById('authStatus');
-    if (authStatus) {
-        if (isConnected) {
-            authStatus.innerHTML = '<i class="fas fa-fire text-success"></i> Đã kết nối Firebase';
-            authStatus.style.background = 'rgba(40, 167, 69, 0.2)';
-            authStatus.style.border = '1px solid rgba(40, 167, 69, 0.5)';
-        } else {
-            authStatus.innerHTML = '<i class="fas fa-fire text-danger"></i> Chưa kết nối Firebase';
-            authStatus.style.background = 'rgba(220, 53, 69, 0.2)';
-            authStatus.style.border = '1px solid rgba(220, 53, 69, 0.5)';
-        }
+// Save transfer to Firebase
+async function saveTransferToFirebase(transfer) {
+    try {
+        const transfersRef = ref(database, `${DB_PATHS.TRANSFERS}/${transfer.id}`);
+        await set(transfersRef, {
+            ...transfer,
+            createdDate: transfer.createdDate.toISOString(),
+            confirmedDate: transfer.confirmedDate ? transfer.confirmedDate.toISOString() : null
+        });
+        console.log('✅ Transfer saved to Firebase:', transfer.id);
+        return transfer.id;
+    } catch (error) {
+        console.error('❌ Error saving transfer:', error);
+        throw error;
     }
 }
 
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Firebase integration after a delay to ensure main script is loaded
-    setTimeout(initializeFirebaseIntegration, 2000);
-});
+// Save log to Firebase
+async function saveLogToFirebase(log) {
+    try {
+        const logsRef = ref(database, `${DB_PATHS.LOGS}/${log.id}`);
+        await set(logsRef, {
+            ...log,
+            timestamp: log.timestamp.toISOString()
+        });
+        console.log('✅ Log saved to Firebase:', log.id);
+        return log.id;
+    } catch (error) {
+        console.error('❌ Error saving log:', error);
+        throw error;
+    }
+}
 
-// Export functions for global access
-window.firebaseIntegration = {
-    initializeFirebaseIntegration,
-    exportToExcel,
-    handleTaskSubmitWithFirebase,
-    handleItemSubmitWithFirebase,
-    handleTransferSubmitWithFirebase
-};
+// Delete inventory item from Firebase
+async function deleteInventoryFromFirebase(itemId) {
+    try {
+        const inventoryRef = ref(database, `${DB_PATHS.INVENTORY}/${itemId}`);
+        await remove(inventoryRef);
+        console.log('✅ Inventory item deleted from Firebase:', itemId);
+    } catch (error) {
+        console.error('❌ Error deleting inventory item:', error);
+        throw error;
+    }
+}
+
+// Delete task from Firebase
+async function deleteTaskFromFirebase(taskId) {
+    try {
+        const tasksRef = ref(database, `${DB_PATHS.TASKS}/${taskId}`);
+        await remove(tasksRef);
+        console.log('✅ Task deleted from Firebase:', taskId);
+    } catch (error) {
+        console.error('❌ Error deleting task:', error);
+        throw error;
+    }
+}
+
+// Delete transfer from Firebase
+async function deleteTransferFromFirebase(transferId) {
+    try {
+        const transfersRef = ref(database, `${DB_PATHS.TRANSFERS}/${transferId}`);
+        await remove(transfersRef);
+        console.log('✅ Transfer deleted from Firebase:', transferId);
+    } catch (error) {
+        console.error('❌ Error deleting transfer:', error);
+        throw error;
+    }
+}
+
+// Export functions for use in script.js
+window.loadAllDataFromFirebase = loadAllDataFromFirebase;
+window.loadInventoryFromRealtimeDB = loadInventoryFromRealtimeDB;
+window.loadTasksFromRealtimeDB = loadTasksFromRealtimeDB;
+window.loadTransfersFromRealtimeDB = loadTransfersFromRealtimeDB;
+window.loadLogsFromRealtimeDB = loadLogsFromRealtimeDB;
+window.saveInventoryToFirebase = saveInventoryToFirebase;
+window.saveTaskToFirebase = saveTaskToFirebase;
+window.saveTransferToFirebase = saveTransferToFirebase;
+window.saveLogToFirebase = saveLogToFirebase;
+window.deleteInventoryFromFirebase = deleteInventoryFromFirebase;
+window.deleteTaskFromFirebase = deleteTaskFromFirebase;
+window.deleteTransferFromFirebase = deleteTransferFromFirebase;

@@ -1,0 +1,63 @@
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getDatabase } from "firebase/database";
+import { getAuth, signInAnonymously } from "firebase/auth";
+
+// Your web app's Firebase configuration
+// Replace with your actual Firebase config
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID",
+  measurementId: "YOUR_MEASUREMENT_ID"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+// Initialize Firebase Authentication and get a reference to the service
+const auth = getAuth(app);
+
+// Initialize Realtime Database and get a reference to the service
+const database = getDatabase(app);
+
+// Database paths
+const DB_PATHS = {
+  INVENTORY: 'inventory',
+  TASKS: 'tasks',
+  TRANSFERS: 'transfers',
+  LOGS: 'logs'
+};
+
+// Authentication status
+let isAuthenticated = false;
+
+// Sign in anonymously
+signInAnonymously(auth)
+  .then(() => {
+    console.log('✅ Firebase Authentication successful');
+    isAuthenticated = true;
+    updateAuthStatus('success', 'Đã kết nối Firebase');
+  })
+  .catch((error) => {
+    console.error('❌ Firebase Authentication failed:', error);
+    updateAuthStatus('error', 'Lỗi kết nối Firebase');
+  });
+
+// Update authentication status in UI
+function updateAuthStatus(status, message) {
+  const authStatus = document.getElementById('authStatus');
+  if (authStatus) {
+    authStatus.innerHTML = `
+      <i class="fas fa-fire ${status === 'success' ? 'text-success' : 'text-danger'}"></i> 
+      ${message}
+    `;
+  }
+}
+
+// Export for use in other files
+export { app, auth, database, DB_PATHS, isAuthenticated };

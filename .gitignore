@@ -6,6 +6,9 @@ server.js
 credentials.json
 client_secret*.json
 
+# Firebase config template (safe to commit)
+!firebase-config.js.template
+
 # Node.js
 node_modules/
 npm-debug.log*
