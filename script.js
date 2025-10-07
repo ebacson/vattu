@@ -8,18 +8,11 @@ let currentEditingItem = null;
 let currentEditingTask = null;
 let charts = {};
 
-// Google Sheets Configuration
-const GOOGLE_SHEETS_CONFIG = {
-    spreadsheetId: '1HLCUeCphiODncUk4yA7yDMaOeeLbug2a19Sf_HVTPqk',
-    range: 'Sheet1!A:Z',
-    apiKey: '96c75d7f6fd066b74f335631bd840e6db963f025'
-};
-
 // Initialize Application
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
     setupEventListeners();
-    loadSampleData();
+    loadAllDataFromFirebase();
     updateDashboard();
     renderInventoryTable();
     renderTasksList();
@@ -30,12 +23,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Initialize Application
 function initializeApp() {
-    console.log('Initializing 2-Warehouse Inventory Management System...');
+    console.log('Initializing 2-Warehouse Inventory Management System with Firebase...');
     
     // Setup warehouse selector
     setupWarehouseSelector();
     
-    showToast('success', 'Hệ thống đã sẵn sàng!', 'Chào mừng đến với hệ thống quản lý vật tư 2 kho.');
+    showToast('success', 'Hệ thống đã sẵn sàng!', 'Chào mừng đến với hệ thống quản lý vật tư 2 kho với Firebase.');
 }
 
 // Setup Event Listeners
@@ -63,8 +56,8 @@ function setupEventListeners() {
     document.getElementById('taskStatusFilter').addEventListener('change', handleTaskFilter);
     document.getElementById('transferStatusFilter').addEventListener('change', handleTransferFilter);
 
-    // Sync button
-    document.getElementById('syncBtn').addEventListener('click', syncWithGoogleSheets);
+    // Sync button - now triggers Firebase sync
+    document.getElementById('syncBtn').addEventListener('click', syncWithFirebase);
 
     // Form submissions
     document.getElementById('taskForm').addEventListener('submit', handleTaskSubmit);
@@ -89,137 +82,34 @@ function getWarehouseName(warehouse) {
     return warehouse === 'net' ? 'Kho Net' : 'Kho Hạ Tầng';
 }
 
-// Sample Data Loading
-function loadSampleData() {
-    // Sample inventory data
-    inventoryData = [
-        {
-            id: 1,
-            code: 'VT001',
-            name: 'Switch 24 port',
-            warehouse: 'net',
-            category: 'Thiết bị mạng',
-            condition: 'available',
-            source: 'Mới nhập kho',
-            dateAdded: new Date('2024-01-15'),
-            taskId: null,
-            description: 'Switch 24 port Gigabit Ethernet'
-        },
-        {
-            id: 2,
-            code: 'VT002',
-            name: 'Router WiFi',
-            warehouse: 'net',
-            category: 'Thiết bị mạng',
-            condition: 'available',
-            source: 'Mới nhập kho',
-            dateAdded: new Date('2024-01-14'),
-            taskId: null,
-            description: 'Router WiFi 6 băng tần kép'
-        },
-        {
-            id: 3,
-            code: 'VT003',
-            name: 'Cáp mạng CAT6',
-            warehouse: 'infrastructure',
-            category: 'Phụ kiện',
-            condition: 'in-use',
-            source: 'Chuyển từ kho Net',
-            dateAdded: new Date('2024-01-13'),
-            taskId: 1,
-            description: 'Cáp mạng CAT6 UTP 305m'
-        },
-        {
-            id: 4,
-            code: 'VT004',
-            name: 'Ổ cắm mạng',
-            warehouse: 'infrastructure',
-            category: 'Phụ kiện',
-            condition: 'in-use',
-            source: 'Chuyển từ kho Net',
-            dateAdded: new Date('2024-01-12'),
-            taskId: 1,
-            description: 'Ổ cắm mạng RJ45'
-        }
-    ];
-
-    // Sample tasks data
-    tasksData = [
-        {
-            id: 1,
-            name: 'Lắp đặt trạm mới ABC',
-            type: 'lapdat',
-            description: 'Lắp đặt thiết bị mạng cho trạm mới tại khu vực ABC',
-            location: 'Trạm ABC - Quận 1',
-            priority: 'high',
-            status: 'in-progress',
-            createdDate: new Date('2024-01-10'),
-            deadline: new Date('2024-01-20'),
-            createdBy: 'Kho Hạ Tầng',
-            assignedItems: [3, 4],
-            completedItems: []
-        },
-        {
-            id: 2,
-            name: 'Nâng cấp trạm XYZ',
-            type: 'nangcap',
-            description: 'Nâng cấp thiết bị mạng cho trạm XYZ',
-            location: 'Trạm XYZ - Quận 2',
-            priority: 'medium',
-            status: 'pending',
-            createdDate: new Date('2024-01-12'),
-            deadline: new Date('2024-01-25'),
-            createdBy: 'Kho Hạ Tầng',
-            assignedItems: [],
-            completedItems: []
-        }
-    ];
-
-    // Sample transfers data
-    transfersData = [
-        {
-            id: 1,
-            type: 'request',
-            taskId: 1,
-            fromWarehouse: 'net',
-            toWarehouse: 'infrastructure',
-            items: [3, 4],
-            status: 'confirmed',
-            createdDate: new Date('2024-01-10'),
-            confirmedDate: new Date('2024-01-11'),
-            notes: 'Vật tư cho sự vụ lắp đặt trạm ABC'
-        }
-    ];
-
-    // Sample logs data
-    logsData = [
-        {
-            id: 1,
-            type: 'transfer',
-            action: 'Chuyển kho',
-            details: 'Chuyển 2 vật tư từ Kho Net sang Kho Hạ Tầng',
-            timestamp: new Date('2024-01-10 09:30:00'),
-            user: 'System'
-        },
-        {
-            id: 2,
-            type: 'task',
-            action: 'Tạo sự vụ',
-            details: 'Tạo sự vụ: Lắp đặt trạm mới ABC',
-            timestamp: new Date('2024-01-10 08:00:00'),
-            user: 'Kho Hạ Tầng'
-        },
-        {
-            id: 3,
-            type: 'confirmation',
-            action: 'Xác nhận giao nhận',
-            details: 'Xác nhận nhận vật tư cho sự vụ #1',
-            timestamp: new Date('2024-01-11 14:20:00'),
-            user: 'Kho Hạ Tầng'
-        }
-    ];
-
-    updateDashboard();
+// Firebase Data Loading
+async function loadAllDataFromFirebase() {
+    try {
+        showLoading();
+        console.log('Loading all data from Firebase...');
+        
+        await Promise.all([
+            loadInventoryFromRealtimeDB(),
+            loadTasksFromRealtimeDB(),
+            loadTransfersFromRealtimeDB(),
+            loadLogsFromRealtimeDB()
+        ]);
+        
+        console.log('All data loaded from Firebase');
+        updateDashboard();
+        renderInventoryTable();
+        renderTasksList();
+        renderTransfersList();
+        renderLogsList();
+        
+        showToast('success', 'Tải dữ liệu thành công!', 'Đã tải tất cả dữ liệu từ Firebase.');
+        
+    } catch (error) {
+        console.error('Error loading data from Firebase:', error);
+        showToast('error', 'Lỗi tải dữ liệu!', 'Không thể tải dữ liệu từ Firebase.');
+    } finally {
+        hideLoading();
+    }
 }
 
 // Dashboard Functions
@@ -523,7 +413,7 @@ function updateTransferTaskOptions() {
 }
 
 // Form Handlers
-function handleTaskSubmit(e) {
+async function handleTaskSubmit(e) {
     e.preventDefault();
     
     const formData = {
@@ -550,25 +440,27 @@ function handleTaskSubmit(e) {
         completedItems: []
     };
 
-    tasksData.push(newTask);
-    addLog('task', 'Tạo sự vụ', `Tạo sự vụ: ${newTask.name}`, getWarehouseName(currentWarehouse));
-    
-    showToast('success', 'Tạo sự vụ thành công!', 'Sự vụ mới đã được tạo.');
-    
-    // Auto sync to Google Sheets
-    setTimeout(() => {
-        syncTasksToSheets().catch(error => {
-            console.error('Auto sync tasks failed:', error);
-            showToast('warning', 'Cảnh báo', 'Tạo sự vụ thành công nhưng chưa đồng bộ được với Google Sheets.');
-        });
-    }, 1000);
-    
-    updateDashboard();
-    renderTasksList();
-    closeModal('taskModal');
+    try {
+        // Save to Firebase
+        await saveTaskToFirebase(newTask);
+        
+        // Update local data
+        tasksData.push(newTask);
+        await addLog('task', 'Tạo sự vụ', `Tạo sự vụ: ${newTask.name}`, getWarehouseName(currentWarehouse));
+        
+        showToast('success', 'Tạo sự vụ thành công!', 'Sự vụ mới đã được tạo và lưu vào Firebase.');
+        
+        updateDashboard();
+        renderTasksList();
+        closeModal('taskModal');
+        
+    } catch (error) {
+        console.error('Error saving task:', error);
+        showToast('error', 'Lỗi!', 'Không thể lưu sự vụ vào Firebase.');
+    }
 }
 
-function handleItemSubmit(e) {
+async function handleItemSubmit(e) {
     e.preventDefault();
     
     const formData = {
@@ -593,25 +485,27 @@ function handleItemSubmit(e) {
         taskId: null
     };
 
-    inventoryData.push(newItem);
-    addLog('inventory', 'Thêm vật tư', `Thêm vật tư: ${newItem.name} vào ${getWarehouseName(newItem.warehouse)}`, getWarehouseName(currentWarehouse));
-    
-    showToast('success', 'Thêm vật tư thành công!', 'Vật tư mới đã được thêm vào hệ thống.');
-    
-    // Auto sync to Google Sheets
-    setTimeout(() => {
-        syncInventoryToSheets().catch(error => {
-            console.error('Auto sync inventory failed:', error);
-            showToast('warning', 'Cảnh báo', 'Thêm vật tư thành công nhưng chưa đồng bộ được với Google Sheets.');
-        });
-    }, 1000);
-    
-    updateDashboard();
-    renderInventoryTable();
-    closeModal('itemModal');
+    try {
+        // Save to Firebase
+        await saveInventoryToFirebase(newItem);
+        
+        // Update local data
+        inventoryData.push(newItem);
+        await addLog('inventory', 'Thêm vật tư', `Thêm vật tư: ${newItem.name} vào ${getWarehouseName(newItem.warehouse)}`, getWarehouseName(currentWarehouse));
+        
+        showToast('success', 'Thêm vật tư thành công!', 'Vật tư mới đã được thêm vào hệ thống và lưu vào Firebase.');
+        
+        updateDashboard();
+        renderInventoryTable();
+        closeModal('itemModal');
+        
+    } catch (error) {
+        console.error('Error saving item:', error);
+        showToast('error', 'Lỗi!', 'Không thể lưu vật tư vào Firebase.');
+    }
 }
 
-function handleTransferSubmit(e) {
+async function handleTransferSubmit(e) {
     e.preventDefault();
     
     const formData = {
@@ -646,22 +540,24 @@ function handleTransferSubmit(e) {
         confirmedDate: null
     };
 
-    transfersData.push(newTransfer);
-    addLog('transfer', 'Tạo chuyển kho', `Tạo chuyển kho ${getTransferTypeText(newTransfer.type)} từ ${getWarehouseName(fromWarehouse)} sang ${getWarehouseName(toWarehouse)}`, getWarehouseName(currentWarehouse));
-    
-    showToast('success', 'Tạo chuyển kho thành công!', 'Chuyển kho mới đã được tạo.');
-    
-    // Auto sync to Google Sheets
-    setTimeout(() => {
-        syncTransfersToSheets().catch(error => {
-            console.error('Auto sync transfers failed:', error);
-            showToast('warning', 'Cảnh báo', 'Tạo chuyển kho thành công nhưng chưa đồng bộ được với Google Sheets.');
-        });
-    }, 1000);
-    
-    updateDashboard();
-    renderTransfersList();
-    closeModal('transferModal');
+    try {
+        // Save to Firebase
+        await saveTransferToFirebase(newTransfer);
+        
+        // Update local data
+        transfersData.push(newTransfer);
+        await addLog('transfer', 'Tạo chuyển kho', `Tạo chuyển kho ${getTransferTypeText(newTransfer.type)} từ ${getWarehouseName(fromWarehouse)} sang ${getWarehouseName(toWarehouse)}`, getWarehouseName(currentWarehouse));
+        
+        showToast('success', 'Tạo chuyển kho thành công!', 'Chuyển kho mới đã được tạo và lưu vào Firebase.');
+        
+        updateDashboard();
+        renderTransfersList();
+        closeModal('transferModal');
+        
+    } catch (error) {
+        console.error('Error saving transfer:', error);
+        showToast('error', 'Lỗi!', 'Không thể lưu chuyển kho vào Firebase.');
+    }
 }
 
 // Search and Filter Functions
@@ -682,7 +578,7 @@ function handleTransferFilter() {
 }
 
 // Utility Functions
-function addLog(type, action, details, user) {
+async function addLog(type, action, details, user) {
     const newLog = {
         id: Math.max(...logsData.map(l => l.id), 0) + 1,
         type,
@@ -691,7 +587,17 @@ function addLog(type, action, details, user) {
         timestamp: new Date(),
         user
     };
-    logsData.unshift(newLog); // Add to beginning
+    
+    try {
+        // Save to Firebase
+        await saveLogToFirebase(newLog);
+        
+        // Update local data
+        logsData.unshift(newLog); // Add to beginning
+        
+    } catch (error) {
+        console.error('Error saving log:', error);
+    }
 }
 
 function getActivityColor(type) {
@@ -1025,523 +931,22 @@ function exportLogs() {
     showToast('success', 'Xuất log thành công!', 'File log đã được tải về.');
 }
 
-async function syncWithGoogleSheets() {
-    showLoading();
-    
+// Firebase Sync Function
+async function syncWithFirebase() {
     try {
-        // Check if user is authenticated
-        if (!isAuthenticated) {
-            throw new Error('Chưa đăng nhập Google. Vui lòng đăng nhập trước.');
-        }
-
-        console.log('Syncing data with Google Sheets...');
-
-        // Sync all data to Google Sheets
-        await syncInventoryToGoogleSheets();
-        await syncTasksToGoogleSheets();
-        await syncTransfersToGoogleSheets();
-        await syncLogsToGoogleSheets();
+        showLoading();
+        console.log('Syncing data with Firebase...');
         
-        showToast('success', 'Đồng bộ thành công!', 'Tất cả dữ liệu đã được đồng bộ với Google Sheets.');
+        // Reload all data from Firebase
+        await loadAllDataFromFirebase();
+        
+        showToast('success', 'Đồng bộ thành công!', 'Tất cả dữ liệu đã được đồng bộ với Firebase.');
         
     } catch (error) {
         console.error('Sync error:', error);
         showToast('error', 'Lỗi đồng bộ!', error.message);
-        
-        // If authentication error, offer to re-login
-        if (error.message.includes('Not authenticated') || error.message.includes('expired')) {
-            setTimeout(() => {
-                if (confirm('Phiên đăng nhập đã hết hạn. Bạn có muốn đăng nhập lại không?')) {
-                    startOAuthFlow();
-                }
-            }, 2000);
-        }
     } finally {
         hideLoading();
-    }
-}
-
-// Sync Inventory Data to Google Sheets
-async function syncInventoryToGoogleSheets() {
-    try {
-        const sheetName = 'Vật Tư';
-        const range = 'A1:J1000'; // Adjust range as needed
-        
-        // Prepare data
-        const headers = ['ID', 'Mã VT', 'Tên Vật Tư', 'Kho', 'Danh Mục', 'Tình Trạng', 'Nguồn Gốc', 'Ngày Nhập', 'Sự Vụ ID', 'Mô Tả'];
-        const values = [headers];
-        
-        inventoryData.forEach(item => {
-            values.push([
-                item.id.toString(),
-                item.code,
-                item.name,
-                item.warehouse,
-                item.category || '',
-                item.condition,
-                item.source || '',
-                formatDateForSheets(item.dateAdded),
-                item.taskId ? item.taskId.toString() : '',
-                item.description || ''
-            ]);
-        });
-
-        // Clear existing data and write new data
-        await clearSheetData(sheetName, range);
-        await writeSheetData(sheetName, range, values);
-        
-        console.log('Inventory data synced:', values.length - 1, 'items');
-        addLog('inventory', 'Đồng bộ dữ liệu', `Đồng bộ ${inventoryData.length} vật tư lên Google Sheets`, 'System');
-        
-    } catch (error) {
-        console.error('Error syncing inventory:', error);
-        throw error;
-    }
-}
-
-// Sync Tasks Data to Google Sheets
-async function syncTasksToSheets() {
-    try {
-        const headers = ['ID', 'Tên Sự Vụ', 'Loại', 'Mô Tả', 'Địa Điểm', 'Ưu Tiên', 'Trạng Thái', 'Ngày Tạo', 'Hạn Hoàn Thành', 'Người Tạo', 'Vật Tư ID', 'Vật Tư Hoàn Thành', 'Ghi Chú'];
-        const rows = [headers];
-        
-        tasksData.forEach(task => {
-            rows.push([
-                task.id.toString(),
-                task.name,
-                task.type,
-                task.description,
-                task.location || '',
-                task.priority,
-                task.status,
-                formatDateForSheets(task.createdDate),
-                task.deadline ? formatDateForSheets(task.deadline) : '',
-                task.createdBy,
-                task.assignedItems.join(','),
-                task.completedItems.join(','),
-                task.notes || ''
-            ]);
-        });
-
-        console.log('Tasks data prepared for sync:', rows.length - 1, 'tasks');
-        
-        addLog('task', 'Đồng bộ dữ liệu', `Đồng bộ ${tasksData.length} sự vụ lên Google Sheets`, 'System');
-        
-    } catch (error) {
-        console.error('Error syncing tasks:', error);
-        throw error;
-    }
-}
-
-// Sync Transfers Data to Google Sheets
-async function syncTransfersToSheets() {
-    try {
-        const headers = ['ID', 'Loại', 'Sự Vụ ID', 'Từ Kho', 'Đến Kho', 'Vật Tư ID', 'Trạng Thái', 'Ngày Tạo', 'Ngày Xác Nhận', 'Ghi Chú', 'Người Tạo', 'Người Xác Nhận'];
-        const rows = [headers];
-        
-        transfersData.forEach(transfer => {
-            rows.push([
-                transfer.id.toString(),
-                transfer.type,
-                transfer.taskId ? transfer.taskId.toString() : '',
-                transfer.fromWarehouse,
-                transfer.toWarehouse,
-                transfer.items.join(','),
-                transfer.status,
-                formatDateTimeForSheets(transfer.createdDate),
-                transfer.confirmedDate ? formatDateTimeForSheets(transfer.confirmedDate) : '',
-                transfer.notes || '',
-                transfer.createdBy || '',
-                transfer.confirmedBy || ''
-            ]);
-        });
-
-        console.log('Transfers data prepared for sync:', rows.length - 1, 'transfers');
-        
-        addLog('transfer', 'Đồng bộ dữ liệu', `Đồng bộ ${transfersData.length} chuyển kho lên Google Sheets`, 'System');
-        
-    } catch (error) {
-        console.error('Error syncing transfers:', error);
-        throw error;
-    }
-}
-
-// Sync Logs Data to Google Sheets
-async function syncLogsToSheets() {
-    try {
-        const headers = ['ID', 'Loại', 'Hành Động', 'Chi Tiết', 'Thời Gian', 'Người Thực Hiện'];
-        const rows = [headers];
-        
-        logsData.forEach(log => {
-            rows.push([
-                log.id.toString(),
-                log.type,
-                log.action,
-                log.details,
-                formatDateTimeForSheets(log.timestamp),
-                log.user
-            ]);
-        });
-
-        console.log('Logs data prepared for sync:', rows.length - 1, 'logs');
-        
-        addLog('log', 'Đồng bộ dữ liệu', `Đồng bộ ${logsData.length} log lên Google Sheets`, 'System');
-        
-    } catch (error) {
-        console.error('Error syncing logs:', error);
-        throw error;
-    }
-}
-
-// Helper function to format date for Google Sheets
-function formatDateForSheets(date) {
-    if (!date) return '';
-    const d = new Date(date);
-    return d.toLocaleDateString('vi-VN');
-}
-
-// Helper function to format datetime for Google Sheets
-function formatDateTimeForSheets(date) {
-    if (!date) return '';
-    const d = new Date(date);
-    return d.toLocaleString('vi-VN');
-}
-
-// Export Functions for CSV
-function prepareInventoryForExport() {
-    const headers = ['ID', 'Mã VT', 'Tên Vật Tư', 'Kho', 'Danh Mục', 'Tình Trạng', 'Nguồn Gốc', 'Ngày Nhập', 'Sự Vụ ID', 'Mô Tả'];
-    const rows = [headers];
-    
-    inventoryData.forEach(item => {
-        rows.push([
-            item.id.toString(),
-            item.code,
-            item.name,
-            item.warehouse,
-            item.category || '',
-            item.condition,
-            item.source || '',
-            formatDateForSheets(item.dateAdded),
-            item.taskId ? item.taskId.toString() : '',
-            item.description || ''
-        ]);
-    });
-    
-    return rows;
-}
-
-function prepareTasksForExport() {
-    const headers = ['ID', 'Tên Sự Vụ', 'Loại', 'Mô Tả', 'Địa Điểm', 'Ưu Tiên', 'Trạng Thái', 'Ngày Tạo', 'Hạn Hoàn Thành', 'Người Tạo', 'Vật Tư ID', 'Vật Tư Hoàn Thành', 'Ghi Chú'];
-    const rows = [headers];
-    
-    tasksData.forEach(task => {
-        rows.push([
-            task.id.toString(),
-            task.name,
-            task.type,
-            task.description,
-            task.location || '',
-            task.priority,
-            task.status,
-            formatDateForSheets(task.createdDate),
-            task.deadline ? formatDateForSheets(task.deadline) : '',
-            task.createdBy,
-            task.assignedItems.join(','),
-            task.completedItems.join(','),
-            task.notes || ''
-        ]);
-    });
-    
-    return rows;
-}
-
-function prepareTransfersForExport() {
-    const headers = ['ID', 'Loại', 'Sự Vụ ID', 'Từ Kho', 'Đến Kho', 'Vật Tư ID', 'Trạng Thái', 'Ngày Tạo', 'Ngày Xác Nhận', 'Ghi Chú', 'Người Tạo', 'Người Xác Nhận'];
-    const rows = [headers];
-    
-    transfersData.forEach(transfer => {
-        rows.push([
-            transfer.id.toString(),
-            transfer.type,
-            transfer.taskId ? transfer.taskId.toString() : '',
-            transfer.fromWarehouse,
-            transfer.toWarehouse,
-            transfer.items.join(','),
-            transfer.status,
-            formatDateTimeForSheets(transfer.createdDate),
-            transfer.confirmedDate ? formatDateTimeForSheets(transfer.confirmedDate) : '',
-            transfer.notes || '',
-            transfer.createdBy || '',
-            transfer.confirmedBy || ''
-        ]);
-    });
-    
-    return rows;
-}
-
-function prepareLogsForExport() {
-    const headers = ['ID', 'Loại', 'Hành Động', 'Chi Tiết', 'Thời Gian', 'Người Thực Hiện'];
-    const rows = [headers];
-    
-    logsData.forEach(log => {
-        rows.push([
-            log.id.toString(),
-            log.type,
-            log.action,
-            log.details,
-            formatDateTimeForSheets(log.timestamp),
-            log.user
-        ]);
-    });
-    
-    return rows;
-}
-
-function exportToCSVFiles(exportData) {
-    // Export Inventory
-    const inventoryCSV = convertToCSV(exportData.inventory);
-    downloadCSV(inventoryCSV, 'vat-tu.csv');
-    
-    // Export Tasks
-    const tasksCSV = convertToCSV(exportData.tasks);
-    downloadCSV(tasksCSV, 'su-vu.csv');
-    
-    // Export Transfers
-    const transfersCSV = convertToCSV(exportData.transfers);
-    downloadCSV(transfersCSV, 'chuyen-kho.csv');
-    
-    // Export Logs
-    const logsCSV = convertToCSV(exportData.logs);
-    downloadCSV(logsCSV, 'log.csv');
-    
-    // Show instructions
-    showInstructionsModal();
-}
-
-function convertToCSV(data) {
-    return data.map(row => 
-        row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
-    ).join('\n');
-}
-
-function downloadCSV(csvContent, filename) {
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.visibility = 'hidden';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    URL.revokeObjectURL(url);
-}
-
-function showInstructionsModal() {
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.style.display = 'block';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Hướng dẫn import vào Google Sheets</h2>
-                <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <p><strong>📁 Các file đã được tải về:</strong></p>
-                <ul>
-                    <li>📊 <code>vat-tu.csv</code> - Dữ liệu vật tư</li>
-                    <li>📋 <code>su-vu.csv</code> - Dữ liệu sự vụ</li>
-                    <li>🚚 <code>chuyen-kho.csv</code> - Dữ liệu chuyển kho</li>
-                    <li>📝 <code>log.csv</code> - Dữ liệu log</li>
-                </ul>
-                
-                <p><strong>🔧 Cách import vào Google Sheets:</strong></p>
-                <ol>
-                    <li>Mở Google Sheets của bạn: <a href="https://docs.google.com/spreadsheets/d/1HLCUeCphiODncUk4yA7yDMaOeeLbug2a19Sf_HVTPqk/edit" target="_blank">Link Google Sheets</a></li>
-                    <li>Chọn tab "Vật Tư" (Sheet1)</li>
-                    <li>File → Import → Upload → Chọn file <code>vat-tu.csv</code></li>
-                    <li>Chọn "Replace data at selected cell" → Import data</li>
-                    <li>Lặp lại với các file khác cho các sheet tương ứng</li>
-                </ol>
-                
-                <p><strong>⚠️ Lưu ý:</strong></p>
-                <ul>
-                    <li>File CSV đã có header row, không cần thêm</li>
-                    <li>Import sẽ thay thế toàn bộ dữ liệu cũ</li>
-                    <li>Nên backup dữ liệu cũ trước khi import</li>
-                </ul>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-primary" onclick="this.closest('.modal').remove()">Đã hiểu</button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // Close when clicking outside
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-            modal.remove();
-        }
-    });
-}
-
-// Google Sheets API Helper Functions
-async function clearSheetData(sheetName, range) {
-    const url = `${SHEETS_API.baseUrl}/${SHEETS_API.spreadsheetId}/values/${sheetName}!${range}:clear`;
-    
-    const response = await makeAuthenticatedRequest(url, {
-        method: 'POST'
-    });
-    
-    if (!response.ok) {
-        throw new Error(`Failed to clear sheet data: ${response.statusText}`);
-    }
-    
-    return await response.json();
-}
-
-async function writeSheetData(sheetName, range, values) {
-    const url = `${SHEETS_API.baseUrl}/${SHEETS_API.spreadsheetId}/values/${sheetName}!${range}?valueInputOption=RAW`;
-    
-    const response = await makeAuthenticatedRequest(url, {
-        method: 'PUT',
-        body: JSON.stringify({
-            values: values
-        })
-    });
-    
-    if (!response.ok) {
-        throw new Error(`Failed to write sheet data: ${response.statusText}`);
-    }
-    
-    return await response.json();
-}
-
-async function readSheetData(sheetName, range) {
-    const url = `${SHEETS_API.baseUrl}/${SHEETS_API.spreadsheetId}/values/${sheetName}!${range}`;
-    
-    const response = await makeAuthenticatedRequest(url);
-    
-    if (!response.ok) {
-        throw new Error(`Failed to read sheet data: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    return data.values || [];
-}
-
-// Sync Tasks Data to Google Sheets
-async function syncTasksToGoogleSheets() {
-    try {
-        const sheetName = 'Sự Vụ';
-        const range = 'A1:M1000';
-        
-        const headers = ['ID', 'Tên Sự Vụ', 'Loại', 'Mô Tả', 'Địa Điểm', 'Ưu Tiên', 'Trạng Thái', 'Ngày Tạo', 'Hạn Hoàn Thành', 'Người Tạo', 'Vật Tư ID', 'Vật Tư Hoàn Thành', 'Ghi Chú'];
-        const values = [headers];
-        
-        tasksData.forEach(task => {
-            values.push([
-                task.id.toString(),
-                task.name,
-                task.type,
-                task.description,
-                task.location || '',
-                task.priority,
-                task.status,
-                formatDateForSheets(task.createdDate),
-                task.deadline ? formatDateForSheets(task.deadline) : '',
-                task.createdBy,
-                task.assignedItems.join(','),
-                task.completedItems.join(','),
-                task.notes || ''
-            ]);
-        });
-
-        await clearSheetData(sheetName, range);
-        await writeSheetData(sheetName, range, values);
-        
-        console.log('Tasks data synced:', values.length - 1, 'tasks');
-        addLog('task', 'Đồng bộ dữ liệu', `Đồng bộ ${tasksData.length} sự vụ lên Google Sheets`, 'System');
-        
-    } catch (error) {
-        console.error('Error syncing tasks:', error);
-        throw error;
-    }
-}
-
-// Sync Transfers Data to Google Sheets
-async function syncTransfersToGoogleSheets() {
-    try {
-        const sheetName = 'Chuyển Kho';
-        const range = 'A1:L1000';
-        
-        const headers = ['ID', 'Loại', 'Sự Vụ ID', 'Từ Kho', 'Đến Kho', 'Vật Tư ID', 'Trạng Thái', 'Ngày Tạo', 'Ngày Xác Nhận', 'Ghi Chú', 'Người Tạo', 'Người Xác Nhận'];
-        const values = [headers];
-        
-        transfersData.forEach(transfer => {
-            values.push([
-                transfer.id.toString(),
-                transfer.type,
-                transfer.taskId ? transfer.taskId.toString() : '',
-                transfer.fromWarehouse,
-                transfer.toWarehouse,
-                transfer.items.join(','),
-                transfer.status,
-                formatDateTimeForSheets(transfer.createdDate),
-                transfer.confirmedDate ? formatDateTimeForSheets(transfer.confirmedDate) : '',
-                transfer.notes || '',
-                transfer.createdBy || '',
-                transfer.confirmedBy || ''
-            ]);
-        });
-
-        await clearSheetData(sheetName, range);
-        await writeSheetData(sheetName, range, values);
-        
-        console.log('Transfers data synced:', values.length - 1, 'transfers');
-        addLog('transfer', 'Đồng bộ dữ liệu', `Đồng bộ ${transfersData.length} chuyển kho lên Google Sheets`, 'System');
-        
-    } catch (error) {
-        console.error('Error syncing transfers:', error);
-        throw error;
-    }
-}
-
-// Sync Logs Data to Google Sheets
-async function syncLogsToGoogleSheets() {
-    try {
-        const sheetName = 'Log';
-        const range = 'A1:F1000';
-        
-        const headers = ['ID', 'Loại', 'Hành Động', 'Chi Tiết', 'Thời Gian', 'Người Thực Hiện'];
-        const values = [headers];
-        
-        logsData.forEach(log => {
-            values.push([
-                log.id.toString(),
-                log.type,
-                log.action,
-                log.details,
-                formatDateTimeForSheets(log.timestamp),
-                log.user
-            ]);
-        });
-
-        await clearSheetData(sheetName, range);
-        await writeSheetData(sheetName, range, values);
-        
-        console.log('Logs data synced:', values.length - 1, 'logs');
-        addLog('log', 'Đồng bộ dữ liệu', `Đồng bộ ${logsData.length} log lên Google Sheets`, 'System');
-        
-    } catch (error) {
-        console.error('Error syncing logs:', error);
-        throw error;
     }
 }
 

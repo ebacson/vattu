@@ -1,8 +1,8 @@
 # 🔥 Vattu Management System v2.0
 
-Hệ thống quản lý vật tư hoàn chỉnh với **Firebase backend** và **xuất báo cáo Excel**.
+Hệ thống quản lý vật tư hoàn chỉnh với **Firebase Realtime Database**.
 
-## ✨ **Tính năng mới v2.0**
+## ✨ **Tính năng chính**
 
 - 🔥 **Firebase Realtime Database** - Lưu trữ dữ liệu realtime
 - 📊 **Xuất báo cáo Excel** - 5 sheets với dữ liệu đầy đủ
@@ -28,149 +28,192 @@ XLSX Files (Reports)
 ## 📋 **Tính năng chính**
 
 ### **Quản lý 2 kho**
-- **Kho Net** - Kho chính cung cấp vật tư
-- **Kho Hạ Tầng** - Kho thực hiện sự vụ
+- **Kho Net**: Quản lý thiết bị mạng, cung cấp vật tư
+- **Kho Hạ Tầng**: Nhận vật tư, thực hiện sự vụ, trả về
 
 ### **Quản lý sự vụ**
-- Tạo, theo dõi và quản lý sự vụ
-- Phân loại: Xử lý, Lắp đặt, Swap, Nâng cấp
-- Trạng thái: Pending, In Progress, Completed
+- Tạo sự vụ (xử lý, lắp đặt, swap, nâng cấp...)
+- Yêu cầu vật tư từ kho Net
+- Xác nhận nhận vật tư
+- Trả vật tư sau khi hoàn thành
 
-### **Chuyển kho thông minh**
-- Chuyển vật tư giữa các kho
+### **Chuyển kho**
+- Yêu cầu chuyển kho (Net → Hạ Tầng)
+- Trả kho (Hạ Tầng → Net)
 - Xác nhận giao nhận
-- Theo dõi trạng thái chuyển kho
+- Theo dõi trạng thái
 
-### **Báo cáo Excel**
-- **Sheet 1**: Danh sách vật tư
-- **Sheet 2**: Danh sách sự vụ  
-- **Sheet 3**: Danh sách chuyển kho
-- **Sheet 4**: Lịch sử log
-- **Sheet 5**: Tổng kết thống kê
+### **Báo cáo & Thống kê**
+- Dashboard tổng quan
+- Biểu đồ phân tích
+- Xuất báo cáo Excel
+- Lịch sử hoạt động
 
 ## 🚀 **Cài đặt nhanh**
 
-### **Bước 1: Cài đặt dependencies**
+### **1. Clone project**
+```bash
+git clone <repository-url>
+cd Vattu
+```
+
+### **2. Cài đặt dependencies**
 ```bash
 npm install
 ```
 
-### **Bước 2: Cấu hình Firebase**
-✅ **Firebase config đã được cập nhật!**
-- Project ID: `project-6680116762664948229`
-- Database URL: `https://project-6680116762664948229-default-rtdb.firebaseio.com`
+### **3. Cấu hình Firebase**
+1. Tạo project Firebase mới
+2. Bật Realtime Database
+3. Tải `serviceAccountKey.json` vào thư mục root
+4. Cập nhật `firebase-config.js` với thông tin project
 
-**Chỉ cần tạo Service Account:**
-1. Truy cập: https://console.firebase.google.com/project/project-6680116762664948229
-2. Vào **Project Settings** → **Service Accounts**
-3. Nhấn **"Generate new private key"**
-4. Tải file JSON và đổi tên thành `serviceAccountKey.json`
-5. Đặt file vào thư mục project
-
-### **Bước 3: Chạy ứng dụng**
-
-**Cách 1: Tự động (Khuyến nghị)**
+### **4. Chạy ứng dụng**
 ```bash
-./start.sh
-```
-
-**Cách 2: Thủ công**
-```bash
-# Terminal 1: Excel Export Server
+# Chạy Excel export server
 npm start
 
-# Terminal 2: Static Server  
-python3 -m http.server 8000
-
-# Truy cập: http://localhost:8000
+# Chạy static server (terminal khác)
+npm run static
 ```
 
-**Cách 3: Test Firebase connection**
-```bash
-# Test Firebase connection trước
-node test-firebase-connection.js
+### **5. Truy cập ứng dụng**
+- **Web App**: http://localhost:8000
+- **Excel Export**: http://localhost:3002/api/export/excel
+
+## 🔧 **Cấu hình Firebase**
+
+### **1. Tạo Firebase Project**
+1. Truy cập [Firebase Console](https://console.firebase.google.com)
+2. Tạo project mới
+3. Bật **Realtime Database**
+4. Bật **Authentication** (Anonymous)
+
+### **2. Cấu hình Realtime Database**
+```json
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null"
+  }
+}
 ```
 
-## 📖 **Hướng dẫn chi tiết**
+### **3. Tải Service Account Key**
+1. Project Settings → Service Accounts
+2. Generate new private key
+3. Lưu file `serviceAccountKey.json` vào thư mục root
 
-- 📋 **[QUICK-SETUP-FIREBASE.md](QUICK-SETUP-FIREBASE.md)** - Setup nhanh Firebase
-- 📋 **[FIREBASE-SETUP-GUIDE.md](FIREBASE-SETUP-GUIDE.md)** - Thiết lập Firebase chi tiết
-- 📊 **[GOOGLE-SHEETS-STRUCTURE.md](GOOGLE-SHEETS-STRUCTURE.md)** - Cấu trúc dữ liệu
-- 🎯 **[SYSTEM-GUIDE.md](SYSTEM-GUIDE.md)** - Hướng dẫn sử dụng
-- 🔥 **[demo-firebase.html](demo-firebase.html)** - Demo test Firebase connection
+### **4. Cập nhật Firebase Config**
+```javascript
+// firebase-config.js
+const firebaseConfig = {
+  apiKey: "your-api-key",
+  authDomain: "your-project.firebaseapp.com",
+  databaseURL: "https://your-project-default-rtdb.firebaseio.com",
+  projectId: "your-project-id",
+  storageBucket: "your-project.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "your-app-id"
+};
+```
 
-## 🔧 **Cấu trúc project**
+## 📁 **Cấu trúc project**
 
 ```
-vattu-management/
+Vattu/
 ├── index.html              # Giao diện chính
-├── styles.css              # CSS styling
+├── styles.css              # CSS styles
 ├── script.js               # Logic chính
-├── firebase-config.js      # Firebase client config
-├── firebase-integration.js # Firebase integration
-├── firebase-admin.js       # Firebase admin SDK
+├── firebase-config.js      # Cấu hình Firebase
+├── firebase-integration.js # Firebase functions
+├── firebase-admin.js       # Firebase Admin SDK
 ├── excel-server.js         # Excel export server
+├── serviceAccountKey.json  # Firebase service account
 ├── package.json            # Dependencies
-├── serviceAccountKey.json  # Firebase service account (tự tạo)
-└── exports/                # Thư mục xuất Excel
+└── README.md              # Hướng dẫn
 ```
-
-## 📊 **Workflow hoàn chỉnh**
-
-1. **Khởi tạo** → Kết nối Firebase → Load dữ liệu
-2. **Tạo sự vụ** → Lưu vào Realtime Database → Cập nhật UI
-3. **Thêm vật tư** → Lưu vào Realtime Database → Cập nhật UI  
-4. **Chuyển kho** → Lưu vào Realtime Database → Cập nhật UI
-5. **Xuất báo cáo** → Tạo Excel file → Tải về
-
-## 🔐 **Bảo mật**
-
-- ✅ Firebase Authentication
-- ✅ Realtime Database Security Rules
-- ✅ Service Account Protection
-- ✅ CORS Configuration
-- ✅ Input Validation
 
 ## 🎯 **Sử dụng**
 
-### **Tạo dữ liệu**
-1. Chọn kho từ dropdown
-2. Tạo sự vụ hoặc thêm vật tư
-3. Dữ liệu tự động lưu vào Firebase Realtime Database
+### **1. Tạo sự vụ**
+1. Chuyển sang tab "Quản Lý Sự Vụ"
+2. Nhấn "Tạo Sự Vụ Mới"
+3. Điền thông tin sự vụ
+4. Lưu vào Firebase
 
-### **Xuất báo cáo**
-1. Nhấn "Xuất báo cáo Excel"
-2. File Excel được tạo với 5 sheets
-3. Tải về và mở bằng Excel
+### **2. Thêm vật tư**
+1. Chuyển sang tab "Quản Lý Vật Tư"
+2. Nhấn "Thêm Vật Tư Mới"
+3. Điền thông tin vật tư
+4. Lưu vào Firebase
 
-### **Theo dõi**
-1. Xem Dashboard để thống kê
-2. Xem Log để theo dõi hoạt động
-3. Kiểm tra Firebase Console → Realtime Database
+### **3. Chuyển kho**
+1. Chuyển sang tab "Chuyển Kho"
+2. Nhấn "Tạo Chuyển Kho"
+3. Chọn loại chuyển kho
+4. Xác nhận giao nhận
 
-## 🆘 **Troubleshooting**
+### **4. Xuất báo cáo**
+1. Nhấn "Đồng bộ Firebase"
+2. Truy cập http://localhost:3002/api/export/excel
+3. Tải file Excel về
 
-### **Firebase không kết nối**
-- Kiểm tra `firebase-config.js` (có databaseURL)
+## 🔍 **Troubleshooting**
+
+### **Lỗi kết nối Firebase**
+```bash
+# Kiểm tra serviceAccountKey.json
+ls -la serviceAccountKey.json
+
+# Test kết nối
+node firebase-admin.js
+```
+
+### **Lỗi Excel export**
+```bash
+# Kiểm tra server
+curl http://localhost:3002/health
+
+# Restart server
+npm start
+```
+
+### **Lỗi authentication**
+- Kiểm tra Firebase Authentication đã bật
 - Kiểm tra Realtime Database rules
-- Kiểm tra Console errors
+- Kiểm tra firebase-config.js
 
-### **Excel không xuất được**
-- Đảm bảo Excel server chạy (port 3002)
-- Kiểm tra `serviceAccountKey.json`
-- Kiểm tra Firebase permissions
+## 📊 **API Endpoints**
 
-### **Dữ liệu không hiển thị**
-- Kiểm tra Firebase Console → Realtime Database
-- Kiểm tra Authentication status
-- Refresh trang và thử lại
+### **Excel Export Server**
+- `GET /health` - Health check
+- `GET /api/export/excel` - Xuất báo cáo Excel
+
+### **Firebase Realtime Database**
+- `inventory/` - Dữ liệu vật tư
+- `tasks/` - Dữ liệu sự vụ
+- `transfers/` - Dữ liệu chuyển kho
+- `logs/` - Dữ liệu log
+
+## 🤝 **Đóng góp**
+
+1. Fork project
+2. Tạo feature branch
+3. Commit changes
+4. Push to branch
+5. Tạo Pull Request
+
+## 📄 **License**
+
+MIT License - Xem file LICENSE để biết thêm chi tiết.
 
 ## 📞 **Hỗ trợ**
 
-- 📧 Email: support@vattu.com
-- 📱 Phone: +84 xxx xxx xxx
-- 🌐 Website: https://vattu.com
+- **Email**: support@vattu.com
+- **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
+- **Documentation**: [Wiki](https://github.com/your-repo/wiki)
 
 ---
 
-**🎉 Hệ thống quản lý vật tư hoàn chỉnh với Firebase Realtime Database và Excel export!**
+**🔥 Được phát triển với Firebase Realtime Database**

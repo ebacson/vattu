@@ -1,7 +1,7 @@
 {
   "name": "vattu-management",
   "version": "2.0.0",
-  "description": "Vật tư Management System with Firebase & Excel Export",
+  "description": "Vật tư Management System with Firebase Realtime Database",
   "main": "excel-server.js",
   "scripts": {
     "start": "node excel-server.js",
