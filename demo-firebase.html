@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Firebase Realtime Database</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #fff;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .success {
+            background: rgba(40, 167, 69, 0.3);
+            border: 2px solid rgba(40, 167, 69, 0.6);
+        }
+        .error {
+            background: rgba(220, 53, 69, 0.3);
+            border: 2px solid rgba(220, 53, 69, 0.6);
+        }
+        .loading {
+            background: rgba(255, 193, 7, 0.3);
+            border: 2px solid rgba(255, 193, 7, 0.6);
+        }
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .data-display {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Demo Firebase Realtime Database</h1>
+        
+        <div id="status" class="status loading">
+            <span class="spinner"></span>Đang kết nối Firebase...
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <button onclick="testConnection()">🔍 Test Connection</button>
+            <button onclick="writeTestData()">📝 Write Test Data</button>
+            <button onclick="readTestData()">📖 Read Test Data</button>
+            <button onclick="clearTestData()">🗑️ Clear Test Data</button>
+        </div>
+        
+        <div id="dataDisplay" class="data-display" style="display: none;">
+            <!-- Test data will be displayed here -->
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="index.html" style="color: white; text-decoration: none; font-weight: bold;">
+                ← Quay lại ứng dụng chính
+            </a>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, set, push, onValue, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyAoLWS5iRF9HalbcQQ7akw7iuVgNKM3SV4",
+            authDomain: "project-6680116762664948229.firebaseapp.com",
+            databaseURL: "https://project-6680116762664948229-default-rtdb.firebaseio.com",
+            projectId: "project-6680116762664948229",
+            storageBucket: "project-6680116762664948229.firebasestorage.app",
+            messagingSenderId: "814890355043",
+            appId: "1:814890355043:web:5b2dfd1a0223640c17eb56",
+            measurementId: "G-CRXF2ZH941"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const auth = getAuth(app);
+
+        let isConnected = false;
+
+        // Initialize authentication
+        async function initializeAuth() {
+            try {
+                const userCredential = await signInAnonymously(auth);
+                console.log('Firebase auth initialized:', userCredential.user.uid);
+                updateStatus('success', '✅ Đã kết nối Firebase Realtime Database thành công!');
+                isConnected = true;
+            } catch (error) {
+                console.error('Firebase auth error:', error);
+                updateStatus('error', '❌ Lỗi kết nối Firebase: ' + error.message);
+                isConnected = false;
+            }
+        }
+
+        // Update status display
+        function updateStatus(type, message) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerHTML = message;
+        }
+
+        // Test connection
+        window.testConnection = async function() {
+            if (!isConnected) {
+                updateStatus('error', '❌ Chưa kết nối Firebase');
+                return;
+            }
+
+            updateStatus('loading', '<span class="spinner"></span>Đang test kết nối...');
+            
+            try {
+                const testRef = ref(db, 'test/connection');
+                await set(testRef, {
+                    message: 'Connection test successful!',
+                    timestamp: new Date().toISOString(),
+                    user: auth.currentUser?.uid || 'anonymous'
+                });
+                
+                updateStatus('success', '✅ Test kết nối thành công!');
+            } catch (error) {
+                console.error('Connection test failed:', error);
+                updateStatus('error', '❌ Test kết nối thất bại: ' + error.message);
+            }
+        };
+
+        // Write test data
+        window.writeTestData = async function() {
+            if (!isConnected) {
+                updateStatus('error', '❌ Chưa kết nối Firebase');
+                return;
+            }
+
+            updateStatus('loading', '<span class="spinner"></span>Đang ghi dữ liệu test...');
+            
+            try {
+                const testDataRef = ref(db, 'test/data');
+                const testData = {
+                    inventory: [
+                        { id: 1, name: 'Router Cisco', code: 'RT001', warehouse: 'net' },
+                        { id: 2, name: 'Switch 24 Port', code: 'SW001', warehouse: 'infrastructure' }
+                    ],
+                    tasks: [
+                        { id: 1, name: 'Lắp đặt Router', type: 'lapdat', status: 'pending' },
+                        { id: 2, name: 'Nâng cấp Switch', type: 'nangcap', status: 'in_progress' }
+                    ],
+                    timestamp: new Date().toISOString()
+                };
+                
+                await set(testDataRef, testData);
+                updateStatus('success', '✅ Ghi dữ liệu test thành công!');
+            } catch (error) {
+                console.error('Write test data failed:', error);
+                updateStatus('error', '❌ Ghi dữ liệu test thất bại: ' + error.message);
+            }
+        };
+
+        // Read test data
+        window.readTestData = async function() {
+            if (!isConnected) {
+                updateStatus('error', '❌ Chưa kết nối Firebase');
+                return;
+            }
+
+            updateStatus('loading', '<span class="spinner"></span>Đang đọc dữ liệu...');
+            
+            try {
+                const testDataRef = ref(db, 'test/data');
+                
+                onValue(testDataRef, (snapshot) => {
+                    const data = snapshot.val();
+                    const dataDisplay = document.getElementById('dataDisplay');
+                    
+                    if (data) {
+                        dataDisplay.style.display = 'block';
+                        dataDisplay.textContent = JSON.stringify(data, null, 2);
+                        updateStatus('success', '✅ Đọc dữ liệu thành công!');
+                    } else {
+                        dataDisplay.style.display = 'block';
+                        dataDisplay.textContent = 'Không có dữ liệu test. Nhấn "Write Test Data" để tạo dữ liệu test.';
+                        updateStatus('error', '⚠️ Không có dữ liệu test');
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Read test data failed:', error);
+                updateStatus('error', '❌ Đọc dữ liệu thất bại: ' + error.message);
+            }
+        };
+
+        // Clear test data
+        window.clearTestData = async function() {
+            if (!isConnected) {
+                updateStatus('error', '❌ Chưa kết nối Firebase');
+                return;
+            }
+
+            updateStatus('loading', '<span class="spinner"></span>Đang xóa dữ liệu test...');
+            
+            try {
+                const testRef = ref(db, 'test');
+                await remove(testRef);
+                
+                const dataDisplay = document.getElementById('dataDisplay');
+                dataDisplay.style.display = 'none';
+                
+                updateStatus('success', '✅ Xóa dữ liệu test thành công!');
+            } catch (error) {
+                console.error('Clear test data failed:', error);
+                updateStatus('error', '❌ Xóa dữ liệu test thất bại: ' + error.message);
+            }
+        };
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAuth();
+        });
+    </script>
+</body>
+</html>

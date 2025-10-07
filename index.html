@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý Vật Tư - 2 Kho</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-warehouse"></i> Hệ Thống Quản Lý Vật Tư</h1>
+                <div class="warehouse-selector">
+                    <label>Kho hiện tại:</label>
+                    <select id="currentWarehouse">
+                        <option value="net">Kho Net</option>
+                        <option value="infrastructure">Kho Hạ Tầng</option>
+                    </select>
+                </div>
+                <div class="header-actions">
+                    <button id="syncBtn" class="btn btn-primary">
+                        <i class="fas fa-download"></i> Xuất dữ liệu CSV
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+            <button class="tab-btn active" data-tab="dashboard">
+                <i class="fas fa-chart-dashboard"></i> Tổng Quan
+            </button>
+            <button class="tab-btn" data-tab="inventory">
+                <i class="fas fa-boxes"></i> Quản Lý Vật Tư
+            </button>
+            <button class="tab-btn" data-tab="tasks">
+                <i class="fas fa-tasks"></i> Quản Lý Sự Vụ
+            </button>
+            <button class="tab-btn" data-tab="transfers">
+                <i class="fas fa-exchange-alt"></i> Chuyển Kho
+            </button>
+            <button class="tab-btn" data-tab="logs">
+                <i class="fas fa-history"></i> Lịch Sử
+            </button>
+            <button class="tab-btn" data-tab="statistics">
+                <i class="fas fa-chart-bar"></i> Thống Kê
+            </button>
+        </nav>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="dashboard-grid">
+                <!-- Warehouse Status Cards -->
+                <div class="warehouse-cards">
+                    <div class="warehouse-card net-warehouse">
+                        <div class="warehouse-header">
+                            <h3><i class="fas fa-network-wired"></i> Kho Net</h3>
+                            <span class="warehouse-status active">Hoạt động</span>
+                        </div>
+                        <div class="warehouse-stats">
+                            <div class="stat-item">
+                                <span class="stat-number" id="netTotalItems">0</span>
+                                <span class="stat-label">Tổng vật tư</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="netPendingTransfers">0</span>
+                                <span class="stat-label">Chờ chuyển</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="netAvailableItems">0</span>
+                                <span class="stat-label">Sẵn sàng</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="warehouse-card infrastructure-warehouse">
+                        <div class="warehouse-header">
+                            <h3><i class="fas fa-building"></i> Kho Hạ Tầng</h3>
+                            <span class="warehouse-status active">Hoạt động</span>
+                        </div>
+                        <div class="warehouse-stats">
+                            <div class="stat-item">
+                                <span class="stat-number" id="infraTotalItems">0</span>
+                                <span class="stat-label">Tổng vật tư</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="infraPendingTasks">0</span>
+                                <span class="stat-label">Sự vụ chờ</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="infraInUseItems">0</span>
+                                <span class="stat-label">Đang sử dụng</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <h2>Thao Tác Nhanh</h2>
+                    <div class="action-buttons">
+                        <button class="action-btn" onclick="showCreateTaskModal()">
+                            <i class="fas fa-plus"></i>
+                            <span>Tạo sự vụ mới</span>
+                        </button>
+                        <button class="action-btn" onclick="showTransferModal()">
+                            <i class="fas fa-exchange-alt"></i>
+                            <span>Chuyển kho</span>
+                        </button>
+                        <button class="action-btn" onclick="showAddItemModal()">
+                            <i class="fas fa-box"></i>
+                            <span>Thêm vật tư</span>
+                        </button>
+                        <button class="action-btn" onclick="showPendingConfirmations()">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Chờ xác nhận</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Activities -->
+                <div class="recent-activities">
+                    <h2>Hoạt Động Gần Đây</h2>
+                    <div id="activitiesList" class="activities-list">
+                        <p class="no-data">Chưa có hoạt động nào</p>
+                    </div>
+                </div>
+
+                <!-- Active Tasks -->
+                <div class="active-tasks">
+                    <h2>Sự Vụ Đang Hoạt Động</h2>
+                    <div id="activeTasksList" class="tasks-list">
+                        <p class="no-data">Chưa có sự vụ nào</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Management Tab -->
+        <div id="inventory" class="tab-content">
+            <div class="inventory-header">
+                <div class="inventory-filters">
+                    <select id="warehouseFilter">
+                        <option value="all">Tất cả kho</option>
+                        <option value="net">Kho Net</option>
+                        <option value="infrastructure">Kho Hạ Tầng</option>
+                    </select>
+                    <select id="statusFilter">
+                        <option value="all">Tất cả trạng thái</option>
+                        <option value="available">Sẵn sàng</option>
+                        <option value="in-use">Đang sử dụng</option>
+                        <option value="maintenance">Bảo trì</option>
+                        <option value="damaged">Hỏng</option>
+                    </select>
+                    <input type="text" id="searchInput" placeholder="Tìm kiếm vật tư...">
+                </div>
+                <button class="btn btn-success" onclick="showAddItemModal()">
+                    <i class="fas fa-plus"></i> Thêm Vật Tư
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Mã VT</th>
+                            <th>Tên Vật Tư</th>
+                            <th>Kho</th>
+                            <th>Tình Trạng</th>
+                            <th>Nguồn Gốc</th>
+                            <th>Ngày Nhập</th>
+                            <th>Sự Vụ</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTableBody">
+                        <tr>
+                            <td colspan="8" class="no-data">Đang tải dữ liệu...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tasks Management Tab -->
+        <div id="tasks" class="tab-content">
+            <div class="tasks-header">
+                <div class="task-filters">
+                    <select id="taskStatusFilter">
+                        <option value="all">Tất cả trạng thái</option>
+                        <option value="pending">Chờ xử lý</option>
+                        <option value="in-progress">Đang thực hiện</option>
+                        <option value="waiting-confirmation">Chờ xác nhận</option>
+                        <option value="completed">Hoàn thành</option>
+                        <option value="cancelled">Hủy bỏ</option>
+                    </select>
+                    <input type="date" id="taskDateFilter">
+                </div>
+                <button class="btn btn-primary" onclick="showCreateTaskModal()">
+                    <i class="fas fa-plus"></i> Tạo Sự Vụ Mới
+                </button>
+            </div>
+
+            <div class="tasks-grid">
+                <div id="tasksList" class="tasks-container">
+                    <p class="no-data">Chưa có sự vụ nào</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transfers Tab -->
+        <div id="transfers" class="tab-content">
+            <div class="transfers-header">
+                <div class="transfer-filters">
+                    <select id="transferStatusFilter">
+                        <option value="all">Tất cả trạng thái</option>
+                        <option value="pending">Chờ chuyển</option>
+                        <option value="in-transit">Đang chuyển</option>
+                        <option value="delivered">Đã giao</option>
+                        <option value="confirmed">Đã xác nhận</option>
+                    </select>
+                    <select id="transferTypeFilter">
+                        <option value="all">Tất cả loại</option>
+                        <option value="request">Yêu cầu</option>
+                        <option value="return">Trả về</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="showTransferModal()">
+                    <i class="fas fa-exchange-alt"></i> Tạo Chuyển Kho
+                </button>
+            </div>
+
+            <div class="transfers-container">
+                <div id="transfersList" class="transfers-list">
+                    <p class="no-data">Chưa có chuyển kho nào</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Tab -->
+        <div id="logs" class="tab-content">
+            <div class="logs-header">
+                <div class="log-filters">
+                    <select id="logTypeFilter">
+                        <option value="all">Tất cả loại</option>
+                        <option value="transfer">Chuyển kho</option>
+                        <option value="task">Sự vụ</option>
+                        <option value="inventory">Vật tư</option>
+                        <option value="confirmation">Xác nhận</option>
+                    </select>
+                    <input type="date" id="logDateFilter">
+                    <input type="text" id="logSearchInput" placeholder="Tìm kiếm...">
+                </div>
+                <button class="btn btn-secondary" onclick="exportLogs()">
+                    <i class="fas fa-download"></i> Xuất Log
+                </button>
+            </div>
+
+            <div class="logs-container">
+                <div id="logsList" class="logs-list">
+                    <p class="no-data">Chưa có log nào</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Tab -->
+        <div id="statistics" class="tab-content">
+            <div class="stats-grid">
+                <div class="chart-container">
+                    <h3>Phân Bố Vật Tư Theo Kho</h3>
+                    <canvas id="warehouseChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Trạng Thái Sự Vụ</h3>
+                    <canvas id="taskStatusChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Lượng Chuyển Kho Theo Tháng</h3>
+                    <canvas id="transferTrendChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Hiệu Suất Xử Lý Sự Vụ</h3>
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Create Task Modal -->
+    <div id="taskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="taskModalTitle">Tạo Sự Vụ Mới</h2>
+                <span class="close" onclick="closeModal('taskModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="taskForm">
+                    <div class="form-group">
+                        <label for="taskName">Tên Sự Vụ *</label>
+                        <input type="text" id="taskName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskType">Loại Sự Vụ *</label>
+                        <select id="taskType" required>
+                            <option value="">Chọn loại sự vụ</option>
+                            <option value="xuly">Xử lý</option>
+                            <option value="lapdat">Lắp đặt</option>
+                            <option value="swap">Swap</option>
+                            <option value="nangcap">Nâng cấp</option>
+                            <option value="baotri">Bảo trì</option>
+                            <option value="khac">Khác</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskDescription">Mô Tả Chi Tiết *</label>
+                        <textarea id="taskDescription" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskLocation">Địa Điểm</label>
+                        <input type="text" id="taskLocation">
+                    </div>
+                    <div class="form-group">
+                        <label for="taskPriority">Mức Độ Ưu Tiên</label>
+                        <select id="taskPriority">
+                            <option value="low">Thấp</option>
+                            <option value="medium" selected>Trung bình</option>
+                            <option value="high">Cao</option>
+                            <option value="urgent">Khẩn cấp</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskDeadline">Hạn Hoàn Thành</label>
+                        <input type="datetime-local" id="taskDeadline">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('taskModal')">Hủy</button>
+                <button type="submit" form="taskForm" class="btn btn-primary">Tạo Sự Vụ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Item Modal -->
+    <div id="itemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="itemModalTitle">Thêm Vật Tư Mới</h2>
+                <span class="close" onclick="closeModal('itemModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="itemForm">
+                    <div class="form-group">
+                        <label for="itemCode">Mã Vật Tư *</label>
+                        <input type="text" id="itemCode" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemName">Tên Vật Tư *</label>
+                        <input type="text" id="itemName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemWarehouse">Kho *</label>
+                        <select id="itemWarehouse" required>
+                            <option value="">Chọn kho</option>
+                            <option value="net">Kho Net</option>
+                            <option value="infrastructure">Kho Hạ Tầng</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemCategory">Danh Mục</label>
+                        <input type="text" id="itemCategory">
+                    </div>
+                    <div class="form-group">
+                        <label for="itemSource">Nguồn Gốc</label>
+                        <input type="text" id="itemSource" placeholder="VD: Thu hồi từ trạm ABC, thay cho trạm XYZ">
+                    </div>
+                    <div class="form-group">
+                        <label for="itemCondition">Tình Trạng *</label>
+                        <select id="itemCondition" required>
+                            <option value="available">Sẵn sàng</option>
+                            <option value="in-use">Đang sử dụng</option>
+                            <option value="maintenance">Bảo trì</option>
+                            <option value="damaged">Hỏng</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemDescription">Mô Tả</label>
+                        <textarea id="itemDescription" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('itemModal')">Hủy</button>
+                <button type="submit" form="itemForm" class="btn btn-primary">Thêm Vật Tư</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Modal -->
+    <div id="transferModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="transferModalTitle">Chuyển Kho</h2>
+                <span class="close" onclick="closeModal('transferModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="transferForm">
+                    <div class="form-group">
+                        <label for="transferType">Loại Chuyển Kho *</label>
+                        <select id="transferType" required>
+                            <option value="">Chọn loại</option>
+                            <option value="request">Yêu cầu từ kho Hạ Tầng</option>
+                            <option value="return">Trả về kho Net</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="transferTask">Sự Vụ Liên Quan</label>
+                        <select id="transferTask">
+                            <option value="">Chọn sự vụ</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="transferItems">Vật Tư Cần Chuyển *</label>
+                        <div id="transferItemsList" class="transfer-items-list">
+                            <p class="no-data">Chọn loại chuyển kho trước</p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="transferNotes">Ghi Chú</label>
+                        <textarea id="transferNotes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('transferModal')">Hủy</button>
+                <button type="submit" form="transferForm" class="btn btn-primary">Tạo Chuyển Kho</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="confirmationModalTitle">Xác Nhận Giao Nhận</h2>
+                <span class="close" onclick="closeModal('confirmationModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="confirmationContent">
+                    <!-- Content will be loaded dynamically -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('confirmationModal')">Hủy</button>
+                <button type="button" class="btn btn-success" id="confirmButton">Xác Nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Đang xử lý...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Add authentication status indicator -->
+    <div id="authStatus" class="auth-status" style="position: fixed; top: 10px; right: 10px; z-index: 1000; padding: 8px 12px; border-radius: 20px; font-size: 12px; background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.1);">
+        <i class="fas fa-fire text-warning"></i> Đang kết nối Firebase...
+    </div>
+    
+    <!-- Firebase SDK -->
+    <script type="module" src="firebase-config-prod.js"></script>
+    <script src="script.js"></script>
+    <script src="firebase-integration-prod.js"></script>
+    <script src="csv-export.js"></script></body>
+</html>

@@ -1,0 +1,36 @@
+{
+  "name": "vattu-management",
+  "version": "2.0.0",
+  "description": "Vật tư Management System with Firebase & Excel Export",
+  "main": "excel-server.js",
+  "scripts": {
+    "start": "node excel-server.js",
+    "dev": "nodemon excel-server.js",
+    "static": "python3 -m http.server 8000",
+    "firebase": "node firebase-admin.js",
+    "install-deps": "npm install",
+    "setup": "npm install && echo 'Setup complete! Configure Firebase and run npm start'"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "firebase-admin": "^11.11.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "inventory",
+    "management",
+    "firebase",
+    "excel",
+    "reporting",
+    "vietnamese"
+  ],
+  "author": "Vattu Management Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
