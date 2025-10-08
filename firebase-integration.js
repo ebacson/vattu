@@ -1,20 +1,39 @@
 // Firebase Integration for Vattu Management System
 // This file provides Firebase Realtime Database functions
 
-import { database, DB_PATHS, isAuthenticated } from './firebase-config.js';
+import { auth, database, DB_PATHS, isAuthenticated } from './firebase-config.js';
 import { ref, set, push, update, remove, onValue, off, query, orderByChild, orderByKey, limitToLast } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
 // Wait for Firebase authentication
 function waitForAuth() {
     return new Promise((resolve) => {
-        const checkAuth = () => {
-            if (isAuthenticated) {
+        // Check if user is authenticated via Firebase Auth
+        if (auth.currentUser) {
+            console.log('🔐 User already authenticated:', auth.currentUser.uid);
+            resolve();
+        } else {
+            console.log('⏳ Waiting for authentication...');
+            // Wait for auth state to be ready
+            const unsubscribe = onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    console.log('✅ User authenticated:', user.uid);
+                    unsubscribe();
+                    resolve();
+                } else {
+                    // No user logged in, resolve anyway to allow operations
+                    console.log('⚠️ No user authenticated, proceeding anyway');
+                    unsubscribe();
+                    resolve();
+                }
+            });
+            
+            // Timeout after 5 seconds to prevent infinite waiting
+            setTimeout(() => {
+                console.log('⚠️ Auth timeout, proceeding anyway');
                 resolve();
-            } else {
-                setTimeout(checkAuth, 100);
-            }
-        };
-        checkAuth();
+            }, 5000);
+        }
     });
 }
 
