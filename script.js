@@ -517,9 +517,10 @@ function renderTransfersList() {
 
     transfersList.innerHTML = filteredTransfers.map(transfer => {
         const task = tasksData.find(t => t.id === transfer.taskId);
-        const items = transfer.items.map(itemId => {
+        const itemsArray = transfer.items || [];
+        const itemsDetails = itemsArray.map(itemId => {
             const item = inventoryData.find(i => i.id === itemId);
-            return item ? item.name : 'Unknown';
+            return item ? `${item.serial} (${item.name})` : 'Unknown';
         }).join(', ');
 
         return `
@@ -531,7 +532,7 @@ function renderTransfersList() {
                 <div class="transfer-info">
                     <p><i class="fas fa-arrow-right"></i> Từ ${getWarehouseName(transfer.fromWarehouse)} → ${getWarehouseName(transfer.toWarehouse)}</p>
                     <p><i class="fas fa-tasks"></i> Sự vụ: ${task ? task.name : 'Không có'}</p>
-                    <p><i class="fas fa-boxes"></i> Vật tư: ${items}</p>
+                    <p><i class="fas fa-boxes"></i> ${itemsArray.length} vật tư: ${itemsDetails || 'Chưa có vật tư'}</p>
                     <p><i class="fas fa-calendar"></i> Ngày tạo: ${formatDate(transfer.createdDate)}</p>
                     ${transfer.confirmedDate ? `<p><i class="fas fa-check"></i> Xác nhận: ${formatDate(transfer.confirmedDate)}</p>` : ''}
                 </div>
@@ -659,6 +660,14 @@ function showTransferModal() {
     document.getElementById('transferModalTitle').textContent = 'Chuyển Kho';
     document.getElementById('transferForm').reset();
     updateTransferTaskOptions();
+    updateTransferItemsList(); // Add items list
+    
+    // Add event listener for transfer type change
+    const transferType = document.getElementById('transferType');
+    if (transferType) {
+        transferType.addEventListener('change', updateTransferItemsList);
+    }
+    
     openModal('transferModal');
 }
 
@@ -672,6 +681,58 @@ function updateTransferTaskOptions() {
         }
     });
 }
+
+// Update transfer items list based on transfer type
+function updateTransferItemsList() {
+    const transferType = document.getElementById('transferType');
+    const itemsList = document.getElementById('transferItemsList');
+    
+    if (!transferType || !itemsList) return;
+    
+    const type = transferType.value;
+    
+    if (!type) {
+        itemsList.innerHTML = '<p class="no-data">Chọn loại chuyển kho trước</p>';
+        return;
+    }
+    
+    // Determine source warehouse based on transfer type
+    let sourceWarehouse;
+    if (type === 'request') {
+        sourceWarehouse = 'net'; // Yêu cầu từ kho Hạ Tầng → lấy từ kho Net
+    } else if (type === 'return') {
+        sourceWarehouse = 'infrastructure'; // Trả về kho Net → lấy từ kho Hạ Tầng
+    }
+    
+    // Get available items from source warehouse
+    const availableItems = inventoryData.filter(item => 
+        item.warehouse === sourceWarehouse && 
+        (item.condition === 'available' || item.condition === 'in-use')
+    );
+    
+    if (availableItems.length === 0) {
+        itemsList.innerHTML = `<p class="no-data">Không có vật tư nào trong ${getWarehouseName(sourceWarehouse)}</p>`;
+        return;
+    }
+    
+    // Render items as checkboxes
+    itemsList.innerHTML = availableItems.map(item => `
+        <div class="transfer-item">
+            <input type="checkbox" id="item-${item.id}" value="${item.id}" name="transferItems">
+            <label for="item-${item.id}" style="cursor: pointer; flex: 1; margin: 0;">
+                <strong>${item.serial}</strong> - ${item.name}
+                <small style="color: #666; display: block; margin-top: 3px;">
+                    ${getConditionText(item.condition)} | ${item.category || 'Chưa phân loại'}
+                </small>
+            </label>
+        </div>
+    `).join('');
+    
+    console.log('📦 Transfer items list updated:', availableItems.length, 'items from', sourceWarehouse);
+}
+
+// Make function global
+window.updateTransferItemsList = updateTransferItemsList;
 
 // Form Handlers
 async function handleTaskSubmit(e) {
@@ -904,6 +965,20 @@ async function handleTransferSubmit(e) {
         showToast('error', 'Lỗi!', 'Vui lòng chọn sự vụ liên quan.');
         return;
     }
+    
+    // Get selected items
+    const selectedItems = [];
+    const checkboxes = document.querySelectorAll('input[name="transferItems"]:checked');
+    checkboxes.forEach(cb => {
+        selectedItems.push(parseInt(cb.value));
+    });
+    
+    console.log('📦 Selected items for transfer:', selectedItems);
+    
+    if (selectedItems.length === 0) {
+        showToast('error', 'Lỗi!', 'Vui lòng chọn ít nhất một vật tư để chuyển.');
+        return;
+    }
 
     // Determine warehouses based on transfer type
     let fromWarehouse, toWarehouse;
@@ -914,16 +989,25 @@ async function handleTransferSubmit(e) {
         fromWarehouse = 'infrastructure';
         toWarehouse = 'net';
     }
+    
+    // Check if user has permission to transfer from source warehouse
+    if (!canManageWarehouse(fromWarehouse)) {
+        showToast('error', 'Không có quyền!', `Bạn không có quyền chuyển vật tư từ ${getWarehouseName(fromWarehouse)}.`);
+        console.log('❌ Permission denied for transfer from:', fromWarehouse);
+        return;
+    }
 
     const newTransfer = {
         id: transfersData.length > 0 ? Math.max(...transfersData.map(t => t.id), 0) + 1 : 1,
         ...formData,
         fromWarehouse,
         toWarehouse,
-        items: [], // Will be populated when items are selected
+        items: selectedItems,
         status: 'pending',
         createdDate: new Date(),
-        confirmedDate: null
+        createdBy: currentUser ? (currentUser.displayName || currentUser.email) : 'Unknown',
+        confirmedDate: null,
+        confirmedBy: null
     };
 
     try {
@@ -934,9 +1018,9 @@ async function handleTransferSubmit(e) {
             
             // Update local data
             transfersData.push(newTransfer);
-            await addLog('transfer', 'Tạo chuyển kho', `Tạo chuyển kho ${getTransferTypeText(newTransfer.type)} từ ${getWarehouseName(fromWarehouse)} sang ${getWarehouseName(toWarehouse)}`, getWarehouseName(currentWarehouse));
+            await addLog('transfer', 'Tạo chuyển kho', `Tạo chuyển kho ${getTransferTypeText(newTransfer.type)} từ ${getWarehouseName(fromWarehouse)} sang ${getWarehouseName(toWarehouse)} (${selectedItems.length} vật tư)`, getWarehouseName(currentWarehouse));
             
-            showToast('success', 'Tạo chuyển kho thành công!', 'Chuyển kho mới đã được tạo và lưu vào Firebase.');
+            showToast('success', 'Tạo chuyển kho thành công!', `Đã tạo chuyển kho ${selectedItems.length} vật tư và lưu vào Firebase.`);
         } else {
             // Fallback: just update local data
             transfersData.push(newTransfer);
