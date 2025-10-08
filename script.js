@@ -618,6 +618,7 @@ function updateTransferTaskOptions() {
 // Form Handlers
 async function handleTaskSubmit(e) {
     e.preventDefault();
+    console.log('🔄 handleTaskSubmit called');
     
     // Clear previous errors
     if (typeof window.clearFormErrors === 'function') {
@@ -689,6 +690,7 @@ async function handleTaskSubmit(e) {
 
 async function handleItemSubmit(e) {
     e.preventDefault();
+    console.log('🔄 handleItemSubmit called');
     
     // Clear previous errors
     if (typeof window.clearFormErrors === 'function') {
@@ -704,20 +706,28 @@ async function handleItemSubmit(e) {
         condition: document.getElementById('itemCondition').value,
         description: document.getElementById('itemDescription').value
     };
+    
+    console.log('📝 Form data:', formData);
 
     // Enhanced validation
     if (typeof window.validateInventoryForm === 'function') {
+        console.log('✅ Using enhanced validation');
         const errors = await window.validateInventoryForm(formData, currentEditingItem ? currentEditingItem.id : null);
         if (errors.length > 0) {
+            console.log('❌ Validation errors:', errors);
             window.displayFormErrors(errors);
             return;
         }
+        console.log('✅ Validation passed');
     } else {
+        console.log('⚠️ Using fallback validation');
         // Fallback basic validation
         if (!formData.serial || !formData.name || !formData.warehouse || !formData.condition) {
+            console.log('❌ Missing required fields');
             showToast('error', 'Lỗi!', 'Vui lòng điền đầy đủ các trường bắt buộc.');
             return;
         }
+        console.log('✅ Basic validation passed');
     }
     
     // Check permissions
