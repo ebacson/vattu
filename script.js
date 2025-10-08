@@ -1446,6 +1446,8 @@ async function confirmTransfer(transferId) {
                 if (item) {
                     console.log(`📦 Updating item ${item.serial} from ${item.warehouse} to ${transfer.toWarehouse}`);
                     
+                    const oldWarehouse = item.warehouse;
+                    
                     // Update item warehouse and status
                     item.warehouse = transfer.toWarehouse;
                     item.condition = 'in-use';
@@ -1456,6 +1458,11 @@ async function confirmTransfer(transferId) {
                         await window.saveInventoryToFirebase(item);
                         console.log(`✅ Item ${item.serial} warehouse updated in Firebase`);
                     }
+                    
+                    // Add individual log for each item
+                    const task = tasksData.find(t => t.id === transfer.taskId);
+                    const itemLogDetails = `Chuyển vật tư ${item.serial} (${item.name}) từ ${getWarehouseName(oldWarehouse)} sang ${getWarehouseName(transfer.toWarehouse)}${task ? ` - Sự vụ: ${task.name}` : ''}`;
+                    await addLog('transfer', 'Chuyển vật tư', itemLogDetails, getWarehouseName(currentWarehouse));
                 }
             }
             
@@ -1468,8 +1475,8 @@ async function confirmTransfer(transferId) {
             console.log('✅ Transfer confirmed and saved to Firebase');
         }
         
-        // Add detailed log
-        const logDetails = `Xác nhận chuyển kho #${transferId} (${getTransferTypeText(transfer.type)}) từ ${getWarehouseName(transfer.fromWarehouse)} sang ${getWarehouseName(transfer.toWarehouse)}. ${transfer.items ? `Số vật tư: ${transfer.items.length}` : ''}`;
+        // Add summary log for the transfer
+        const logDetails = `Xác nhận chuyển kho #${transferId} (${getTransferTypeText(transfer.type)}) từ ${getWarehouseName(transfer.fromWarehouse)} sang ${getWarehouseName(transfer.toWarehouse)} - Tổng ${transfer.items ? transfer.items.length : 0} vật tư`;
         await addLog('confirmation', 'Xác nhận chuyển kho', logDetails, getWarehouseName(currentWarehouse));
         
         showToast('success', 'Xác nhận thành công!', 'Chuyển kho đã được xác nhận và vật tư đã được cập nhật.');
