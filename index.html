@@ -336,10 +336,6 @@
                             <option value="urgent">Khẩn cấp</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label for="taskDeadline">Hạn Hoàn Thành</label>
-                        <input type="datetime-local" id="taskDeadline">
-                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -381,10 +377,6 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="itemCategory">Danh Mục</label>
-                        <input type="text" id="itemCategory">
-                    </div>
-                    <div class="form-group">
                         <label for="itemSource">Nguồn Gốc</label>
                         <input type="text" id="itemSource" placeholder="VD: Thu hồi từ trạm ABC, thay cho trạm XYZ">
                     </div>
@@ -420,12 +412,10 @@
             <div class="modal-body">
                 <form id="transferForm">
                     <div class="form-group">
-                        <label for="transferType">Loại Chuyển Kho *</label>
-                        <select id="transferType" required>
-                            <option value="">Chọn loại</option>
-                            <option value="request">Yêu cầu từ kho Hạ Tầng</option>
-                            <option value="return">Trả về kho Net</option>
-                        </select>
+                        <label>Chuyển kho:</label>
+                        <p id="transferDirection" style="font-weight: 600; color: #007bff; font-size: 1.1rem; margin: 10px 0;">
+                            <i class="fas fa-arrow-right"></i> Đang tải...
+                        </p>
                     </div>
                     <div class="form-group">
                         <label for="transferTask">Sự Vụ Liên Quan</label>

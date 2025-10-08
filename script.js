@@ -370,7 +370,7 @@ function updateActiveTasks() {
             </div>
             <div class="task-actions">
                 <button class="btn btn-sm btn-primary" onclick="viewTask(${task.id})">Xem</button>
-                <button class="btn btn-sm btn-success" onclick="updateTaskStatus(${task.id})">Cập nhật</button>
+                <button class="btn btn-sm btn-success" onclick="closeTask(${task.id})">Đóng sự vụ</button>
             </div>
         </div>
     `).join('');
@@ -477,7 +477,7 @@ function renderTasksList() {
             <div class="task-actions">
                 <button class="btn btn-sm btn-primary" onclick="viewTask(${task.id})">Xem chi tiết</button>
                 <button class="btn btn-sm btn-success" onclick="requestItems(${task.id})">Yêu cầu vật tư</button>
-                <button class="btn btn-sm btn-warning" onclick="updateTaskStatus(${task.id})">Cập nhật</button>
+                <button class="btn btn-sm btn-danger" onclick="closeTask(${task.id})">Đóng sự vụ</button>
                 <button class="btn btn-sm btn-info" onclick="viewTaskLogs(${task.id})">Lịch sử</button>
             </div>
         </div>
@@ -649,14 +649,19 @@ window.handleWarehouseChange = handleWarehouseChange;
 function showTransferModal() {
     document.getElementById('transferModalTitle').textContent = 'Chuyển Kho';
     document.getElementById('transferForm').reset();
-    updateTransferTaskOptions();
-    updateTransferItemsList(); // Add items list
     
-    // Add event listener for transfer type change
-    const transferType = document.getElementById('transferType');
-    if (transferType) {
-        transferType.addEventListener('change', updateTransferItemsList);
+    // Determine transfer direction based on user's warehouse
+    const transferDirection = document.getElementById('transferDirection');
+    if (transferDirection) {
+        if (userWarehouse === 'net') {
+            transferDirection.innerHTML = '<i class="fas fa-arrow-right"></i> Từ Kho Net → Kho Hạ Tầng';
+        } else {
+            transferDirection.innerHTML = '<i class="fas fa-arrow-left"></i> Từ Kho Hạ Tầng → Kho Net';
+        }
     }
+    
+    updateTransferTaskOptions();
+    updateTransferItemsList();
     
     openModal('transferModal');
 }
@@ -672,27 +677,14 @@ function updateTransferTaskOptions() {
     });
 }
 
-// Update transfer items list based on transfer type
+// Update transfer items list based on user's warehouse
 function updateTransferItemsList() {
-    const transferType = document.getElementById('transferType');
     const itemsList = document.getElementById('transferItemsList');
     
-    if (!transferType || !itemsList) return;
+    if (!itemsList) return;
     
-    const type = transferType.value;
-    
-    if (!type) {
-        itemsList.innerHTML = '<p class="no-data">Chọn loại chuyển kho trước</p>';
-        return;
-    }
-    
-    // Determine source warehouse based on transfer type
-    let sourceWarehouse;
-    if (type === 'request') {
-        sourceWarehouse = 'net'; // Yêu cầu từ kho Hạ Tầng → lấy từ kho Net
-    } else if (type === 'return') {
-        sourceWarehouse = 'infrastructure'; // Trả về kho Net → lấy từ kho Hạ Tầng
-    }
+    // Source warehouse is always user's warehouse
+    const sourceWarehouse = userWarehouse;
     
     // Get available items from source warehouse
     const availableItems = inventoryData.filter(item => 
@@ -739,8 +731,7 @@ async function handleTaskSubmit(e) {
         type: document.getElementById('taskType').value,
         description: document.getElementById('taskDescription').value,
         location: document.getElementById('taskLocation').value,
-        priority: document.getElementById('taskPriority').value,
-        deadline: document.getElementById('taskDeadline').value ? new Date(document.getElementById('taskDeadline').value) : null
+        priority: document.getElementById('taskPriority').value
     };
 
     // Enhanced validation
@@ -813,7 +804,6 @@ async function handleItemSubmit(e) {
         serial: document.getElementById('itemSerial').value,
         name: document.getElementById('itemName').value,
         warehouse: document.getElementById('itemWarehouse').value,
-        category: document.getElementById('itemCategory').value,
         source: document.getElementById('itemSource').value,
         condition: document.getElementById('itemCondition').value,
         description: document.getElementById('itemDescription').value,
@@ -940,18 +930,10 @@ async function handleTransferSubmit(e) {
         window.clearFormErrors('transferForm');
     }
     
-    const formData = {
-        type: document.getElementById('transferType').value,
-        taskId: document.getElementById('transferTask').value ? parseInt(document.getElementById('transferTask').value) : null,
-        notes: document.getElementById('transferNotes').value
-    };
-
-    if (!formData.type) {
-        showToast('error', 'Lỗi!', 'Vui lòng chọn loại chuyển kho.');
-        return;
-    }
+    const taskId = document.getElementById('transferTask').value ? parseInt(document.getElementById('transferTask').value) : null;
+    const notes = document.getElementById('transferNotes').value;
     
-    if (!formData.taskId) {
+    if (!taskId) {
         showToast('error', 'Lỗi!', 'Vui lòng chọn sự vụ liên quan.');
         return;
     }
@@ -970,26 +952,20 @@ async function handleTransferSubmit(e) {
         return;
     }
 
-    // Determine warehouses based on transfer type
-    let fromWarehouse, toWarehouse;
-    if (formData.type === 'request') {
-        fromWarehouse = 'net';
-        toWarehouse = 'infrastructure';
-    } else {
-        fromWarehouse = 'infrastructure';
-        toWarehouse = 'net';
-    }
+    // Determine warehouses based on user's warehouse
+    const fromWarehouse = userWarehouse;
+    const toWarehouse = userWarehouse === 'net' ? 'infrastructure' : 'net';
     
-    // Check if user has permission to transfer from source warehouse
-    if (!canManageWarehouse(fromWarehouse)) {
-        showToast('error', 'Không có quyền!', `Bạn không có quyền chuyển vật tư từ ${getWarehouseName(fromWarehouse)}.`);
-        console.log('❌ Permission denied for transfer from:', fromWarehouse);
-        return;
-    }
+    // Determine transfer type
+    const type = userWarehouse === 'net' ? 'request' : 'return';
+    
+    console.log(`🔄 Transfer from ${fromWarehouse} to ${toWarehouse}, type: ${type}`);
 
     const newTransfer = {
         id: transfersData.length > 0 ? Math.max(...transfersData.map(t => t.id), 0) + 1 : 1,
-        ...formData,
+        type: type,
+        taskId: taskId,
+        notes: notes,
         fromWarehouse,
         toWarehouse,
         items: selectedItems,
@@ -1398,8 +1374,58 @@ function requestItems(taskId) {
     showToast('info', 'Yêu cầu vật tư', `Yêu cầu vật tư cho sự vụ #${taskId}`);
 }
 
-function updateTaskStatus(taskId) {
-    showToast('info', 'Cập nhật sự vụ', `Cập nhật trạng thái sự vụ #${taskId}`);
+async function closeTask(taskId) {
+    const task = tasksData.find(t => t.id === taskId);
+    if (!task) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy sự vụ.');
+        return;
+    }
+    
+    // Check if user is the creator or admin
+    const canClose = isUserAdmin || task.createdBy === getWarehouseName(userWarehouse);
+    if (!canClose) {
+        showToast('error', 'Không có quyền!', 'Chỉ người tạo sự vụ hoặc Admin mới có thể đóng sự vụ.');
+        return;
+    }
+    
+    // Show confirmation
+    const confirmed = await showConfirmDialog(
+        'Đóng sự vụ',
+        `Bạn có chắc muốn đóng sự vụ này?<br><br>
+        <strong>Tên:</strong> ${task.name}<br>
+        <strong>Loại:</strong> ${getTaskTypeText(task.type)}<br>
+        <strong>Địa điểm:</strong> ${task.location}<br>
+        <strong>Trạng thái hiện tại:</strong> ${getTaskStatusText(task.status)}`,
+        'Đóng sự vụ',
+        'Hủy'
+    );
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    try {
+        // Update task status
+        task.status = 'completed';
+        task.completedDate = new Date();
+        task.completedBy = currentUser ? (currentUser.displayName || currentUser.email) : 'Unknown';
+        
+        // Save to Firebase
+        if (typeof window.saveTaskToFirebase === 'function') {
+            await window.saveTaskToFirebase(task);
+            console.log('✅ Task closed and saved to Firebase');
+        }
+        
+        await addLog('task', 'Đóng sự vụ', `Đóng sự vụ: ${task.name}`, getWarehouseName(currentWarehouse));
+        showToast('success', 'Đóng sự vụ thành công!', 'Sự vụ đã được đánh dấu hoàn thành.');
+        
+        updateDashboard();
+        renderTasksList();
+        
+    } catch (error) {
+        console.error('Error closing task:', error);
+        showToast('error', 'Lỗi!', 'Không thể đóng sự vụ.');
+    }
 }
 
 async function confirmTransfer(transferId) {
@@ -1516,7 +1542,6 @@ function editItem(itemId) {
     document.getElementById('itemSerial').value = item.serial;
     document.getElementById('itemName').value = item.name;
     document.getElementById('itemWarehouse').value = item.warehouse;
-    document.getElementById('itemCategory').value = item.category || '';
     document.getElementById('itemSource').value = item.source || '';
     document.getElementById('itemCondition').value = item.condition;
     document.getElementById('itemDescription').value = item.description || '';
