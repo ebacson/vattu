@@ -1509,4 +1509,3 @@ async function updateUserInterface(user) {
         userInfo.style.display = 'none';
     }
 }
-}
