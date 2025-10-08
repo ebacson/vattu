@@ -49,10 +49,13 @@ function waitForFirebaseFunctions() {
 function canManageWarehouse(warehouse) {
     // Admin can manage all warehouses
     if (isUserAdmin) {
+        console.log('✅ Admin can manage all warehouses');
         return true;
     }
     // Regular users can only manage their assigned warehouse
-    return userWarehouse === warehouse;
+    const canManage = userWarehouse === warehouse;
+    console.log(`🔐 Can manage ${warehouse}:`, canManage, '(User warehouse:', userWarehouse + ')');
+    return canManage;
 }
 
 function canViewWarehouse(warehouse) {
@@ -1402,7 +1405,10 @@ function editItem(itemId) {
     }
     
     if (!canEditItem(item)) {
-        showToast('error', 'Lỗi quyền!', `Bạn không có quyền chỉnh sửa vật tư trong ${getWarehouseName(item.warehouse)}.`);
+        const userWarehouseName = getWarehouseName(userWarehouse);
+        const itemWarehouseName = getWarehouseName(item.warehouse);
+        showToast('error', 'Không có quyền!', `Bạn chỉ có quyền quản lý ${userWarehouseName}. Vật tư này thuộc ${itemWarehouseName}.`);
+        console.log('❌ Permission denied: User warehouse:', userWarehouse, 'Item warehouse:', item.warehouse);
         return;
     }
     
@@ -1439,7 +1445,10 @@ async function deleteItem(itemId) {
     }
     
     if (!canEditItem(item)) {
-        showToast('error', 'Lỗi quyền!', `Bạn không có quyền xóa vật tư trong ${getWarehouseName(item.warehouse)}.`);
+        const userWarehouseName = getWarehouseName(userWarehouse);
+        const itemWarehouseName = getWarehouseName(item.warehouse);
+        showToast('error', 'Không có quyền!', `Bạn chỉ có quyền quản lý ${userWarehouseName}. Vật tư này thuộc ${itemWarehouseName}.`);
+        console.log('❌ Permission denied for delete: User warehouse:', userWarehouse, 'Item warehouse:', item.warehouse);
         return;
     }
     
