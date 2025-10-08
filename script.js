@@ -117,11 +117,23 @@ function updateUIForPermissions() {
     const addItemBtn = document.getElementById('addItemBtn');
     if (addItemBtn) {
         if (canCreateItem(currentWarehouse)) {
-            addItemBtn.style.display = 'block';
+            addItemBtn.style.display = 'inline-block';
             addItemBtn.disabled = false;
         } else {
-            addItemBtn.style.display = 'none';
-            addItemBtn.disabled = true;
+            addItemBtn.style.display = 'inline-block';
+            addItemBtn.disabled = false;
+        }
+    }
+    
+    // Update create task button visibility
+    const createTaskBtn = document.getElementById('createTaskBtn');
+    if (createTaskBtn) {
+        if (canCreateTask()) {
+            createTaskBtn.style.display = 'inline-block';
+            createTaskBtn.disabled = false;
+        } else {
+            createTaskBtn.style.display = 'inline-block';
+            createTaskBtn.disabled = false;
         }
     }
     
@@ -1496,4 +1508,5 @@ async function updateUserInterface(user) {
     } else if (userInfo) {
         userInfo.style.display = 'none';
     }
+}
 }
