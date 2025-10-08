@@ -373,7 +373,7 @@ function updateActiveTasks() {
             <div class="task-info">
                 <p><i class="fas fa-map-marker-alt"></i> ${task.location}</p>
                 <p><i class="fas fa-clock"></i> Hạn: ${formatDate(task.deadline)}</p>
-                <p><i class="fas fa-boxes"></i> ${task.assignedItems.length} vật tư</p>
+                <p><i class="fas fa-boxes"></i> ${task.assignedItems ? task.assignedItems.length : 0} vật tư</p>
             </div>
             <div class="task-actions">
                 <button class="btn btn-sm btn-primary" onclick="viewTask(${task.id})">Xem</button>

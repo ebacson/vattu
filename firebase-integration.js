@@ -97,7 +97,9 @@ async function loadTasksFromRealtimeDB() {
                     id: key,
                     ...data[key],
                     createdDate: data[key].createdDate ? new Date(data[key].createdDate) : new Date(),
-                    deadline: data[key].deadline ? new Date(data[key].deadline) : null
+                    deadline: data[key].deadline ? new Date(data[key].deadline) : null,
+                    assignedItems: data[key].assignedItems || [],
+                    completedItems: data[key].completedItems || []
                 }));
                 console.log('📋 Loaded tasks data:', tasksData.length, 'tasks');
             } else {
