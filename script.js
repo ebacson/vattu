@@ -100,20 +100,14 @@ function canConfirmTransfer(transfer) {
 
 // Update UI based on user permissions
 function updateUIForPermissions() {
-    console.log('🔐 Updating UI for permissions:', { userWarehouse, isUserAdmin });
+    console.log('🔐 Updating UI for permissions:', { userWarehouse, isUserAdmin, currentWarehouse });
     
-    // Update warehouse selector visibility
-    const warehouseSelector = document.getElementById('currentWarehouse');
-    if (warehouseSelector) {
-        if (isUserAdmin) {
-            // Admin can see all warehouses
-            warehouseSelector.style.display = 'block';
-            warehouseSelector.disabled = false;
-        } else {
-            // Regular users can only see their assigned warehouse
-            warehouseSelector.style.display = 'none';
-            warehouseSelector.disabled = true;
-        }
+    // Update warehouse display (no selector anymore, just display)
+    const userWarehouseDisplay = document.getElementById('userWarehouseDisplay');
+    if (userWarehouseDisplay) {
+        const warehouseName = userWarehouse === 'net' ? 'Kho Net' : 'Kho Hạ Tầng';
+        userWarehouseDisplay.textContent = warehouseName;
+        console.log('✅ Warehouse display updated:', warehouseName);
     }
     
     // Update add item button visibility
@@ -152,9 +146,6 @@ function updateUIForPermissions() {
 function initializeApp() {
     console.log('Initializing 2-Warehouse Inventory Management System with Firebase...');
     
-    // Setup warehouse selector
-    setupWarehouseSelector();
-    
     // Initialize form validation
     if (typeof window.initializeFormValidation === 'function') {
         window.initializeFormValidation();
@@ -173,13 +164,8 @@ function setupEventListeners() {
         });
     });
 
-    // Warehouse selector
-    document.getElementById('currentWarehouse').addEventListener('change', function() {
-        currentWarehouse = this.value;
-        updateDashboard();
-        renderInventoryTable();
-        showToast('info', 'Đã chuyển kho', `Chuyển sang ${this.value === 'net' ? 'Kho Net' : 'Kho Hạ Tầng'}`);
-    });
+    // Warehouse display (no longer a selector, just display user's warehouse)
+    // Event listener removed as users cannot change their assigned warehouse
 
     // Search and filters
     document.getElementById('searchInput').addEventListener('input', handleSearch);
@@ -205,10 +191,8 @@ function setupEventListeners() {
 }
 
 // Warehouse Management
-function setupWarehouseSelector() {
-    const selector = document.getElementById('currentWarehouse');
-    selector.value = currentWarehouse;
-}
+// Warehouse selector removed - users now have fixed assigned warehouse
+// This function is no longer needed
 
 function getWarehouseName(warehouse) {
     return warehouse === 'net' ? 'Kho Net' : 'Kho Hạ Tầng';
@@ -1729,7 +1713,7 @@ async function setupAuthentication() {
 async function updateUserInterface(user) {
     const userInfo = document.getElementById('userInfo');
     const userName = document.getElementById('userName');
-    const currentWarehouseSelect = document.getElementById('currentWarehouse');
+    const userWarehouseDisplay = document.getElementById('userWarehouseDisplay');
     
     if (user && userInfo && userName) {
         try {
@@ -1757,9 +1741,9 @@ async function updateUserInterface(user) {
                     </small>
                 `;
                 
-                // Update warehouse selector to match user's warehouse
-                if (currentWarehouseSelect) {
-                    currentWarehouseSelect.value = warehouse;
+                // Update warehouse display
+                if (userWarehouseDisplay) {
+                    userWarehouseDisplay.textContent = warehouse === 'net' ? 'Kho Net' : 'Kho Hạ Tầng';
                     currentWarehouse = warehouse;
                 }
                 
@@ -1794,8 +1778,8 @@ async function updateUserInterface(user) {
                 isUserAdmin = false;
                 currentWarehouse = 'net';
                 
-                if (currentWarehouseSelect) {
-                    currentWarehouseSelect.value = 'net';
+                if (userWarehouseDisplay) {
+                    userWarehouseDisplay.textContent = 'Kho Net (mặc định)';
                 }
 
                 updateUIForPermissions();
