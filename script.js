@@ -594,6 +594,13 @@ function showAddItemModal() {
     currentEditingItem = null;
     document.getElementById('itemModalTitle').textContent = 'Thêm Vật Tư Mới';
     document.getElementById('itemForm').reset();
+    
+    // Reset button text
+    const submitBtn = document.querySelector('#itemModal .modal-footer button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.textContent = 'Thêm Vật Tư';
+    }
+    
     openModal('itemModal');
 }
 
@@ -739,42 +746,67 @@ async function handleItemSubmit(e) {
     }
     console.log('✅ Permission granted');
 
-    const newItem = {
-        id: inventoryData.length > 0 ? Math.max(...inventoryData.map(i => i.id), 0) + 1 : 1,
-        ...formData,
-        dateAdded: new Date(),
-        taskId: null
-    };
-    
-    console.log('📦 New item created:', newItem);
-
     try {
-        // Check if Firebase functions are available
-        console.log('🔥 Checking Firebase functions...');
-        console.log('saveInventoryToFirebase available:', typeof window.saveInventoryToFirebase);
-        
-        if (typeof window.saveInventoryToFirebase === 'function') {
-            console.log('💾 Saving to Firebase...');
+        if (currentEditingItem) {
+            // UPDATE existing item
+            console.log('📝 Updating existing item:', currentEditingItem.id);
+            
+            const updatedItem = {
+                ...currentEditingItem,
+                ...formData,
+                dateAdded: currentEditingItem.dateAdded // Keep original date
+            };
+            
+            console.log('📦 Updated item:', updatedItem);
+            
             // Save to Firebase
-            await window.saveInventoryToFirebase(newItem);
-            console.log('✅ Saved to Firebase');
+            if (typeof window.saveInventoryToFirebase === 'function') {
+                console.log('💾 Updating in Firebase...');
+                await window.saveInventoryToFirebase(updatedItem);
+                console.log('✅ Updated in Firebase');
+            }
             
             // Update local data
-            inventoryData.push(newItem);
-            console.log('✅ Added to local data, total items:', inventoryData.length);
+            const index = inventoryData.findIndex(i => i.id === currentEditingItem.id);
+            if (index !== -1) {
+                inventoryData[index] = updatedItem;
+                console.log('✅ Updated in local data');
+            }
             
-            await addLog('inventory', 'Thêm vật tư', `Thêm vật tư: ${newItem.name} vào ${getWarehouseName(newItem.warehouse)}`, getWarehouseName(currentWarehouse));
+            await addLog('inventory', 'Cập nhật vật tư', `Cập nhật vật tư: ${updatedItem.name}`, getWarehouseName(currentWarehouse));
+            showToast('success', 'Cập nhật thành công!', 'Vật tư đã được cập nhật.');
             
-            showToast('success', 'Thêm vật tư thành công!', 'Vật tư mới đã được thêm vào hệ thống và lưu vào Firebase.');
         } else {
-            console.log('⚠️ Using fallback (no Firebase)');
-            // Fallback: just update local data
-            inventoryData.push(newItem);
-            console.log('✅ Added to local data (fallback), total items:', inventoryData.length);
+            // CREATE new item
+            const newItem = {
+                id: inventoryData.length > 0 ? Math.max(...inventoryData.map(i => i.id), 0) + 1 : 1,
+                ...formData,
+                dateAdded: new Date(),
+                taskId: null
+            };
             
-            addLog('inventory', 'Thêm vật tư', `Thêm vật tư: ${newItem.name} vào ${getWarehouseName(newItem.warehouse)}`, getWarehouseName(currentWarehouse));
+            console.log('📦 New item created:', newItem);
+            console.log('🔥 Checking Firebase functions...');
+            console.log('saveInventoryToFirebase available:', typeof window.saveInventoryToFirebase);
             
-            showToast('warning', 'Thêm vật tư thành công!', 'Vật tư đã được thêm vào hệ thống (chưa lưu Firebase).');
+            if (typeof window.saveInventoryToFirebase === 'function') {
+                console.log('💾 Saving to Firebase...');
+                await window.saveInventoryToFirebase(newItem);
+                console.log('✅ Saved to Firebase');
+                
+                inventoryData.push(newItem);
+                console.log('✅ Added to local data, total items:', inventoryData.length);
+                
+                await addLog('inventory', 'Thêm vật tư', `Thêm vật tư: ${newItem.name} vào ${getWarehouseName(newItem.warehouse)}`, getWarehouseName(currentWarehouse));
+                showToast('success', 'Thêm vật tư thành công!', 'Vật tư mới đã được thêm vào hệ thống và lưu vào Firebase.');
+            } else {
+                console.log('⚠️ Using fallback (no Firebase)');
+                inventoryData.push(newItem);
+                console.log('✅ Added to local data (fallback), total items:', inventoryData.length);
+                
+                addLog('inventory', 'Thêm vật tư', `Thêm vật tư: ${newItem.name} vào ${getWarehouseName(newItem.warehouse)}`, getWarehouseName(currentWarehouse));
+                showToast('warning', 'Thêm vật tư thành công!', 'Vật tư đã được thêm vào hệ thống (chưa lưu Firebase).');
+            }
         }
         
         updateDashboard();
@@ -1315,7 +1347,29 @@ function editItem(itemId) {
         return;
     }
     
-    showToast('info', 'Chỉnh sửa vật tư', `Chỉnh sửa vật tư #${itemId}`);
+    // Set current editing item
+    currentEditingItem = item;
+    
+    // Update modal title
+    document.getElementById('itemModalTitle').textContent = 'Chỉnh Sửa Vật Tư';
+    
+    // Populate form with item data
+    document.getElementById('itemSerial').value = item.serial;
+    document.getElementById('itemName').value = item.name;
+    document.getElementById('itemWarehouse').value = item.warehouse;
+    document.getElementById('itemCategory').value = item.category || '';
+    document.getElementById('itemSource').value = item.source || '';
+    document.getElementById('itemCondition').value = item.condition;
+    document.getElementById('itemDescription').value = item.description || '';
+    
+    // Change button text
+    const submitBtn = document.querySelector('#itemForm button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.innerHTML = '<i class="fas fa-save"></i> Cập Nhật';
+    }
+    
+    // Open modal
+    openModal('itemModal');
 }
 
 function viewItemHistory(itemId) {
