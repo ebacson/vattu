@@ -731,10 +731,13 @@ async function handleItemSubmit(e) {
     }
     
     // Check permissions
+    console.log('🔐 Checking permissions for warehouse:', formData.warehouse);
     if (!canCreateItem(formData.warehouse)) {
+        console.log('❌ Permission denied');
         showToast('error', 'Lỗi quyền!', `Bạn không có quyền thêm vật tư vào ${getWarehouseName(formData.warehouse)}.`);
         return;
     }
+    console.log('✅ Permission granted');
 
     const newItem = {
         id: inventoryData.length > 0 ? Math.max(...inventoryData.map(i => i.id), 0) + 1 : 1,
@@ -742,21 +745,33 @@ async function handleItemSubmit(e) {
         dateAdded: new Date(),
         taskId: null
     };
+    
+    console.log('📦 New item created:', newItem);
 
     try {
         // Check if Firebase functions are available
+        console.log('🔥 Checking Firebase functions...');
+        console.log('saveInventoryToFirebase available:', typeof window.saveInventoryToFirebase);
+        
         if (typeof window.saveInventoryToFirebase === 'function') {
+            console.log('💾 Saving to Firebase...');
             // Save to Firebase
             await window.saveInventoryToFirebase(newItem);
+            console.log('✅ Saved to Firebase');
             
             // Update local data
             inventoryData.push(newItem);
+            console.log('✅ Added to local data, total items:', inventoryData.length);
+            
             await addLog('inventory', 'Thêm vật tư', `Thêm vật tư: ${newItem.name} vào ${getWarehouseName(newItem.warehouse)}`, getWarehouseName(currentWarehouse));
             
             showToast('success', 'Thêm vật tư thành công!', 'Vật tư mới đã được thêm vào hệ thống và lưu vào Firebase.');
         } else {
+            console.log('⚠️ Using fallback (no Firebase)');
             // Fallback: just update local data
             inventoryData.push(newItem);
+            console.log('✅ Added to local data (fallback), total items:', inventoryData.length);
+            
             addLog('inventory', 'Thêm vật tư', `Thêm vật tư: ${newItem.name} vào ${getWarehouseName(newItem.warehouse)}`, getWarehouseName(currentWarehouse));
             
             showToast('warning', 'Thêm vật tư thành công!', 'Vật tư đã được thêm vào hệ thống (chưa lưu Firebase).');
