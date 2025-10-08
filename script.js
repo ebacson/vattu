@@ -646,9 +646,15 @@ function handleWarehouseChange() {
 // Make function global
 window.handleWarehouseChange = handleWarehouseChange;
 
+// Selected items for transfer
+let selectedTransferItems = [];
+
 function showTransferModal() {
     document.getElementById('transferModalTitle').textContent = 'Chuyển Kho';
     document.getElementById('transferForm').reset();
+    
+    // Reset selected items
+    selectedTransferItems = [];
     
     // Determine transfer direction based on user's warehouse
     const transferDirection = document.getElementById('transferDirection');
@@ -661,7 +667,16 @@ function showTransferModal() {
     }
     
     updateTransferTaskOptions();
-    updateTransferItemsList();
+    renderAvailableItems();
+    renderSelectedItems();
+    
+    // Setup search
+    const searchInput = document.getElementById('transferItemSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            renderAvailableItems(this.value);
+        });
+    }
     
     openModal('transferModal');
 }
@@ -677,44 +692,98 @@ function updateTransferTaskOptions() {
     });
 }
 
-// Update transfer items list based on user's warehouse
-function updateTransferItemsList() {
-    const itemsList = document.getElementById('transferItemsList');
+// Render available items for transfer
+function renderAvailableItems(searchTerm = '') {
+    const container = document.getElementById('transferAvailableItems');
+    if (!container) return;
     
-    if (!itemsList) return;
-    
-    // Source warehouse is always user's warehouse
-    const sourceWarehouse = userWarehouse;
-    
-    // Get available items from source warehouse
-    const availableItems = inventoryData.filter(item => 
-        item.warehouse === sourceWarehouse && 
-        (item.condition === 'available' || item.condition === 'in-use')
-    );
+    // Get items from user's warehouse that are not already selected
+    const availableItems = inventoryData.filter(item => {
+        const isInUserWarehouse = item.warehouse === userWarehouse;
+        const isNotSelected = !selectedTransferItems.includes(item.id);
+        const isAvailable = item.condition === 'available' || item.condition === 'in-use';
+        const matchesSearch = !searchTerm || item.serial.toLowerCase().includes(searchTerm.toLowerCase()) || item.name.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        return isInUserWarehouse && isNotSelected && isAvailable && matchesSearch;
+    });
     
     if (availableItems.length === 0) {
-        itemsList.innerHTML = `<p class="no-data">Không có vật tư nào trong ${getWarehouseName(sourceWarehouse)}</p>`;
+        container.innerHTML = '<p class="no-data" style="margin: 10px 0;">Không có vật tư nào</p>';
         return;
     }
     
-    // Render items as checkboxes
-    itemsList.innerHTML = availableItems.map(item => `
-        <div class="transfer-item">
-            <input type="checkbox" id="item-${item.id}" value="${item.id}" name="transferItems">
-            <label for="item-${item.id}" style="cursor: pointer; flex: 1; margin: 0;">
-                <strong>${item.serial}</strong> - ${item.name}
-                <small style="color: #666; display: block; margin-top: 3px;">
-                    ${getConditionText(item.condition)} | ${item.category || 'Chưa phân loại'}
-                </small>
-            </label>
+    container.innerHTML = availableItems.map(item => `
+        <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #f0f0f0; background: white; transition: background 0.2s;" onmouseenter="this.style.background='#f8f9fa'" onmouseleave="this.style.background='white'">
+            <div style="flex: 1;">
+                <div style="font-weight: 600; color: #2c3e50;">${item.serial}</div>
+                <div style="color: #666; font-size: 0.9rem;">${item.name}</div>
+                <div style="color: #999; font-size: 0.85rem;">${getConditionText(item.condition)}</div>
+            </div>
+            <button class="btn btn-sm btn-primary" onclick="addItemToTransfer(${item.id})" style="white-space: nowrap;">
+                <i class="fas fa-plus"></i> Thêm
+            </button>
         </div>
     `).join('');
     
-    console.log('📦 Transfer items list updated:', availableItems.length, 'items from', sourceWarehouse);
+    console.log('📦 Available items:', availableItems.length);
 }
 
-// Make function global
-window.updateTransferItemsList = updateTransferItemsList;
+// Render selected items for transfer
+function renderSelectedItems() {
+    const container = document.getElementById('transferSelectedItems');
+    const countSpan = document.getElementById('selectedItemsCount');
+    
+    if (!container) return;
+    
+    if (countSpan) {
+        countSpan.textContent = selectedTransferItems.length;
+    }
+    
+    if (selectedTransferItems.length === 0) {
+        container.innerHTML = '<p class="no-data" style="margin: 0; color: #999;">Chưa chọn vật tư nào</p>';
+        return;
+    }
+    
+    container.innerHTML = selectedTransferItems.map(itemId => {
+        const item = inventoryData.find(i => i.id === itemId);
+        if (!item) return '';
+        
+        return `
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px; background: white; border-radius: 6px; margin-bottom: 5px;">
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; color: #2c3e50;">${item.serial} - ${item.name}</div>
+                    <div style="color: #999; font-size: 0.85rem;">${getConditionText(item.condition)}</div>
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="removeItemFromTransfer(${item.id})" style="white-space: nowrap;">
+                    <i class="fas fa-times"></i> Xóa
+                </button>
+            </div>
+        `;
+    }).join('');
+    
+    console.log('✅ Selected items:', selectedTransferItems.length);
+}
+
+// Add item to transfer list
+function addItemToTransfer(itemId) {
+    if (!selectedTransferItems.includes(itemId)) {
+        selectedTransferItems.push(itemId);
+        renderAvailableItems(document.getElementById('transferItemSearch').value);
+        renderSelectedItems();
+        showToast('success', 'Đã thêm', 'Vật tư đã được thêm vào danh sách chuyển kho.');
+    }
+}
+
+// Remove item from transfer list
+function removeItemFromTransfer(itemId) {
+    selectedTransferItems = selectedTransferItems.filter(id => id !== itemId);
+    renderAvailableItems(document.getElementById('transferItemSearch').value);
+    renderSelectedItems();
+}
+
+// Make functions global
+window.addItemToTransfer = addItemToTransfer;
+window.removeItemFromTransfer = removeItemFromTransfer;
 
 // Form Handlers
 async function handleTaskSubmit(e) {
@@ -938,16 +1007,10 @@ async function handleTransferSubmit(e) {
         return;
     }
     
-    // Get selected items
-    const selectedItems = [];
-    const checkboxes = document.querySelectorAll('input[name="transferItems"]:checked');
-    checkboxes.forEach(cb => {
-        selectedItems.push(parseInt(cb.value));
-    });
+    // Use selected items from the list
+    console.log('📦 Selected items for transfer:', selectedTransferItems);
     
-    console.log('📦 Selected items for transfer:', selectedItems);
-    
-    if (selectedItems.length === 0) {
+    if (selectedTransferItems.length === 0) {
         showToast('error', 'Lỗi!', 'Vui lòng chọn ít nhất một vật tư để chuyển.');
         return;
     }
@@ -968,7 +1031,7 @@ async function handleTransferSubmit(e) {
         notes: notes,
         fromWarehouse,
         toWarehouse,
-        items: selectedItems,
+        items: selectedTransferItems,
         status: 'pending',
         createdDate: new Date(),
         createdBy: currentUser ? (currentUser.displayName || currentUser.email) : 'Unknown',
@@ -984,9 +1047,9 @@ async function handleTransferSubmit(e) {
             
             // Update local data
             transfersData.push(newTransfer);
-            await addLog('transfer', 'Tạo chuyển kho', `Tạo chuyển kho ${getTransferTypeText(newTransfer.type)} từ ${getWarehouseName(fromWarehouse)} sang ${getWarehouseName(toWarehouse)} (${selectedItems.length} vật tư)`, getWarehouseName(currentWarehouse));
+            await addLog('transfer', 'Tạo chuyển kho', `Tạo chuyển kho ${getTransferTypeText(newTransfer.type)} từ ${getWarehouseName(fromWarehouse)} sang ${getWarehouseName(toWarehouse)} (${selectedTransferItems.length} vật tư)`, getWarehouseName(currentWarehouse));
             
-            showToast('success', 'Tạo chuyển kho thành công!', `Đã tạo chuyển kho ${selectedItems.length} vật tư và lưu vào Firebase.`);
+            showToast('success', 'Tạo chuyển kho thành công!', `Đã tạo chuyển kho ${selectedTransferItems.length} vật tư và lưu vào Firebase.`);
         } else {
             // Fallback: just update local data
             transfersData.push(newTransfer);
