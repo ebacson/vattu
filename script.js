@@ -104,10 +104,16 @@ function updateUIForPermissions() {
     
     // Update warehouse display (no selector anymore, just display)
     const userWarehouseDisplay = document.getElementById('userWarehouseDisplay');
+    console.log('🔍 userWarehouseDisplay element:', userWarehouseDisplay);
+    console.log('🔍 userWarehouse value:', userWarehouse);
+    
     if (userWarehouseDisplay) {
         const warehouseName = userWarehouse === 'net' ? 'Kho Net' : 'Kho Hạ Tầng';
         userWarehouseDisplay.textContent = warehouseName;
+        userWarehouseDisplay.style.display = 'inline-block';
         console.log('✅ Warehouse display updated:', warehouseName);
+    } else {
+        console.error('❌ userWarehouseDisplay element not found!');
     }
     
     // Update add item button visibility
