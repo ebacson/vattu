@@ -434,6 +434,9 @@ function renderInventoryTable() {
                             <button class="btn btn-sm btn-warning" onclick="updateItemCondition(${item.id})" title="Cập nhật tình trạng">
                                 <i class="fas fa-tools"></i>
                             </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteItem(${item.id})" title="Xóa">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         ` : ''}
                     </div>
                 </td>
@@ -1370,6 +1373,61 @@ function editItem(itemId) {
     
     // Open modal
     openModal('itemModal');
+}
+
+async function deleteItem(itemId) {
+    const item = inventoryData.find(i => i.id === itemId);
+    if (!item) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy vật tư.');
+        return;
+    }
+    
+    if (!canEditItem(item)) {
+        showToast('error', 'Lỗi quyền!', `Bạn không có quyền xóa vật tư trong ${getWarehouseName(item.warehouse)}.`);
+        return;
+    }
+    
+    // Show confirmation dialog
+    const confirmed = await showConfirmDialog(
+        'Xác nhận xóa',
+        `Bạn có chắc muốn xóa vật tư này?<br><br>
+        <strong>Serial:</strong> ${item.serial}<br>
+        <strong>Tên:</strong> ${item.name}<br>
+        <strong>Kho:</strong> ${getWarehouseName(item.warehouse)}<br>
+        <strong>Tình trạng:</strong> ${getConditionText(item.condition)}`,
+        'Xóa',
+        'Hủy'
+    );
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    try {
+        // Delete from Firebase
+        if (typeof window.deleteInventoryFromFirebase === 'function') {
+            console.log('🗑️ Deleting from Firebase...');
+            await window.deleteInventoryFromFirebase(item.id);
+            console.log('✅ Deleted from Firebase');
+        }
+        
+        // Delete from local data
+        const index = inventoryData.findIndex(i => i.id === itemId);
+        if (index !== -1) {
+            inventoryData.splice(index, 1);
+            console.log('✅ Deleted from local data');
+        }
+        
+        await addLog('inventory', 'Xóa vật tư', `Xóa vật tư: ${item.name} (${item.serial})`, getWarehouseName(currentWarehouse));
+        showToast('success', 'Xóa thành công!', 'Vật tư đã được xóa khỏi hệ thống.');
+        
+        updateDashboard();
+        renderInventoryTable();
+        
+    } catch (error) {
+        console.error('Error deleting item:', error);
+        showToast('error', 'Lỗi!', 'Không thể xóa vật tư.');
+    }
 }
 
 function viewItemHistory(itemId) {
