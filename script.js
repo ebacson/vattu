@@ -1724,7 +1724,7 @@ async function updateUserInterface(user) {
     if (user && userInfo && userName) {
         try {
             // Get user data from Firebase
-            const { getUserData, getUserWarehouse, isUserAdmin } = await import('./auth-integration.js');
+            const { getUserData, getUserWarehouse, isUserAdmin: checkIsUserAdmin } = await import('./auth-integration.js');
             const userDataResult = await getUserData();
             
             if (userDataResult.success) {
