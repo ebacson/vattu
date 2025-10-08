@@ -598,14 +598,59 @@ function showAddItemModal() {
     document.getElementById('itemModalTitle').textContent = 'Thêm Vật Tư Mới';
     document.getElementById('itemForm').reset();
     
+    // Set warehouse to user's warehouse and disable if not admin
+    const warehouseSelect = document.getElementById('itemWarehouse');
+    if (warehouseSelect) {
+        warehouseSelect.value = userWarehouse;
+        if (!isUserAdmin) {
+            warehouseSelect.disabled = true;
+        } else {
+            warehouseSelect.disabled = false;
+        }
+    }
+    
     // Reset button text
     const submitBtn = document.querySelector('#itemModal .modal-footer button[type="submit"]');
     if (submitBtn) {
         submitBtn.textContent = 'Thêm Vật Tư';
     }
     
+    // Handle warehouse change to show/hide task field
+    handleWarehouseChange();
+    
     openModal('itemModal');
 }
+
+// Handle warehouse selection change
+function handleWarehouseChange() {
+    const warehouseSelect = document.getElementById('itemWarehouse');
+    const taskGroup = document.getElementById('itemTaskGroup');
+    const taskSelect = document.getElementById('itemTask');
+    
+    if (!warehouseSelect || !taskGroup || !taskSelect) return;
+    
+    const selectedWarehouse = warehouseSelect.value;
+    
+    if (selectedWarehouse === 'infrastructure') {
+        // Show task field for Hạ Tầng warehouse
+        taskGroup.style.display = 'block';
+        taskSelect.required = true;
+        
+        // Populate with available tasks
+        taskSelect.innerHTML = '<option value="">Chọn sự vụ</option>';
+        tasksData.filter(task => task.status === 'pending' || task.status === 'in-progress').forEach(task => {
+            taskSelect.innerHTML += `<option value="${task.id}">${task.name}</option>`;
+        });
+    } else {
+        // Hide task field for Net warehouse
+        taskGroup.style.display = 'none';
+        taskSelect.required = false;
+        taskSelect.value = '';
+    }
+}
+
+// Make function global
+window.handleWarehouseChange = handleWarehouseChange;
 
 function showTransferModal() {
     document.getElementById('transferModalTitle').textContent = 'Chuyển Kho';
@@ -707,6 +752,9 @@ async function handleItemSubmit(e) {
         window.clearFormErrors('itemForm');
     }
     
+    const taskSelect = document.getElementById('itemTask');
+    const taskId = taskSelect && taskSelect.value ? parseInt(taskSelect.value) : null;
+    
     const formData = {
         serial: document.getElementById('itemSerial').value,
         name: document.getElementById('itemName').value,
@@ -714,7 +762,8 @@ async function handleItemSubmit(e) {
         category: document.getElementById('itemCategory').value,
         source: document.getElementById('itemSource').value,
         condition: document.getElementById('itemCondition').value,
-        description: document.getElementById('itemDescription').value
+        description: document.getElementById('itemDescription').value,
+        taskId: taskId
     };
     
     console.log('📝 Form data:', formData);
@@ -738,6 +787,13 @@ async function handleItemSubmit(e) {
             return;
         }
         console.log('✅ Basic validation passed');
+    }
+    
+    // Additional validation for infrastructure warehouse
+    if (formData.warehouse === 'infrastructure' && !formData.taskId) {
+        console.log('❌ Task required for infrastructure warehouse');
+        showToast('error', 'Lỗi!', 'Vui lòng chọn sự vụ cho vật tư kho Hạ Tầng.');
+        return;
     }
     
     // Check permissions
@@ -784,8 +840,8 @@ async function handleItemSubmit(e) {
             const newItem = {
                 id: inventoryData.length > 0 ? Math.max(...inventoryData.map(i => i.id), 0) + 1 : 1,
                 ...formData,
-                dateAdded: new Date(),
-                taskId: null
+                dateAdded: new Date()
+                // taskId already in formData
             };
             
             console.log('📦 New item created:', newItem);

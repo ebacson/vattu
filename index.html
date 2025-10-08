@@ -371,10 +371,16 @@
                     </div>
                     <div class="form-group">
                         <label for="itemWarehouse">Kho *</label>
-                        <select id="itemWarehouse" required>
+                        <select id="itemWarehouse" required onchange="handleWarehouseChange()">
                             <option value="">Chọn kho</option>
                             <option value="net">Kho Net</option>
                             <option value="infrastructure">Kho Hạ Tầng</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="itemTaskGroup" style="display: none;">
+                        <label for="itemTask">Sự Vụ *</label>
+                        <select id="itemTask">
+                            <option value="">Chọn sự vụ</option>
                         </select>
                     </div>
                     <div class="form-group">
