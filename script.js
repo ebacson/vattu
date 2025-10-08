@@ -853,8 +853,8 @@ async function handleItemSubmit(e) {
                 await window.saveInventoryToFirebase(newItem);
                 console.log('✅ Saved to Firebase');
                 
-                inventoryData.push(newItem);
-                console.log('✅ Added to local data, total items:', inventoryData.length);
+                // Don't push to local array - Firebase onValue listener will update it automatically
+                // This prevents duplicate entries
                 
                 await addLog('inventory', 'Thêm vật tư', `Thêm vật tư: ${newItem.name} vào ${getWarehouseName(newItem.warehouse)}`, getWarehouseName(currentWarehouse));
                 showToast('success', 'Thêm vật tư thành công!', 'Vật tư mới đã được thêm vào hệ thống và lưu vào Firebase.');
@@ -868,8 +868,8 @@ async function handleItemSubmit(e) {
             }
         }
         
+        // Don't call renderInventoryTable() here - Firebase listener will trigger it
         updateDashboard();
-        renderInventoryTable();
         closeModal('itemModal');
         
     } catch (error) {
@@ -1659,6 +1659,10 @@ async function updateUserInterface(user) {
                 
                 // Update UI based on permissions
                 updateUIForPermissions();
+                
+                // Refresh dashboard and tables with user's warehouse
+                updateDashboard();
+                renderInventoryTable();
                 
                 userInfo.style.display = 'block';
                 

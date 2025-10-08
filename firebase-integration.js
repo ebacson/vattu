@@ -63,6 +63,7 @@ async function loadInventoryFromRealtimeDB() {
     return new Promise((resolve, reject) => {
         const inventoryRef = ref(database, DB_PATHS.INVENTORY);
         
+        let isFirstLoad = true;
         onValue(inventoryRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -77,7 +78,20 @@ async function loadInventoryFromRealtimeDB() {
                 inventoryData = [];
                 console.log('📦 No inventory data found');
             }
-            resolve();
+            
+            // Trigger UI update on data changes (but not on first load to avoid double render)
+            if (!isFirstLoad && typeof window.renderInventoryTable === 'function') {
+                console.log('🔄 Inventory data changed, updating UI...');
+                window.renderInventoryTable();
+                if (typeof window.updateDashboard === 'function') {
+                    window.updateDashboard();
+                }
+            }
+            
+            if (isFirstLoad) {
+                isFirstLoad = false;
+                resolve();
+            }
         }, (error) => {
             console.error('❌ Error loading inventory:', error);
             reject(error);
