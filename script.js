@@ -1449,20 +1449,33 @@ async function confirmTransfer(transferId) {
         
         // Update items in transfer if any
         if (transfer.items && transfer.items.length > 0) {
-            transfer.items.forEach(itemId => {
+            console.log(`🔄 Updating ${transfer.items.length} items warehouse to ${transfer.toWarehouse}`);
+            
+            for (const itemId of transfer.items) {
                 const item = inventoryData.find(i => i.id === itemId);
                 if (item) {
-                    // Update item warehouse
+                    console.log(`📦 Updating item ${item.serial} from ${item.warehouse} to ${transfer.toWarehouse}`);
+                    
+                    // Update item warehouse and status
                     item.warehouse = transfer.toWarehouse;
                     item.condition = 'in-use';
                     item.taskId = transfer.taskId;
+                    
+                    // Save updated item to Firebase
+                    if (typeof window.saveInventoryToFirebase === 'function') {
+                        await window.saveInventoryToFirebase(item);
+                        console.log(`✅ Item ${item.serial} warehouse updated in Firebase`);
+                    }
                 }
-            });
+            }
+            
+            console.log(`✅ All ${transfer.items.length} items updated to ${getWarehouseName(transfer.toWarehouse)}`);
         }
         
-        // Save to Firebase
+        // Save transfer to Firebase
         if (typeof window.saveTransferToFirebase === 'function') {
             await window.saveTransferToFirebase(transfer);
+            console.log('✅ Transfer confirmed and saved to Firebase');
         }
         
         // Add detailed log
