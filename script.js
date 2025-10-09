@@ -785,7 +785,25 @@ function renderAvailableItems(searchTerm = '') {
     const container = document.getElementById('transferAvailableItems');
     if (!container) return;
     
+    console.log('🔍 renderAvailableItems called');
+    console.log('👤 User warehouse:', userWarehouse);
+    console.log('📦 Total inventory:', inventoryData.length);
+    
     // Get items from user's warehouse that are not already selected
+    const itemsInUserWarehouse = inventoryData.filter(item => item.warehouse === userWarehouse);
+    console.log(`🏢 Items in ${userWarehouse}:`, itemsInUserWarehouse.length);
+    
+    const itemsWithCorrectCondition = itemsInUserWarehouse.filter(item => 
+        item.condition === 'available' || item.condition === 'in-use'
+    );
+    console.log('✅ Items available or in-use:', itemsWithCorrectCondition.length);
+    console.log('📋 Breakdown:', {
+        available: itemsInUserWarehouse.filter(i => i.condition === 'available').length,
+        'in-use': itemsInUserWarehouse.filter(i => i.condition === 'in-use').length,
+        maintenance: itemsInUserWarehouse.filter(i => i.condition === 'maintenance').length,
+        damaged: itemsInUserWarehouse.filter(i => i.condition === 'damaged').length
+    });
+    
     const availableItems = inventoryData.filter(item => {
         const isInUserWarehouse = item.warehouse === userWarehouse;
         const isNotSelected = !selectedTransferItems.includes(item.id);
@@ -794,6 +812,8 @@ function renderAvailableItems(searchTerm = '') {
         
         return isInUserWarehouse && isNotSelected && isAvailable && matchesSearch;
     });
+    
+    console.log('✅ Final available items for transfer:', availableItems.length);
     
     if (availableItems.length === 0) {
         container.innerHTML = '<p class="no-data" style="margin: 10px 0;">Không có vật tư nào</p>';
