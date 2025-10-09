@@ -3,6 +3,7 @@ let inventoryData = [];
 let tasksData = [];
 let transfersData = [];
 let logsData = [];
+let deliveryRequestsData = []; // NEW: Delivery requests waiting for confirmation
 let currentWarehouse = 'net';
 let currentEditingItem = null;
 let currentEditingTask = null;
@@ -449,11 +450,24 @@ function renderInventoryTable() {
                             </button>
                         ` : ''}
                         
-                        ${item.warehouse === 'net' && item.condition === 'available' ? `
+                        ${item.warehouse === 'net' && item.condition === 'available' && userWarehouse === 'net' ? `
                             <button class="btn btn-sm btn-success" onclick="deliverItemToTask(${item.id})" title="Giao cho sự vụ">
                                 <i class="fas fa-shipping-fast"></i> Giao
                             </button>
                         ` : ''}
+                        
+                        ${(() => {
+                            // Check if there's a pending delivery request for this item
+                            const pendingRequest = deliveryRequestsData.find(r => r.itemId === item.id && r.status === 'pending');
+                            if (pendingRequest && userWarehouse === 'infrastructure') {
+                                return `
+                                    <button class="btn btn-sm btn-warning" onclick="confirmDeliveryRequest(${pendingRequest.id})" title="Xác nhận nhận vật tư">
+                                        <i class="fas fa-check-circle"></i> Xác nhận
+                                    </button>
+                                `;
+                            }
+                            return '';
+                        })()}
                         
                         <button class="btn btn-sm btn-info" onclick="viewItemHistory(${item.id})" title="Lịch sử">
                             <i class="fas fa-history"></i>
@@ -888,11 +902,8 @@ async function handleTaskSubmit(e) {
     try {
         // Check if Firebase functions are available
         if (typeof window.saveTaskToFirebase === 'function') {
-            // Save to Firebase
+            // Save to Firebase (onValue listener will update tasksData automatically)
             await window.saveTaskToFirebase(newTask);
-            
-            // Update local data
-            tasksData.push(newTask);
             await addLog('task', 'Tạo sự vụ', `Tạo sự vụ: ${newTask.name}`, getWarehouseName(currentWarehouse));
             
             showToast('success', 'Tạo sự vụ thành công!', 'Sự vụ mới đã được tạo và lưu vào Firebase.');
@@ -1961,22 +1972,105 @@ async function handleDeliverItemSubmit(e) {
     }
     
     try {
-        // Update item
-        currentDeliveringItem.warehouse = 'infrastructure';
-        currentDeliveringItem.condition = 'in-use';
-        currentDeliveringItem.taskId = taskId;
+        // Create delivery request instead of direct transfer
+        const deliveryRequest = {
+            id: deliveryRequestsData.length > 0 ? Math.max(...deliveryRequestsData.map(d => d.id), 0) + 1 : 1,
+            itemId: currentDeliveringItem.id,
+            itemSerial: currentDeliveringItem.serial,
+            itemName: currentDeliveringItem.name,
+            taskId: taskId,
+            taskName: task.name,
+            status: 'pending', // pending, confirmed, rejected
+            requestedBy: currentUser ? (currentUser.displayName || currentUser.email) : 'Unknown',
+            requestedFrom: 'net',
+            requestedDate: new Date(),
+            confirmedBy: null,
+            confirmedDate: null,
+            notes: notes
+        };
         
-        // Save to Firebase
+        // Add to local data (Firebase integration will come later)
+        deliveryRequestsData.push(deliveryRequest);
+        
+        // Save to Firebase if available
+        if (typeof window.saveDeliveryRequestToFirebase === 'function') {
+            await window.saveDeliveryRequestToFirebase(deliveryRequest);
+        }
+        
+        // Add log
+        const logDetails = notes ? 
+            `Tạo yêu cầu giao vật tư ${currentDeliveringItem.serial} - ${currentDeliveringItem.name} cho sự vụ "${task.name}". Ghi chú: ${notes}` :
+            `Tạo yêu cầu giao vật tư ${currentDeliveringItem.serial} - ${currentDeliveringItem.name} cho sự vụ "${task.name}"`;
+        await addLog('delivery-request', 'Yêu cầu giao vật tư', logDetails, getWarehouseName(currentWarehouse));
+        
+        showToast('success', 'Tạo yêu cầu thành công!', `Yêu cầu giao vật tư đang chờ xác nhận từ Kho Hạ Tầng.`);
+        
+        closeModal('deliverItemModal');
+        currentDeliveringItem = null;
+        
+        updateDashboard();
+        renderInventoryTable();
+        
+    } catch (error) {
+        console.error('❌ Error creating delivery request:', error);
+        showToast('error', 'Lỗi!', 'Không thể tạo yêu cầu giao vật tư.');
+    }
+}
+
+// Confirm delivery request (Infrastructure warehouse user)
+async function confirmDeliveryRequest(requestId) {
+    const request = deliveryRequestsData.find(r => r.id === requestId);
+    if (!request) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy yêu cầu.');
+        return;
+    }
+    
+    const item = inventoryData.find(i => i.id === request.itemId);
+    if (!item) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy vật tư.');
+        return;
+    }
+    
+    const task = tasksData.find(t => t.id === request.taskId);
+    if (!task) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy sự vụ.');
+        return;
+    }
+    
+    // Show confirmation
+    const confirmed = await showConfirmDialog(
+        'Xác nhận nhận vật tư',
+        `Bạn xác nhận đã nhận vật tư này?<br><br>
+        <strong>Vật tư:</strong> ${item.serial} - ${item.name}<br>
+        <strong>Sự vụ:</strong> ${task.name}<br>
+        <strong>Người yêu cầu:</strong> ${request.requestedBy}<br>
+        <strong>Ngày yêu cầu:</strong> ${formatDateTime(request.requestedDate)}<br>
+        ${request.notes ? `<strong>Ghi chú:</strong> ${request.notes}` : ''}`,
+        'Xác nhận',
+        'Hủy'
+    );
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    try {
+        // Update item
+        item.warehouse = 'infrastructure';
+        item.condition = 'in-use';
+        item.taskId = request.taskId;
+        
+        // Save item to Firebase
         if (typeof window.saveInventoryToFirebase === 'function') {
-            await window.saveInventoryToFirebase(currentDeliveringItem);
+            await window.saveInventoryToFirebase(item);
         }
         
         // Add to task's assigned items
         if (!task.assignedItems) {
             task.assignedItems = [];
         }
-        if (!task.assignedItems.includes(currentDeliveringItem.id)) {
-            task.assignedItems.push(currentDeliveringItem.id);
+        if (!task.assignedItems.includes(item.id)) {
+            task.assignedItems.push(item.id);
             
             // Save task to Firebase
             if (typeof window.saveTaskToFirebase === 'function') {
@@ -1984,30 +2078,37 @@ async function handleDeliverItemSubmit(e) {
             }
         }
         
+        // Update delivery request status
+        request.status = 'confirmed';
+        request.confirmedBy = currentUser ? (currentUser.displayName || currentUser.email) : 'Unknown';
+        request.confirmedDate = new Date();
+        
+        // Save request to Firebase if available
+        if (typeof window.saveDeliveryRequestToFirebase === 'function') {
+            await window.saveDeliveryRequestToFirebase(request);
+        }
+        
         // Add log
-        const logDetails = notes ? 
-            `Giao vật tư ${currentDeliveringItem.serial} - ${currentDeliveringItem.name} cho sự vụ "${task.name}". Ghi chú: ${notes}` :
-            `Giao vật tư ${currentDeliveringItem.serial} - ${currentDeliveringItem.name} cho sự vụ "${task.name}"`;
-        await addLog('delivery', 'Giao vật tư', logDetails, getWarehouseName(currentWarehouse));
+        await addLog('delivery-confirmed', 'Xác nhận giao vật tư', 
+            `Xác nhận nhận vật tư ${item.serial} - ${item.name} cho sự vụ "${task.name}" (Yêu cầu bởi: ${request.requestedBy})`, 
+            getWarehouseName(currentWarehouse));
         
-        showToast('success', 'Giao vật tư thành công!', `Vật tư đã được giao cho sự vụ "${task.name}".`);
-        
-        closeModal('deliverItemModal');
-        currentDeliveringItem = null;
+        showToast('success', 'Xác nhận thành công!', `Vật tư đã được giao cho sự vụ "${task.name}".`);
         
         updateDashboard();
         renderInventoryTable();
         renderTasksList();
         
     } catch (error) {
-        console.error('❌ Error delivering item:', error);
-        showToast('error', 'Lỗi!', 'Không thể giao vật tư.');
+        console.error('❌ Error confirming delivery:', error);
+        showToast('error', 'Lỗi!', 'Không thể xác nhận giao vật tư.');
     }
 }
 
 // Make functions global
 window.returnItemToNet = returnItemToNet;
 window.deliverItemToTask = deliverItemToTask;
+window.confirmDeliveryRequest = confirmDeliveryRequest;
 
 function viewItemHistory(itemId) {
     showToast('info', 'Lịch sử vật tư', `Xem lịch sử vật tư #${itemId}`);
