@@ -428,11 +428,22 @@ function renderInventoryTable() {
             item.name.toLowerCase().includes(searchTerm) ||
             (item.category && item.category.toLowerCase().includes(searchTerm));
         
-        // Permission check: only show items from warehouses user can view
-        const canView = canViewWarehouse(item.warehouse);
+        // Permission check with special case for pending requests
+        // Infrastructure user can see Net items if there's a pending delivery request
+        const pendingDeliveryRequest = deliveryRequestsData.find(r => r.itemId === item.id && r.status === 'pending');
+        const canViewPendingDelivery = userWarehouse === 'infrastructure' && pendingDeliveryRequest;
+        
+        // Net user can see Infrastructure items if there's a pending return request  
+        const pendingReturnRequest = returnRequestsData.find(r => r.itemId === item.id && r.status === 'pending');
+        const canViewPendingReturn = userWarehouse === 'net' && pendingReturnRequest;
+        
+        const canView = canViewWarehouse(item.warehouse) || canViewPendingDelivery || canViewPendingReturn;
 
         return matchesWarehouse && matchesStatus && matchesSearch && canView;
     });
+
+    console.log('🔍 Pending delivery requests:', deliveryRequestsData.filter(r => r.status === 'pending').length);
+    console.log('🔍 Pending return requests:', returnRequestsData.filter(r => r.status === 'pending').length);
 
     console.log('✅ Filtered items:', filteredData.length);
 
