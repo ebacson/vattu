@@ -443,12 +443,25 @@ function renderInventoryTable() {
 
     tbody.innerHTML = filteredData.map(item => {
         const task = tasksData.find(t => t.id === item.taskId);
+        
+        // Check for pending requests
+        const pendingDelivery = deliveryRequestsData.find(r => r.itemId === item.id && r.status === 'pending');
+        const pendingReturn = returnRequestsData.find(r => r.itemId === item.id && r.status === 'pending');
+        const hasPendingRequest = pendingDelivery || pendingReturn;
+        
         return `
-            <tr>
-                <td><strong>${item.serial}</strong></td>
+            <tr style="${hasPendingRequest ? 'background: #fff9e6;' : ''}">
+                <td>
+                    <strong>${item.serial}</strong>
+                    ${hasPendingRequest ? '<br><small style="color: #f39c12;"><i class="fas fa-clock"></i> Chờ xác nhận</small>' : ''}
+                </td>
                 <td>${item.name}</td>
                 <td><span class="warehouse-badge ${item.warehouse}">${getWarehouseName(item.warehouse)}</span></td>
-                <td><span class="status-badge ${item.condition}">${getConditionText(item.condition)}</span></td>
+                <td>
+                    <span class="status-badge ${item.condition}">${getConditionText(item.condition)}</span>
+                    ${pendingDelivery ? '<br><small style="color: #3498db;"><i class="fas fa-arrow-right"></i> → Hạ Tầng</small>' : ''}
+                    ${pendingReturn ? '<br><small style="color: #27ae60;"><i class="fas fa-arrow-left"></i> → Net</small>' : ''}
+                </td>
                 <td>${item.source}</td>
                 <td>${formatDate(item.dateAdded)}</td>
                 <td>${task ? task.name : '-'}</td>
