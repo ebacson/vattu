@@ -751,17 +751,21 @@ function handleWarehouseChange() {
         taskGroup.style.display = 'block';
         taskSelect.required = true;
         
-        // Populate with available tasks
+        // Populate with ACTIVE tasks only (exclude completed)
         taskSelect.innerHTML = '<option value="">Chọn sự vụ thu hồi...</option>';
-        const availableTasks = tasksData.filter(task => task.status === 'pending' || task.status === 'in-progress');
+        const availableTasks = tasksData.filter(task => 
+            task.status === 'pending' || task.status === 'in-progress'
+        );
         
         if (availableTasks.length === 0) {
-            taskSelect.innerHTML += '<option value="" disabled>Chưa có sự vụ nào</option>';
+            taskSelect.innerHTML += '<option value="" disabled>Chưa có sự vụ đang hoạt động</option>';
         } else {
             availableTasks.forEach(task => {
-                taskSelect.innerHTML += `<option value="${task.id}">${task.name} (${getTaskTypeText(task.type)})</option>`;
+                taskSelect.innerHTML += `<option value="${task.id}">${task.name} (${getTaskTypeText(task.type)}) - ${task.location}</option>`;
             });
         }
+        
+        console.log('📋 Available tasks for item assignment:', availableTasks.length);
         
         console.log('📋 Infrastructure warehouse selected - Task field shown with', availableTasks.length, 'tasks');
     } else {
@@ -1112,6 +1116,26 @@ async function handleItemSubmit(e) {
         }
         
         return;
+    }
+    
+    // Check if task is completed (for infrastructure items)
+    if (formData.warehouse === 'infrastructure' && formData.taskId) {
+        const selectedTask = tasksData.find(t => t.id === formData.taskId);
+        if (selectedTask && selectedTask.status === 'completed') {
+            console.log('❌ Cannot assign items to completed task');
+            showToast('error', 'Sự vụ đã đóng!', 'Không thể gán vật tư vào sự vụ đã hoàn thành. Sự vụ đã đóng chỉ để thống kê.');
+            
+            const taskSelect = document.getElementById('itemTask');
+            if (taskSelect) {
+                taskSelect.style.borderColor = '#e74c3c';
+                taskSelect.focus();
+                setTimeout(() => {
+                    taskSelect.style.borderColor = '';
+                }, 3000);
+            }
+            
+            return;
+        }
     }
     
     // Check permissions
@@ -1679,10 +1703,13 @@ async function closeTask(taskId) {
         return;
     }
     
-    // Check if user is the creator or admin
-    const canClose = isUserAdmin || task.createdBy === getWarehouseName(userWarehouse);
-    if (!canClose) {
-        showToast('error', 'Không có quyền!', 'Chỉ người tạo sự vụ hoặc Admin mới có thể đóng sự vụ.');
+    // Check if user is the creator (ONLY creator can close, not admin)
+    const currentUserName = currentUser ? (currentUser.displayName || currentUser.email) : 'Unknown';
+    const isCreator = task.createdBy === currentUserName;
+    
+    if (!isCreator) {
+        showToast('error', 'Không có quyền!', 'Chỉ người tạo sự vụ mới có thể đóng sự vụ.');
+        console.log('❌ Not creator. Task created by:', task.createdBy, 'Current user:', currentUserName);
         return;
     }
     
