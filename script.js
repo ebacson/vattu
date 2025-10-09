@@ -647,20 +647,30 @@ function handleWarehouseChange() {
     const selectedWarehouse = warehouseSelect.value;
     
     if (selectedWarehouse === 'infrastructure') {
-        // Show task field for Hạ Tầng warehouse
+        // Show task field for Hạ Tầng warehouse (recovered equipment)
         taskGroup.style.display = 'block';
         taskSelect.required = true;
         
         // Populate with available tasks
-        taskSelect.innerHTML = '<option value="">Chọn sự vụ</option>';
-        tasksData.filter(task => task.status === 'pending' || task.status === 'in-progress').forEach(task => {
-            taskSelect.innerHTML += `<option value="${task.id}">${task.name}</option>`;
-        });
+        taskSelect.innerHTML = '<option value="">Chọn sự vụ thu hồi...</option>';
+        const availableTasks = tasksData.filter(task => task.status === 'pending' || task.status === 'in-progress');
+        
+        if (availableTasks.length === 0) {
+            taskSelect.innerHTML += '<option value="" disabled>Chưa có sự vụ nào</option>';
+        } else {
+            availableTasks.forEach(task => {
+                taskSelect.innerHTML += `<option value="${task.id}">${task.name} (${getTaskTypeText(task.type)})</option>`;
+            });
+        }
+        
+        console.log('📋 Infrastructure warehouse selected - Task field shown with', availableTasks.length, 'tasks');
     } else {
-        // Hide task field for Net warehouse
+        // Hide task field for Net warehouse (new equipment)
         taskGroup.style.display = 'none';
         taskSelect.required = false;
         taskSelect.value = '';
+        
+        console.log('📦 Net warehouse selected - Task field hidden');
     }
 }
 
@@ -936,9 +946,21 @@ async function handleItemSubmit(e) {
     }
     
     // Additional validation for infrastructure warehouse
+    // Infrastructure items are recovered equipment, must be linked to a task
     if (formData.warehouse === 'infrastructure' && !formData.taskId) {
-        console.log('❌ Task required for infrastructure warehouse');
-        showToast('error', 'Lỗi!', 'Vui lòng chọn sự vụ cho vật tư kho Hạ Tầng.');
+        console.log('❌ Task required for infrastructure warehouse - recovered equipment');
+        showToast('error', 'Thiếu thông tin!', 'Vật tư kho Hạ Tầng là thiết bị thu hồi, BẮT BUỘC phải gán sự vụ.');
+        
+        // Highlight the task field
+        const taskSelect = document.getElementById('itemTask');
+        if (taskSelect) {
+            taskSelect.style.borderColor = '#e74c3c';
+            taskSelect.focus();
+            setTimeout(() => {
+                taskSelect.style.borderColor = '';
+            }, 3000);
+        }
+        
         return;
     }
     
