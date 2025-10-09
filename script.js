@@ -763,7 +763,17 @@ function showTransferModal() {
     }
     
     updateTransferTaskOptions();
-    renderAvailableItems();
+    
+    // Don't render items initially - wait for task selection
+    const container = document.getElementById('transferAvailableItems');
+    if (container) {
+        if (userWarehouse === 'infrastructure') {
+            container.innerHTML = '<p class="no-data" style="margin: 10px 0; color: #7f8c8d;"><i class="fas fa-info-circle"></i> Vui lòng chọn sự vụ để xem vật tư thu hồi</p>';
+        } else {
+            renderAvailableItems();
+        }
+    }
+    
     renderSelectedItems();
     
     openModal('transferModal');
@@ -778,15 +788,33 @@ function updateTransferTaskOptions() {
             taskSelect.innerHTML += `<option value="${task.id}">${task.name}</option>`;
         }
     });
+    
+    // Add event listener for task selection to filter items
+    taskSelect.onchange = function() {
+        const selectedTaskId = parseInt(this.value) || null;
+        console.log('📋 Task selected:', selectedTaskId);
+        
+        if (userWarehouse === 'infrastructure' && selectedTaskId) {
+            // Filter items by selected task
+            renderAvailableItems('', selectedTaskId);
+        } else if (userWarehouse === 'infrastructure' && !selectedTaskId) {
+            // No task selected - show message
+            const container = document.getElementById('transferAvailableItems');
+            if (container) {
+                container.innerHTML = '<p class="no-data" style="margin: 10px 0; color: #7f8c8d;"><i class="fas fa-info-circle"></i> Vui lòng chọn sự vụ để xem vật tư thu hồi</p>';
+            }
+        }
+    };
 }
 
 // Render available items for transfer
-function renderAvailableItems(searchTerm = '') {
+function renderAvailableItems(searchTerm = '', filterTaskId = null) {
     const container = document.getElementById('transferAvailableItems');
     if (!container) return;
     
     console.log('🔍 renderAvailableItems called');
     console.log('👤 User warehouse:', userWarehouse);
+    console.log('📋 Filter by taskId:', filterTaskId);
     console.log('📦 Total inventory:', inventoryData.length);
     
     // Get items from user's warehouse that are not already selected
@@ -810,7 +838,10 @@ function renderAvailableItems(searchTerm = '') {
         const isAvailable = item.condition === 'available' || item.condition === 'in-use';
         const matchesSearch = !searchTerm || item.serial.toLowerCase().includes(searchTerm.toLowerCase()) || item.name.toLowerCase().includes(searchTerm.toLowerCase());
         
-        return isInUserWarehouse && isNotSelected && isAvailable && matchesSearch;
+        // For Infrastructure warehouse, filter by taskId if specified
+        const matchesTask = !filterTaskId || item.taskId === filterTaskId;
+        
+        return isInUserWarehouse && isNotSelected && isAvailable && matchesSearch && matchesTask;
     });
     
     console.log('✅ Final available items for transfer:', availableItems.length);
@@ -820,101 +851,19 @@ function renderAvailableItems(searchTerm = '') {
         return;
     }
     
-    // Group by task for Infrastructure warehouse (recovered items)
-    if (userWarehouse === 'infrastructure') {
-        const groupedByTask = {};
-        const noTaskItems = [];
-        
-        availableItems.forEach(item => {
-            if (item.taskId) {
-                if (!groupedByTask[item.taskId]) {
-                    const task = tasksData.find(t => t.id === item.taskId);
-                    groupedByTask[item.taskId] = {
-                        task: task,
-                        items: []
-                    };
-                }
-                groupedByTask[item.taskId].items.push(item);
-            } else {
-                noTaskItems.push(item);
-            }
-        });
-        
-        let html = '';
-        
-        // Render items grouped by task
-        Object.values(groupedByTask).forEach(group => {
-            html += `
-                <div style="margin-bottom: 15px; border: 1px solid #e1e8ed; border-radius: 8px; overflow: hidden;">
-                    <div style="background: #f8f9fa; padding: 10px; border-bottom: 1px solid #e1e8ed;">
-                        <strong style="color: #2c3e50;">
-                            <i class="fas fa-tasks"></i> ${group.task ? group.task.name : 'Không rõ sự vụ'}
-                        </strong>
-                        <span style="color: #7f8c8d; font-size: 0.9rem; margin-left: 10px;">
-                            (${group.items.length} vật tư thu hồi)
-                        </span>
-                    </div>
-                    ${group.items.map(item => `
-                        <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #f0f0f0; background: white; transition: background 0.2s;" onmouseenter="this.style.background='#f8f9fa'" onmouseleave="this.style.background='white'">
-                            <div style="flex: 1;">
-                                <div style="font-weight: 600; color: #2c3e50;">${item.serial}</div>
-                                <div style="color: #666; font-size: 0.9rem;">${item.name}</div>
-                                <div style="color: #999; font-size: 0.85rem;">${getConditionText(item.condition)}</div>
-                            </div>
-                            <button class="btn btn-sm btn-primary" onclick="addItemToTransfer(${item.id})" style="white-space: nowrap;">
-                                <i class="fas fa-plus"></i> Thêm
-                            </button>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        });
-        
-        // Render items without task
-        if (noTaskItems.length > 0) {
-            html += `
-                <div style="margin-bottom: 15px; border: 1px solid #e1e8ed; border-radius: 8px; overflow: hidden;">
-                    <div style="background: #fff3cd; padding: 10px; border-bottom: 1px solid #e1e8ed;">
-                        <strong style="color: #856404;">
-                            <i class="fas fa-exclamation-triangle"></i> Chưa gán sự vụ
-                        </strong>
-                        <span style="color: #856404; font-size: 0.9rem; margin-left: 10px;">
-                            (${noTaskItems.length} vật tư)
-                        </span>
-                    </div>
-                    ${noTaskItems.map(item => `
-                        <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #f0f0f0; background: white; transition: background 0.2s;" onmouseenter="this.style.background='#f8f9fa'" onmouseleave="this.style.background='white'">
-                            <div style="flex: 1;">
-                                <div style="font-weight: 600; color: #2c3e50;">${item.serial}</div>
-                                <div style="color: #666; font-size: 0.9rem;">${item.name}</div>
-                                <div style="color: #999; font-size: 0.85rem;">${getConditionText(item.condition)}</div>
-                            </div>
-                            <button class="btn btn-sm btn-primary" onclick="addItemToTransfer(${item.id})" style="white-space: nowrap;">
-                                <i class="fas fa-plus"></i> Thêm
-                            </button>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        }
-        
-        container.innerHTML = html;
-        
-    } else {
-        // Net warehouse - simple list (no grouping needed)
-        container.innerHTML = availableItems.map(item => `
-            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #f0f0f0; background: white; transition: background 0.2s;" onmouseenter="this.style.background='#f8f9fa'" onmouseleave="this.style.background='white'">
-                <div style="flex: 1;">
-                    <div style="font-weight: 600; color: #2c3e50;">${item.serial}</div>
-                    <div style="color: #666; font-size: 0.9rem;">${item.name}</div>
-                    <div style="color: #999; font-size: 0.85rem;">${getConditionText(item.condition)}</div>
-                </div>
-                <button class="btn btn-sm btn-primary" onclick="addItemToTransfer(${item.id})" style="white-space: nowrap;">
-                    <i class="fas fa-plus"></i> Thêm
-                </button>
+    // Simple list for all warehouses (task filtering done above)
+    container.innerHTML = availableItems.map(item => `
+        <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #f0f0f0; background: white; transition: background 0.2s;" onmouseenter="this.style.background='#f8f9fa'" onmouseleave="this.style.background='white'">
+            <div style="flex: 1;">
+                <div style="font-weight: 600; color: #2c3e50;">${item.serial}</div>
+                <div style="color: #666; font-size: 0.9rem;">${item.name}</div>
+                <div style="color: #999; font-size: 0.85rem;">${getConditionText(item.condition)}</div>
             </div>
-        `).join('');
-    }
+            <button class="btn btn-sm btn-primary" onclick="addItemToTransfer(${item.id})" style="white-space: nowrap;">
+                <i class="fas fa-plus"></i> Thêm
+            </button>
+        </div>
+    `).join('');
     
     console.log('📦 Available items:', availableItems.length);
 }
