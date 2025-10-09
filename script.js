@@ -803,6 +803,12 @@ async function handleTaskSubmit(e) {
     e.preventDefault();
     console.log('🔄 handleTaskSubmit called');
     
+    // Prevent duplicate submissions
+    if (isSubmittingTask) {
+        console.log('⚠️ Task already being submitted, skipping...');
+        return;
+    }
+    
     // Clear previous errors
     if (typeof window.clearFormErrors === 'function') {
         window.clearFormErrors('taskForm');
@@ -830,6 +836,10 @@ async function handleTaskSubmit(e) {
             return;
         }
     }
+
+    // Mark as submitting
+    isSubmittingTask = true;
+    console.log('🔐 Marked task as submitting');
 
     const newTask = {
         id: tasksData.length > 0 ? Math.max(...tasksData.map(t => t.id), 0) + 1 : 1,
@@ -865,14 +875,24 @@ async function handleTaskSubmit(e) {
         closeModal('taskModal');
         
     } catch (error) {
-        console.error('Error saving task:', error);
+        console.error('❌ Error saving task:', error);
         showToast('error', 'Lỗi!', 'Không thể lưu sự vụ vào Firebase.');
+    } finally {
+        // Always reset submitting flag
+        isSubmittingTask = false;
+        console.log('🔓 Reset task submitting flag');
     }
 }
 
 async function handleItemSubmit(e) {
     e.preventDefault();
     console.log('🔄 handleItemSubmit called');
+    
+    // Prevent duplicate submissions
+    if (isSubmittingItem) {
+        console.log('⚠️ Item already being submitted, skipping...');
+        return;
+    }
     
     // Clear previous errors
     if (typeof window.clearFormErrors === 'function') {
@@ -930,6 +950,10 @@ async function handleItemSubmit(e) {
         return;
     }
     console.log('✅ Permission granted');
+
+    // Mark as submitting
+    isSubmittingItem = true;
+    console.log('🔐 Marked item as submitting');
 
     try {
         if (currentEditingItem) {
@@ -999,13 +1023,23 @@ async function handleItemSubmit(e) {
         closeModal('itemModal');
         
     } catch (error) {
-        console.error('Error saving item:', error);
+        console.error('❌ Error saving item:', error);
         showToast('error', 'Lỗi!', 'Không thể lưu vật tư vào Firebase.');
+    } finally {
+        // Always reset submitting flag
+        isSubmittingItem = false;
+        console.log('🔓 Reset item submitting flag');
     }
 }
 
 async function handleTransferSubmit(e) {
     e.preventDefault();
+    
+    // Prevent duplicate submissions
+    if (isSubmittingTransfer) {
+        console.log('⚠️ Transfer already being submitted, skipping...');
+        return;
+    }
     
     // Clear previous errors
     if (typeof window.clearFormErrors === 'function') {
@@ -1036,6 +1070,10 @@ async function handleTransferSubmit(e) {
     const type = userWarehouse === 'net' ? 'request' : 'return';
     
     console.log(`🔄 Transfer from ${fromWarehouse} to ${toWarehouse}, type: ${type}`);
+
+    // Mark as submitting
+    isSubmittingTransfer = true;
+    console.log('🔐 Marked transfer as submitting');
 
     const newTransfer = {
         id: transfersData.length > 0 ? Math.max(...transfersData.map(t => t.id), 0) + 1 : 1,
@@ -1076,8 +1114,12 @@ async function handleTransferSubmit(e) {
         closeModal('transferModal');
         
     } catch (error) {
-        console.error('Error saving transfer:', error);
+        console.error('❌ Error saving transfer:', error);
         showToast('error', 'Lỗi!', 'Không thể lưu chuyển kho vào Firebase.');
+    } finally {
+        // Always reset submitting flag
+        isSubmittingTransfer = false;
+        console.log('🔓 Reset transfer submitting flag');
     }
 }
 
@@ -1670,6 +1712,9 @@ function editItem(itemId) {
 const deletingItems = new Set();
 const closingTasks = new Set();
 const confirmingTransfers = new Set();
+let isSubmittingTask = false;
+let isSubmittingItem = false;
+let isSubmittingTransfer = false;
 
 async function deleteItem(itemId) {
     console.log('🗑️ deleteItem called for:', itemId);
