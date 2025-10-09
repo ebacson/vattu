@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateDashboard();
         renderInventoryTable();
         renderTasksList();
-        renderTransfersList();
+        renderPendingRequestsList();
         renderLogsList();
         initializeCharts();
     });
@@ -145,9 +145,9 @@ function updateUIForPermissions() {
     // Update inventory table
     renderInventoryTable();
     
-    // Update tasks and transfers
+    // Update tasks and pending requests
     renderTasksList();
-    renderTransfersList();
+    renderPendingRequestsList();
 }
 
 // Initialize Application
@@ -188,7 +188,8 @@ function setupEventListeners() {
     document.getElementById('warehouseFilter').addEventListener('change', handleFilter);
     document.getElementById('statusFilter').addEventListener('change', handleFilter);
     document.getElementById('taskStatusFilter').addEventListener('change', handleTaskFilter);
-    document.getElementById('transferStatusFilter').addEventListener('change', handleTransferFilter);
+    document.getElementById('pendingRequestTypeFilter').addEventListener('change', renderPendingRequestsList);
+    document.getElementById('pendingRequestStatusFilter').addEventListener('change', renderPendingRequestsList);
 
     // Sync button - now triggers Firebase sync
     document.getElementById('syncBtn').addEventListener('click', syncWithFirebase);
@@ -606,56 +607,111 @@ function renderTasksList() {
 }
 
 // Transfers Management
-function renderTransfersList() {
-    const transfersList = document.getElementById('transfersList');
-    const statusFilter = document.getElementById('transferStatusFilter').value;
-    const typeFilter = document.getElementById('transferTypeFilter').value;
-
-    let filteredTransfers = transfersData.filter(transfer => {
-        const matchesStatus = statusFilter === 'all' || transfer.status === statusFilter;
-        const matchesType = typeFilter === 'all' || transfer.type === typeFilter;
-        
-        // Permission check: only show transfers involving user's warehouse
-        const canView = canConfirmTransfer(transfer);
-        
-        return matchesStatus && matchesType && canView;
-    });
-
-    if (filteredTransfers.length === 0) {
-        transfersList.innerHTML = '<p class="no-data">Chưa có chuyển kho nào</p>';
+function renderPendingRequestsList() {
+    const requestsList = document.getElementById('pendingRequestsList');
+    if (!requestsList) return;
+    
+    const typeFilter = document.getElementById('pendingRequestTypeFilter').value;
+    const statusFilter = document.getElementById('pendingRequestStatusFilter').value;
+    
+    console.log('🔍 renderPendingRequestsList called');
+    console.log('📊 Delivery requests:', deliveryRequestsData.length);
+    console.log('📊 Return requests:', returnRequestsData.length);
+    
+    // Combine both types of requests
+    let allRequests = [];
+    
+    // Add delivery requests
+    if (typeFilter === 'all' || typeFilter === 'delivery') {
+        deliveryRequestsData.forEach(req => {
+            if (statusFilter === 'all' || req.status === statusFilter) {
+                allRequests.push({
+                    ...req,
+                    type: 'delivery',
+                    direction: 'Net → Hạ Tầng',
+                    icon: 'fa-shipping-fast',
+                    color: '#3498db'
+                });
+            }
+        });
+    }
+    
+    // Add return requests
+    if (typeFilter === 'all' || typeFilter === 'return') {
+        returnRequestsData.forEach(req => {
+            if (statusFilter === 'all' || req.status === statusFilter) {
+                allRequests.push({
+                    ...req,
+                    type: 'return',
+                    direction: 'Hạ Tầng → Net',
+                    icon: 'fa-undo',
+                    color: '#e67e22'
+                });
+            }
+        });
+    }
+    
+    // Sort by date (newest first)
+    allRequests.sort((a, b) => b.requestedDate - a.requestedDate);
+    
+    console.log('✅ Filtered requests:', allRequests.length);
+    
+    if (allRequests.length === 0) {
+        requestsList.innerHTML = '<p class="no-data">Chưa có yêu cầu nào</p>';
         return;
     }
-
-    transfersList.innerHTML = filteredTransfers.map(transfer => {
-        const task = tasksData.find(t => t.id === transfer.taskId);
-        const itemsArray = transfer.items || [];
-        const itemsDetails = itemsArray.map(itemId => {
-            const item = inventoryData.find(i => i.id === itemId);
-            return item ? `${item.serial} (${item.name})` : 'Unknown';
-        }).join(', ');
-
+    
+    requestsList.innerHTML = allRequests.map(request => {
+        const task = tasksData.find(t => t.id === request.taskId);
+        const item = inventoryData.find(i => i.id === request.itemId);
+        const isPending = request.status === 'pending';
+        const canConfirm = (request.type === 'delivery' && userWarehouse === 'infrastructure') ||
+                          (request.type === 'return' && userWarehouse === 'net');
+        
         return `
-            <div class="transfer-card">
+            <div class="transfer-card" style="border-left: 4px solid ${request.color};">
                 <div class="transfer-header">
-                    <h3>Chuyển kho ${getTransferTypeText(transfer.type)}</h3>
-                    <span class="status-badge ${transfer.status}">${getTransferStatusText(transfer.status)}</span>
+                    <h3>
+                        <i class="fas ${request.icon}"></i> 
+                        ${request.type === 'delivery' ? 'Giao Nhận' : 'Chuyển Trả'}
+                    </h3>
+                    <span class="status-badge ${isPending ? 'pending' : 'completed'}">
+                        ${isPending ? 'Chờ xác nhận' : 'Đã xác nhận'}
+                    </span>
                 </div>
                 <div class="transfer-info">
-                    <p><i class="fas fa-arrow-right"></i> Từ ${getWarehouseName(transfer.fromWarehouse)} → ${getWarehouseName(transfer.toWarehouse)}</p>
-                    <p><i class="fas fa-tasks"></i> Sự vụ: ${task ? task.name : 'Không có'}</p>
-                    <p><i class="fas fa-boxes"></i> ${itemsArray.length} vật tư: ${itemsDetails || 'Chưa có vật tư'}</p>
-                    <p><i class="fas fa-calendar"></i> Ngày tạo: ${formatDate(transfer.createdDate)}</p>
-                    ${transfer.confirmedDate ? `<p><i class="fas fa-check"></i> Xác nhận: ${formatDate(transfer.confirmedDate)}</p>` : ''}
-                </div>
-                <div class="transfer-notes">
-                    <p>${transfer.notes}</p>
-                </div>
-                <div class="transfer-actions">
-                    ${transfer.status === 'pending' && canConfirmTransfer(transfer) ? `
-                        <button class="btn btn-sm btn-success" onclick="confirmTransfer(${transfer.id})">Xác nhận</button>
+                    <p><i class="fas fa-arrow-right"></i> <strong>${request.direction}</strong></p>
+                    <p><i class="fas fa-box"></i> Vật tư: <strong>${request.itemSerial} - ${request.itemName}</strong></p>
+                    ${request.itemCondition ? `<p><i class="fas fa-info-circle"></i> Tình trạng: <span class="status-badge ${request.itemCondition}">${getConditionText(request.itemCondition)}</span></p>` : ''}
+                    <p><i class="fas fa-tasks"></i> Sự vụ: ${request.taskName || task?.name || 'Không có'}</p>
+                    <p><i class="fas fa-user"></i> Yêu cầu bởi: ${request.requestedBy}</p>
+                    <p><i class="fas fa-calendar"></i> Ngày yêu cầu: ${formatDateTime(request.requestedDate)}</p>
+                    ${!isPending ? `
+                        <p><i class="fas fa-check-circle"></i> Xác nhận bởi: ${request.confirmedBy}</p>
+                        <p><i class="fas fa-calendar-check"></i> Ngày xác nhận: ${formatDateTime(request.confirmedDate)}</p>
                     ` : ''}
-                    <button class="btn btn-sm btn-primary" onclick="viewTransferDetails(${transfer.id})">Chi tiết</button>
-                    <button class="btn btn-sm btn-info" onclick="viewTransferLogs(${transfer.id})">Lịch sử</button>
+                </div>
+                ${request.notes ? `
+                    <div class="transfer-notes">
+                        <p><i class="fas fa-sticky-note"></i> ${request.notes}</p>
+                    </div>
+                ` : ''}
+                <div class="transfer-actions">
+                    ${isPending && canConfirm ? `
+                        <button class="btn btn-sm btn-success" onclick="${request.type === 'delivery' ? 'confirmDeliveryRequest' : 'confirmReturnRequest'}(${request.id})">
+                            <i class="fas fa-check"></i> Xác nhận
+                        </button>
+                    ` : ''}
+                    ${item ? `
+                        <button class="btn btn-sm btn-info" onclick="viewItemHistory(${item.id})">
+                            <i class="fas fa-box"></i> Xem vật tư
+                        </button>
+                    ` : ''}
+                    ${task ? `
+                        <button class="btn btn-sm btn-primary" onclick="viewTask(${task.id})">
+                            <i class="fas fa-tasks"></i> Xem sự vụ
+                        </button>
+                    ` : ''}
                 </div>
             </div>
         `;
@@ -1306,7 +1362,7 @@ async function handleTransferSubmit(e) {
         }
         
         updateDashboard();
-        renderTransfersList();
+        renderPendingRequestsList();
         closeModal('transferModal');
         
     } catch (error) {
@@ -1333,7 +1389,7 @@ function handleTaskFilter() {
 }
 
 function handleTransferFilter() {
-    renderTransfersList();
+    renderPendingRequestsList();
 }
 
 // Utility Functions
@@ -2039,7 +2095,7 @@ async function confirmTransfer(transferId) {
         showToast('success', 'Xác nhận thành công!', 'Chuyển kho đã được xác nhận và vật tư đã được cập nhật.');
         
         updateDashboard();
-        renderTransfersList();
+        renderPendingRequestsList();
         renderInventoryTable();
         
     } catch (error) {
@@ -2240,6 +2296,7 @@ async function returnItemToNet(itemId) {
         
         updateDashboard();
         renderInventoryTable();
+        renderPendingRequestsList();
         
     } catch (error) {
         console.error('❌ Error creating return request:', error);
@@ -2360,6 +2417,7 @@ async function handleDeliverItemSubmit(e) {
         
         updateDashboard();
         renderInventoryTable();
+        renderPendingRequestsList();
         
     } catch (error) {
         console.error('❌ Error creating delivery request:', error);
@@ -2448,6 +2506,7 @@ async function confirmDeliveryRequest(requestId) {
         updateDashboard();
         renderInventoryTable();
         renderTasksList();
+        renderPendingRequestsList();
         
     } catch (error) {
         console.error('❌ Error confirming delivery:', error);
@@ -2516,6 +2575,7 @@ async function confirmReturnRequest(requestId) {
         
         updateDashboard();
         renderInventoryTable();
+        renderPendingRequestsList();
         
     } catch (error) {
         console.error('❌ Error confirming return:', error);

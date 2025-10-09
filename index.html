@@ -44,7 +44,7 @@
                 <i class="fas fa-tasks"></i> Quản Lý Sự Vụ
             </button>
             <button class="tab-btn" data-tab="transfers">
-                <i class="fas fa-exchange-alt"></i> Chuyển Kho
+                <i class="fas fa-clock"></i> Chờ Xác Nhận
             </button>
             <button class="tab-btn" data-tab="logs">
                 <i class="fas fa-history"></i> Lịch Sử
@@ -212,31 +212,29 @@
             </div>
         </div>
 
-        <!-- Transfers Tab -->
+        <!-- Pending Requests Tab -->
         <div id="transfers" class="tab-content">
             <div class="transfers-header">
                 <div class="transfer-filters">
-                    <select id="transferStatusFilter">
-                        <option value="all">Tất cả trạng thái</option>
-                        <option value="pending">Chờ chuyển</option>
-                        <option value="in-transit">Đang chuyển</option>
-                        <option value="delivered">Đã giao</option>
-                        <option value="confirmed">Đã xác nhận</option>
-                    </select>
-                    <select id="transferTypeFilter">
+                    <select id="pendingRequestTypeFilter">
                         <option value="all">Tất cả loại</option>
-                        <option value="request">Yêu cầu</option>
-                        <option value="return">Trả về</option>
+                        <option value="delivery">Giao nhận (Net → Hạ Tầng)</option>
+                        <option value="return">Chuyển trả (Hạ Tầng → Net)</option>
+                    </select>
+                    <select id="pendingRequestStatusFilter">
+                        <option value="pending">Chờ xác nhận</option>
+                        <option value="confirmed">Đã xác nhận</option>
+                        <option value="all">Tất cả</option>
                     </select>
                 </div>
-                <button class="btn btn-primary" onclick="showTransferModal()">
-                    <i class="fas fa-exchange-alt"></i> Tạo Chuyển Kho
-                </button>
+                <div style="color: #7f8c8d; font-size: 0.9rem;">
+                    <i class="fas fa-info-circle"></i> Danh sách yêu cầu giao nhận và chuyển trả vật tư
+                </div>
             </div>
 
             <div class="transfers-container">
-                <div id="transfersList" class="transfers-list">
-                    <p class="no-data">Chưa có chuyển kho nào</p>
+                <div id="pendingRequestsList" class="transfers-list">
+                    <p class="no-data">Chưa có yêu cầu nào</p>
                 </div>
             </div>
         </div>
