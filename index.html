@@ -194,12 +194,9 @@
             <div class="tasks-header">
                 <div class="task-filters">
                     <select id="taskStatusFilter">
-                        <option value="all">Tất cả trạng thái</option>
-                        <option value="pending">Chờ xử lý</option>
-                        <option value="in-progress">Đang thực hiện</option>
-                        <option value="waiting-confirmation">Chờ xác nhận</option>
-                        <option value="completed">Hoàn thành</option>
-                        <option value="cancelled">Hủy bỏ</option>
+                        <option value="all">Tất cả sự vụ</option>
+                        <option value="active">Chưa hoàn thành</option>
+                        <option value="completed">Đã hoàn thành</option>
                     </select>
                     <input type="date" id="taskDateFilter">
                 </div>
@@ -458,6 +455,39 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeModal('transferModal')">Hủy</button>
                 <button type="submit" form="transferForm" class="btn btn-primary">Tạo Chuyển Kho</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deliver Item Modal -->
+    <div id="deliverItemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Giao Vật Tư Cho Sự Vụ</h2>
+                <span class="close" onclick="closeModal('deliverItemModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="deliverItemInfo" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <!-- Item info will be loaded here -->
+                </div>
+                <form id="deliverItemForm">
+                    <div class="form-group">
+                        <label for="deliverTaskSelect">Chọn Sự Vụ *</label>
+                        <select id="deliverTaskSelect" required>
+                            <option value="">Chọn sự vụ cần giao...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="deliverNotes">Ghi Chú</label>
+                        <textarea id="deliverNotes" rows="3" placeholder="VD: Giao cho sự vụ lắp đặt trạm ABC"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('deliverItemModal')">Hủy</button>
+                <button type="submit" form="deliverItemForm" class="btn btn-success">
+                    <i class="fas fa-shipping-fast"></i> Giao Vật Tư
+                </button>
             </div>
         </div>
     </div>

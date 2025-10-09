@@ -196,6 +196,7 @@ function setupEventListeners() {
     document.getElementById('taskForm').addEventListener('submit', handleTaskSubmit);
     document.getElementById('itemForm').addEventListener('submit', handleItemSubmit);
     document.getElementById('transferForm').addEventListener('submit', handleTransferSubmit);
+    document.getElementById('deliverItemForm').addEventListener('submit', handleDeliverItemSubmit);
     
     // Transfer item search
     const transferItemSearch = document.getElementById('transferItemSearch');
@@ -441,6 +442,19 @@ function renderInventoryTable() {
                                 <i class="fas fa-edit"></i>
                             </button>
                         ` : ''}
+                        
+                        ${item.warehouse === 'infrastructure' && item.condition === 'available' ? `
+                            <button class="btn btn-sm btn-success" onclick="returnItemToNet(${item.id})" title="Chuyển trả về Net">
+                                <i class="fas fa-undo"></i> Trả
+                            </button>
+                        ` : ''}
+                        
+                        ${item.warehouse === 'net' && item.condition === 'available' ? `
+                            <button class="btn btn-sm btn-success" onclick="deliverItemToTask(${item.id})" title="Giao cho sự vụ">
+                                <i class="fas fa-shipping-fast"></i> Giao
+                            </button>
+                        ` : ''}
+                        
                         <button class="btn btn-sm btn-info" onclick="viewItemHistory(${item.id})" title="Lịch sử">
                             <i class="fas fa-history"></i>
                         </button>
@@ -466,7 +480,17 @@ function renderTasksList() {
     const dateFilter = document.getElementById('taskDateFilter').value;
 
     let filteredTasks = tasksData.filter(task => {
-        const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
+        let matchesStatus = true;
+        
+        if (statusFilter === 'active') {
+            // Active = not completed (pending, in-progress, waiting-confirmation)
+            matchesStatus = task.status !== 'completed' && task.status !== 'cancelled';
+        } else if (statusFilter === 'completed') {
+            // Completed
+            matchesStatus = task.status === 'completed';
+        }
+        // 'all' shows everything
+        
         const matchesDate = !dateFilter || formatDate(task.createdDate) === dateFilter;
         return matchesStatus && matchesDate;
     });
@@ -1812,6 +1836,178 @@ async function deleteItem(itemId) {
         console.log('🔓 Removed item from deleting set:', itemId);
     }
 }
+
+// Return item from Infrastructure to Net warehouse
+async function returnItemToNet(itemId) {
+    const item = inventoryData.find(i => i.id === itemId);
+    if (!item) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy vật tư.');
+        return;
+    }
+    
+    // Show confirmation
+    const confirmed = await showConfirmDialog(
+        'Chuyển trả về Kho Net',
+        `Bạn có chắc muốn chuyển trả vật tư này về Kho Net?<br><br>
+        <strong>Serial:</strong> ${item.serial}<br>
+        <strong>Tên:</strong> ${item.name}<br>
+        <strong>Hiện tại:</strong> ${getWarehouseName(item.warehouse)}<br>
+        <strong>Sự vụ:</strong> ${item.taskId ? (tasksData.find(t => t.id === item.taskId)?.name || '-') : '-'}`,
+        'Chuyển trả',
+        'Hủy'
+    );
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    try {
+        // Update item
+        item.warehouse = 'net';
+        item.condition = 'available';
+        item.taskId = null; // Clear task assignment
+        
+        // Save to Firebase
+        if (typeof window.saveInventoryToFirebase === 'function') {
+            await window.saveInventoryToFirebase(item);
+        }
+        
+        // Add log
+        await addLog('transfer', 'Chuyển trả', `Chuyển trả vật tư ${item.serial} - ${item.name} từ Kho Hạ Tầng về Kho Net`, getWarehouseName(currentWarehouse));
+        
+        showToast('success', 'Chuyển trả thành công!', 'Vật tư đã được chuyển về Kho Net.');
+        
+        updateDashboard();
+        renderInventoryTable();
+        
+    } catch (error) {
+        console.error('❌ Error returning item:', error);
+        showToast('error', 'Lỗi!', 'Không thể chuyển trả vật tư.');
+    }
+}
+
+// Track current item being delivered
+let currentDeliveringItem = null;
+
+// Deliver item from Net to task (Infrastructure)
+function deliverItemToTask(itemId) {
+    const item = inventoryData.find(i => i.id === itemId);
+    if (!item) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy vật tư.');
+        return;
+    }
+    
+    currentDeliveringItem = item;
+    
+    // Show item info
+    const itemInfo = document.getElementById('deliverItemInfo');
+    itemInfo.innerHTML = `
+        <h4 style="margin-top: 0; color: #2c3e50;">
+            <i class="fas fa-box"></i> Thông tin vật tư
+        </h4>
+        <div style="display: grid; grid-template-columns: 120px 1fr; gap: 8px; font-size: 14px;">
+            <strong>Serial:</strong> <span>${item.serial}</span>
+            <strong>Tên:</strong> <span>${item.name}</span>
+            <strong>Kho hiện tại:</strong> <span>${getWarehouseName(item.warehouse)}</span>
+            <strong>Tình trạng:</strong> <span class="status-badge ${item.condition}">${getConditionText(item.condition)}</span>
+        </div>
+    `;
+    
+    // Populate task dropdown with active tasks
+    const taskSelect = document.getElementById('deliverTaskSelect');
+    taskSelect.innerHTML = '<option value="">Chọn sự vụ cần giao...</option>';
+    
+    const activeTasks = tasksData.filter(task => 
+        task.status === 'pending' || task.status === 'in-progress'
+    );
+    
+    if (activeTasks.length === 0) {
+        taskSelect.innerHTML += '<option value="" disabled>Chưa có sự vụ đang hoạt động</option>';
+    } else {
+        activeTasks.forEach(task => {
+            taskSelect.innerHTML += `<option value="${task.id}">${task.name} (${getTaskTypeText(task.type)} - ${task.location})</option>`;
+        });
+    }
+    
+    // Reset form
+    document.getElementById('deliverItemForm').reset();
+    document.getElementById('deliverNotes').value = '';
+    
+    // Open modal
+    openModal('deliverItemModal');
+}
+
+// Handle deliver item form submission
+async function handleDeliverItemSubmit(e) {
+    e.preventDefault();
+    
+    if (!currentDeliveringItem) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy vật tư.');
+        return;
+    }
+    
+    const taskId = parseInt(document.getElementById('deliverTaskSelect').value);
+    const notes = document.getElementById('deliverNotes').value;
+    
+    if (!taskId) {
+        showToast('error', 'Lỗi!', 'Vui lòng chọn sự vụ.');
+        return;
+    }
+    
+    const task = tasksData.find(t => t.id === taskId);
+    if (!task) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy sự vụ.');
+        return;
+    }
+    
+    try {
+        // Update item
+        currentDeliveringItem.warehouse = 'infrastructure';
+        currentDeliveringItem.condition = 'in-use';
+        currentDeliveringItem.taskId = taskId;
+        
+        // Save to Firebase
+        if (typeof window.saveInventoryToFirebase === 'function') {
+            await window.saveInventoryToFirebase(currentDeliveringItem);
+        }
+        
+        // Add to task's assigned items
+        if (!task.assignedItems) {
+            task.assignedItems = [];
+        }
+        if (!task.assignedItems.includes(currentDeliveringItem.id)) {
+            task.assignedItems.push(currentDeliveringItem.id);
+            
+            // Save task to Firebase
+            if (typeof window.saveTaskToFirebase === 'function') {
+                await window.saveTaskToFirebase(task);
+            }
+        }
+        
+        // Add log
+        const logDetails = notes ? 
+            `Giao vật tư ${currentDeliveringItem.serial} - ${currentDeliveringItem.name} cho sự vụ "${task.name}". Ghi chú: ${notes}` :
+            `Giao vật tư ${currentDeliveringItem.serial} - ${currentDeliveringItem.name} cho sự vụ "${task.name}"`;
+        await addLog('delivery', 'Giao vật tư', logDetails, getWarehouseName(currentWarehouse));
+        
+        showToast('success', 'Giao vật tư thành công!', `Vật tư đã được giao cho sự vụ "${task.name}".`);
+        
+        closeModal('deliverItemModal');
+        currentDeliveringItem = null;
+        
+        updateDashboard();
+        renderInventoryTable();
+        renderTasksList();
+        
+    } catch (error) {
+        console.error('❌ Error delivering item:', error);
+        showToast('error', 'Lỗi!', 'Không thể giao vật tư.');
+    }
+}
+
+// Make functions global
+window.returnItemToNet = returnItemToNet;
+window.deliverItemToTask = deliverItemToTask;
 
 function viewItemHistory(itemId) {
     showToast('info', 'Lịch sử vật tư', `Xem lịch sử vật tư #${itemId}`);
