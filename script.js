@@ -460,8 +460,8 @@ function renderInventoryTable() {
                             </button>
                         ` : ''}
                         
-                        ${item.warehouse === 'infrastructure' && item.condition === 'available' ? `
-                            <button class="btn btn-sm btn-success" onclick="returnItemToNet(${item.id})" title="Chuyển trả về Net">
+                        ${item.warehouse === 'infrastructure' && userWarehouse === 'infrastructure' ? `
+                            <button class="btn btn-sm btn-success" onclick="returnItemToNet(${item.id})" title="Chuyển trả về Net (bất kỳ tình trạng)">
                                 <i class="fas fa-undo"></i> Trả
                             </button>
                         ` : ''}
@@ -473,15 +473,26 @@ function renderInventoryTable() {
                         ` : ''}
                         
                         ${(() => {
-                            // Check if there's a pending delivery request for this item
-                            const pendingRequest = deliveryRequestsData.find(r => r.itemId === item.id && r.status === 'pending');
-                            if (pendingRequest && userWarehouse === 'infrastructure') {
+                            // Check if there's a pending delivery request (Net → Infrastructure)
+                            const pendingDeliveryRequest = deliveryRequestsData.find(r => r.itemId === item.id && r.status === 'pending');
+                            if (pendingDeliveryRequest && userWarehouse === 'infrastructure') {
                                 return `
-                                    <button class="btn btn-sm btn-warning" onclick="confirmDeliveryRequest(${pendingRequest.id})" title="Xác nhận nhận vật tư">
-                                        <i class="fas fa-check-circle"></i> Xác nhận
+                                    <button class="btn btn-sm btn-warning" onclick="confirmDeliveryRequest(${pendingDeliveryRequest.id})" title="Xác nhận nhận vật tư">
+                                        <i class="fas fa-check-circle"></i> Xác nhận nhận
                                     </button>
                                 `;
                             }
+                            
+                            // Check if there's a pending return request (Infrastructure → Net)
+                            const pendingReturnRequest = returnRequestsData.find(r => r.itemId === item.id && r.status === 'pending');
+                            if (pendingReturnRequest && userWarehouse === 'net') {
+                                return `
+                                    <button class="btn btn-sm btn-warning" onclick="confirmReturnRequest(${pendingReturnRequest.id})" title="Xác nhận nhận trả">
+                                        <i class="fas fa-check-circle"></i> Xác nhận trả
+                                    </button>
+                                `;
+                            }
+                            
                             return '';
                         })()}
                         
@@ -1928,7 +1939,10 @@ async function deleteItem(itemId) {
     }
 }
 
-// Return item from Infrastructure to Net warehouse
+// Global variable for return requests
+let returnRequestsData = [];
+
+// Return item from Infrastructure to Net warehouse (creates return request)
 async function returnItemToNet(itemId) {
     const item = inventoryData.find(i => i.id === itemId);
     if (!item) {
@@ -1936,15 +1950,18 @@ async function returnItemToNet(itemId) {
         return;
     }
     
+    const task = item.taskId ? tasksData.find(t => t.id === item.taskId) : null;
+    
     // Show confirmation
     const confirmed = await showConfirmDialog(
-        'Chuyển trả về Kho Net',
+        'Tạo yêu cầu chuyển trả về Kho Net',
         `Bạn có chắc muốn chuyển trả vật tư này về Kho Net?<br><br>
         <strong>Serial:</strong> ${item.serial}<br>
         <strong>Tên:</strong> ${item.name}<br>
-        <strong>Hiện tại:</strong> ${getWarehouseName(item.warehouse)}<br>
-        <strong>Sự vụ:</strong> ${item.taskId ? (tasksData.find(t => t.id === item.taskId)?.name || '-') : '-'}`,
-        'Chuyển trả',
+        <strong>Tình trạng:</strong> ${getConditionText(item.condition)}<br>
+        <strong>Sự vụ:</strong> ${task ? task.name : 'Không có'}<br><br>
+        <em style="color: #7f8c8d;">Yêu cầu sẽ chờ xác nhận từ Kho Net</em>`,
+        'Tạo yêu cầu',
         'Hủy'
     );
     
@@ -1953,27 +1970,45 @@ async function returnItemToNet(itemId) {
     }
     
     try {
-        // Update item
-        item.warehouse = 'net';
-        item.condition = 'available';
-        item.taskId = null; // Clear task assignment
+        // Create return request instead of direct transfer
+        const returnRequest = {
+            id: returnRequestsData.length > 0 ? Math.max(...returnRequestsData.map(r => r.id), 0) + 1 : 1,
+            itemId: item.id,
+            itemSerial: item.serial,
+            itemName: item.name,
+            itemCondition: item.condition,
+            taskId: item.taskId,
+            taskName: task ? task.name : null,
+            status: 'pending',
+            requestedBy: currentUser ? (currentUser.displayName || currentUser.email) : 'Unknown',
+            requestedFrom: 'infrastructure',
+            requestedDate: new Date(),
+            confirmedBy: null,
+            confirmedDate: null,
+            notes: `Chuyển trả vật tư ${getConditionText(item.condition).toLowerCase()}`
+        };
         
-        // Save to Firebase
-        if (typeof window.saveInventoryToFirebase === 'function') {
-            await window.saveInventoryToFirebase(item);
+        // Add to local data
+        returnRequestsData.push(returnRequest);
+        
+        // Save to Firebase if available
+        if (typeof window.saveReturnRequestToFirebase === 'function') {
+            await window.saveReturnRequestToFirebase(returnRequest);
         }
         
         // Add log
-        await addLog('transfer', 'Chuyển trả', `Chuyển trả vật tư ${item.serial} - ${item.name} từ Kho Hạ Tầng về Kho Net`, getWarehouseName(currentWarehouse));
+        await addLog('return-request', 'Yêu cầu chuyển trả', 
+            `Tạo yêu cầu chuyển trả vật tư ${item.serial} - ${item.name} (${getConditionText(item.condition)}) từ Kho Hạ Tầng về Kho Net`, 
+            getWarehouseName(currentWarehouse));
         
-        showToast('success', 'Chuyển trả thành công!', 'Vật tư đã được chuyển về Kho Net.');
+        showToast('success', 'Tạo yêu cầu thành công!', 'Yêu cầu chuyển trả đang chờ xác nhận từ Kho Net.');
         
         updateDashboard();
         renderInventoryTable();
         
     } catch (error) {
-        console.error('❌ Error returning item:', error);
-        showToast('error', 'Lỗi!', 'Không thể chuyển trả vật tư.');
+        console.error('❌ Error creating return request:', error);
+        showToast('error', 'Lỗi!', 'Không thể tạo yêu cầu chuyển trả.');
     }
 }
 
@@ -2185,10 +2220,79 @@ async function confirmDeliveryRequest(requestId) {
     }
 }
 
+// Confirm return request (Net warehouse user)
+async function confirmReturnRequest(requestId) {
+    const request = returnRequestsData.find(r => r.id === requestId);
+    if (!request) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy yêu cầu.');
+        return;
+    }
+    
+    const item = inventoryData.find(i => i.id === request.itemId);
+    if (!item) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy vật tư.');
+        return;
+    }
+    
+    // Show confirmation
+    const confirmed = await showConfirmDialog(
+        'Xác nhận nhận trả vật tư',
+        `Bạn xác nhận đã nhận trả vật tư này về Kho Net?<br><br>
+        <strong>Vật tư:</strong> ${item.serial} - ${item.name}<br>
+        <strong>Tình trạng:</strong> ${getConditionText(request.itemCondition)}<br>
+        <strong>Sự vụ:</strong> ${request.taskName || 'Không có'}<br>
+        <strong>Người yêu cầu:</strong> ${request.requestedBy}<br>
+        <strong>Ngày yêu cầu:</strong> ${formatDateTime(request.requestedDate)}`,
+        'Xác nhận',
+        'Hủy'
+    );
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    try {
+        // Update item - return to Net warehouse with original condition
+        item.warehouse = 'net';
+        // Keep original condition (available, damaged, etc)
+        item.taskId = null; // Clear task assignment
+        
+        // Save item to Firebase
+        if (typeof window.saveInventoryToFirebase === 'function') {
+            await window.saveInventoryToFirebase(item);
+        }
+        
+        // Update return request status
+        request.status = 'confirmed';
+        request.confirmedBy = currentUser ? (currentUser.displayName || currentUser.email) : 'Unknown';
+        request.confirmedDate = new Date();
+        
+        // Save request to Firebase if available
+        if (typeof window.saveReturnRequestToFirebase === 'function') {
+            await window.saveReturnRequestToFirebase(request);
+        }
+        
+        // Add log
+        await addLog('return-confirmed', 'Xác nhận nhận trả', 
+            `Xác nhận nhận trả vật tư ${item.serial} - ${item.name} (${getConditionText(item.condition)}) từ Kho Hạ Tầng (Yêu cầu bởi: ${request.requestedBy})`, 
+            getWarehouseName(currentWarehouse));
+        
+        showToast('success', 'Xác nhận thành công!', 'Vật tư đã được chuyển về Kho Net.');
+        
+        updateDashboard();
+        renderInventoryTable();
+        
+    } catch (error) {
+        console.error('❌ Error confirming return:', error);
+        showToast('error', 'Lỗi!', 'Không thể xác nhận nhận trả vật tư.');
+    }
+}
+
 // Make functions global
 window.returnItemToNet = returnItemToNet;
 window.deliverItemToTask = deliverItemToTask;
 window.confirmDeliveryRequest = confirmDeliveryRequest;
+window.confirmReturnRequest = confirmReturnRequest;
 
 function viewItemHistory(itemId) {
     showToast('info', 'Lịch sử vật tư', `Xem lịch sử vật tư #${itemId}`);
