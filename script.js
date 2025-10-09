@@ -389,7 +389,7 @@ function updateActiveTasks() {
             <div class="task-info">
                 <p><i class="fas fa-tag"></i> ${getTaskTypeText(task.type)}</p>
                 <p><i class="fas fa-map-marker-alt"></i> ${task.location}</p>
-                <p><i class="fas fa-user"></i> ${task.createdBy || 'Không rõ'}</p>
+                <p><i class="fas fa-user"></i> ${task.createdBy || 'Không rõ'}${task.createdByWarehouse ? ` (${task.createdByWarehouse})` : ''}</p>
                 <p><i class="fas fa-calendar"></i> ${formatDate(task.createdDate)}</p>
                 <p><i class="fas fa-boxes"></i> ${task.assignedItems ? task.assignedItems.length : 0} vật tư</p>
             </div>
@@ -534,7 +534,7 @@ function renderTasksList() {
             <div class="task-info">
                 <p><i class="fas fa-tag"></i> ${getTaskTypeText(task.type)}</p>
                 <p><i class="fas fa-map-marker-alt"></i> ${task.location}</p>
-                <p><i class="fas fa-user"></i> Người tạo: ${task.createdBy || 'Không rõ'}</p>
+                <p><i class="fas fa-user"></i> Người tạo: ${task.createdBy || 'Không rõ'}${task.createdByWarehouse ? ` (${task.createdByWarehouse})` : ''}</p>
                 <p><i class="fas fa-calendar"></i> Tạo: ${formatDate(task.createdDate)}</p>
                 <p><i class="fas fa-boxes"></i> ${task.assignedItems ? task.assignedItems.length : 0} vật tư</p>
                 ${task.status === 'completed' && task.completedDate ? `
@@ -907,7 +907,8 @@ async function handleTaskSubmit(e) {
         ...formData,
         status: 'pending',
         createdDate: new Date(),
-        createdBy: getWarehouseName(currentWarehouse),
+        createdBy: currentUser ? (currentUser.displayName || currentUser.email) : 'Unknown',
+        createdByWarehouse: getWarehouseName(userWarehouse),
         assignedItems: [],
         completedItems: []
     };
