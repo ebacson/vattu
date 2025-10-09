@@ -10,6 +10,7 @@ let charts = {};
 let currentUser = null;
 let userWarehouse = 'net'; // User's assigned warehouse
 let isUserAdmin = false; // User's admin status
+let listenersSetup = false; // Flag to prevent duplicate event listeners
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', function() {
@@ -162,6 +163,14 @@ function initializeApp() {
 
 // Setup Event Listeners
 function setupEventListeners() {
+    // Prevent duplicate event listeners
+    if (listenersSetup) {
+        console.log('⚠️ Event listeners already setup, skipping...');
+        return;
+    }
+    
+    console.log('🎯 Setting up event listeners...');
+    
     // Tab navigation
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -187,6 +196,14 @@ function setupEventListeners() {
     document.getElementById('taskForm').addEventListener('submit', handleTaskSubmit);
     document.getElementById('itemForm').addEventListener('submit', handleItemSubmit);
     document.getElementById('transferForm').addEventListener('submit', handleTransferSubmit);
+    
+    // Transfer item search
+    const transferItemSearch = document.getElementById('transferItemSearch');
+    if (transferItemSearch) {
+        transferItemSearch.addEventListener('input', function() {
+            renderAvailableItems(this.value);
+        });
+    }
 
     // Modal close on outside click
     window.addEventListener('click', function(event) {
@@ -194,6 +211,10 @@ function setupEventListeners() {
             closeModal(event.target.id);
         }
     });
+    
+    // Mark listeners as setup
+    listenersSetup = true;
+    console.log('✅ Event listeners setup complete');
 }
 
 // Warehouse Management
@@ -669,14 +690,6 @@ function showTransferModal() {
     updateTransferTaskOptions();
     renderAvailableItems();
     renderSelectedItems();
-    
-    // Setup search
-    const searchInput = document.getElementById('transferItemSearch');
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            renderAvailableItems(this.value);
-        });
-    }
     
     openModal('transferModal');
 }
