@@ -389,7 +389,8 @@ function updateActiveTasks() {
             <div class="task-info">
                 <p><i class="fas fa-tag"></i> ${getTaskTypeText(task.type)}</p>
                 <p><i class="fas fa-map-marker-alt"></i> ${task.location}</p>
-                <p><i class="fas fa-calendar"></i> Tạo: ${formatDate(task.createdDate)}</p>
+                <p><i class="fas fa-user"></i> ${task.createdBy || 'Không rõ'}</p>
+                <p><i class="fas fa-calendar"></i> ${formatDate(task.createdDate)}</p>
                 <p><i class="fas fa-boxes"></i> ${task.assignedItems ? task.assignedItems.length : 0} vật tư</p>
             </div>
             <div class="task-actions">
@@ -494,6 +495,10 @@ function renderTasksList() {
     const statusFilter = document.getElementById('taskStatusFilter').value;
     const dateFilter = document.getElementById('taskDateFilter').value;
 
+    console.log('🔍 renderTasksList called');
+    console.log('📊 Total tasks:', tasksData.length);
+    console.log('🔧 Status filter:', statusFilter);
+
     let filteredTasks = tasksData.filter(task => {
         let matchesStatus = true;
         
@@ -509,6 +514,8 @@ function renderTasksList() {
         const matchesDate = !dateFilter || formatDate(task.createdDate) === dateFilter;
         return matchesStatus && matchesDate;
     });
+
+    console.log('✅ Filtered tasks:', filteredTasks.length);
 
     if (filteredTasks.length === 0) {
         tasksList.innerHTML = '<p class="no-data">Chưa có sự vụ nào</p>';
@@ -527,16 +534,22 @@ function renderTasksList() {
             <div class="task-info">
                 <p><i class="fas fa-tag"></i> ${getTaskTypeText(task.type)}</p>
                 <p><i class="fas fa-map-marker-alt"></i> ${task.location}</p>
+                <p><i class="fas fa-user"></i> Người tạo: ${task.createdBy || 'Không rõ'}</p>
                 <p><i class="fas fa-calendar"></i> Tạo: ${formatDate(task.createdDate)}</p>
                 <p><i class="fas fa-boxes"></i> ${task.assignedItems ? task.assignedItems.length : 0} vật tư</p>
+                ${task.status === 'completed' && task.completedDate ? `
+                    <p><i class="fas fa-check-circle"></i> Hoàn thành: ${formatDate(task.completedDate)} bởi ${task.completedBy || 'Không rõ'}</p>
+                ` : ''}
             </div>
             <div class="task-description">
                 <p>${task.description}</p>
             </div>
             <div class="task-actions">
                 <button class="btn btn-sm btn-primary" onclick="viewTask(${task.id})">Xem chi tiết</button>
-                <button class="btn btn-sm btn-success" onclick="requestItems(${task.id})">Yêu cầu vật tư</button>
-                <button class="btn btn-sm btn-danger" onclick="closeTask(${task.id})">Đóng sự vụ</button>
+                ${task.status !== 'completed' ? `
+                    <button class="btn btn-sm btn-success" onclick="requestItems(${task.id})">Yêu cầu vật tư</button>
+                    <button class="btn btn-sm btn-danger" onclick="closeTask(${task.id})">Đóng sự vụ</button>
+                ` : ''}
                 <button class="btn btn-sm btn-info" onclick="viewTaskLogs(${task.id})">Lịch sử</button>
             </div>
         </div>
