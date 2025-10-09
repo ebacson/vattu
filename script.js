@@ -408,19 +408,33 @@ function renderInventoryTable() {
     const statusFilter = document.getElementById('statusFilter').value;
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
 
+    console.log('📦 renderInventoryTable called');
+    console.log('📊 Total inventory items:', inventoryData.length);
+    console.log('🏢 Items by warehouse:', {
+        net: inventoryData.filter(i => i.warehouse === 'net').length,
+        infrastructure: inventoryData.filter(i => i.warehouse === 'infrastructure').length
+    });
+    console.log('🔧 Items by condition:', {
+        available: inventoryData.filter(i => i.condition === 'available').length,
+        'in-use': inventoryData.filter(i => i.condition === 'in-use').length
+    });
+    console.log('🔍 Infrastructure + available:', inventoryData.filter(i => i.warehouse === 'infrastructure' && i.condition === 'available').length);
+
     let filteredData = inventoryData.filter(item => {
         const matchesWarehouse = warehouseFilter === 'all' || item.warehouse === warehouseFilter;
         const matchesStatus = statusFilter === 'all' || item.condition === statusFilter;
         const matchesSearch = !searchTerm || 
             item.serial.toLowerCase().includes(searchTerm) ||
             item.name.toLowerCase().includes(searchTerm) ||
-            item.category.toLowerCase().includes(searchTerm);
+            (item.category && item.category.toLowerCase().includes(searchTerm));
         
         // Permission check: only show items from warehouses user can view
         const canView = canViewWarehouse(item.warehouse);
 
         return matchesWarehouse && matchesStatus && matchesSearch && canView;
     });
+
+    console.log('✅ Filtered items:', filteredData.length);
 
     if (filteredData.length === 0) {
         tbody.innerHTML = '<tr><td colspan="8" class="no-data">Không có dữ liệu</td></tr>';
