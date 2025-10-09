@@ -387,8 +387,9 @@ function updateActiveTasks() {
                 <span class="task-priority ${task.priority}">${getPriorityText(task.priority)}</span>
             </div>
             <div class="task-info">
+                <p><i class="fas fa-tag"></i> ${getTaskTypeText(task.type)}</p>
                 <p><i class="fas fa-map-marker-alt"></i> ${task.location}</p>
-                <p><i class="fas fa-clock"></i> Hạn: ${formatDate(task.deadline)}</p>
+                <p><i class="fas fa-calendar"></i> Tạo: ${formatDate(task.createdDate)}</p>
                 <p><i class="fas fa-boxes"></i> ${task.assignedItems ? task.assignedItems.length : 0} vật tư</p>
             </div>
             <div class="task-actions">
@@ -527,8 +528,7 @@ function renderTasksList() {
                 <p><i class="fas fa-tag"></i> ${getTaskTypeText(task.type)}</p>
                 <p><i class="fas fa-map-marker-alt"></i> ${task.location}</p>
                 <p><i class="fas fa-calendar"></i> Tạo: ${formatDate(task.createdDate)}</p>
-                <p><i class="fas fa-clock"></i> Hạn: ${formatDate(task.deadline)}</p>
-                <p><i class="fas fa-boxes"></i> ${task.assignedItems.length} vật tư</p>
+                <p><i class="fas fa-boxes"></i> ${task.assignedItems ? task.assignedItems.length : 0} vật tư</p>
             </div>
             <div class="task-description">
                 <p>${task.description}</p>
