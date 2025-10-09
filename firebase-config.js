@@ -29,7 +29,9 @@ const DB_PATHS = {
   INVENTORY: 'inventory',
   TASKS: 'tasks',
   TRANSFERS: 'transfers',
-  LOGS: 'logs'
+  LOGS: 'logs',
+  DELIVERY_REQUESTS: 'deliveryRequests',
+  RETURN_REQUESTS: 'returnRequests'
 };
 
 // Authentication status

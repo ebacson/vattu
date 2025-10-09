@@ -47,7 +47,9 @@ async function loadAllDataFromFirebase() {
             loadInventoryFromRealtimeDB(),
             loadTasksFromRealtimeDB(),
             loadTransfersFromRealtimeDB(),
-            loadLogsFromRealtimeDB()
+            loadLogsFromRealtimeDB(),
+            loadDeliveryRequestsFromRealtimeDB(),
+            loadReturnRequestsFromRealtimeDB()
         ]);
         
         console.log('✅ All data loaded from Firebase');
@@ -181,6 +183,80 @@ async function loadLogsFromRealtimeDB() {
     });
 }
 
+// Load delivery requests from Firebase
+async function loadDeliveryRequestsFromRealtimeDB() {
+    return new Promise((resolve, reject) => {
+        const requestsRef = ref(database, DB_PATHS.DELIVERY_REQUESTS);
+        
+        let isFirstLoad = true;
+        onValue(requestsRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                deliveryRequestsData = Object.keys(data).map(key => ({
+                    id: key,
+                    ...data[key],
+                    requestedDate: data[key].requestedDate ? new Date(data[key].requestedDate) : new Date(),
+                    confirmedDate: data[key].confirmedDate ? new Date(data[key].confirmedDate) : null
+                }));
+                console.log('🚚 Loaded delivery requests:', deliveryRequestsData.length);
+            } else {
+                deliveryRequestsData = [];
+                console.log('🚚 No delivery requests found');
+            }
+            
+            if (!isFirstLoad && typeof window.renderInventoryTable === 'function') {
+                console.log('🔄 Delivery requests changed, updating UI...');
+                window.renderInventoryTable();
+            }
+            
+            if (isFirstLoad) {
+                isFirstLoad = false;
+                resolve();
+            }
+        }, (error) => {
+            console.error('❌ Error loading delivery requests:', error);
+            reject(error);
+        });
+    });
+}
+
+// Load return requests from Firebase
+async function loadReturnRequestsFromRealtimeDB() {
+    return new Promise((resolve, reject) => {
+        const requestsRef = ref(database, DB_PATHS.RETURN_REQUESTS);
+        
+        let isFirstLoad = true;
+        onValue(requestsRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                returnRequestsData = Object.keys(data).map(key => ({
+                    id: key,
+                    ...data[key],
+                    requestedDate: data[key].requestedDate ? new Date(data[key].requestedDate) : new Date(),
+                    confirmedDate: data[key].confirmedDate ? new Date(data[key].confirmedDate) : null
+                }));
+                console.log('↩️ Loaded return requests:', returnRequestsData.length);
+            } else {
+                returnRequestsData = [];
+                console.log('↩️ No return requests found');
+            }
+            
+            if (!isFirstLoad && typeof window.renderInventoryTable === 'function') {
+                console.log('🔄 Return requests changed, updating UI...');
+                window.renderInventoryTable();
+            }
+            
+            if (isFirstLoad) {
+                isFirstLoad = false;
+                resolve();
+            }
+        }, (error) => {
+            console.error('❌ Error loading return requests:', error);
+            reject(error);
+        });
+    });
+}
+
 // Save inventory item to Firebase
 async function saveInventoryToFirebase(item) {
     try {
@@ -251,6 +327,42 @@ async function saveLogToFirebase(log) {
     }
 }
 
+// Save delivery request to Firebase
+async function saveDeliveryRequestToFirebase(request) {
+    try {
+        await waitForAuth();
+        const requestRef = ref(database, `${DB_PATHS.DELIVERY_REQUESTS}/${request.id}`);
+        await set(requestRef, {
+            ...request,
+            requestedDate: request.requestedDate.toISOString(),
+            confirmedDate: request.confirmedDate ? request.confirmedDate.toISOString() : null
+        });
+        console.log('✅ Delivery request saved to Firebase:', request.id);
+        return request.id;
+    } catch (error) {
+        console.error('❌ Error saving delivery request:', error);
+        throw error;
+    }
+}
+
+// Save return request to Firebase
+async function saveReturnRequestToFirebase(request) {
+    try {
+        await waitForAuth();
+        const requestRef = ref(database, `${DB_PATHS.RETURN_REQUESTS}/${request.id}`);
+        await set(requestRef, {
+            ...request,
+            requestedDate: request.requestedDate.toISOString(),
+            confirmedDate: request.confirmedDate ? request.confirmedDate.toISOString() : null
+        });
+        console.log('✅ Return request saved to Firebase:', request.id);
+        return request.id;
+    } catch (error) {
+        console.error('❌ Error saving return request:', error);
+        throw error;
+    }
+}
+
 // Delete inventory item from Firebase
 async function deleteInventoryFromFirebase(itemId) {
     try {
@@ -293,10 +405,14 @@ window.loadInventoryFromRealtimeDB = loadInventoryFromRealtimeDB;
 window.loadTasksFromRealtimeDB = loadTasksFromRealtimeDB;
 window.loadTransfersFromRealtimeDB = loadTransfersFromRealtimeDB;
 window.loadLogsFromRealtimeDB = loadLogsFromRealtimeDB;
+window.loadDeliveryRequestsFromRealtimeDB = loadDeliveryRequestsFromRealtimeDB;
+window.loadReturnRequestsFromRealtimeDB = loadReturnRequestsFromRealtimeDB;
 window.saveInventoryToFirebase = saveInventoryToFirebase;
 window.saveTaskToFirebase = saveTaskToFirebase;
 window.saveTransferToFirebase = saveTransferToFirebase;
 window.saveLogToFirebase = saveLogToFirebase;
+window.saveDeliveryRequestToFirebase = saveDeliveryRequestToFirebase;
+window.saveReturnRequestToFirebase = saveReturnRequestToFirebase;
 window.deleteInventoryFromFirebase = deleteInventoryFromFirebase;
 window.deleteTaskFromFirebase = deleteTaskFromFirebase;
 window.deleteTransferFromFirebase = deleteTransferFromFirebase;
