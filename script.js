@@ -1451,6 +1451,14 @@ function requestItems(taskId) {
 }
 
 async function closeTask(taskId) {
+    console.log('🔒 closeTask called for:', taskId);
+    
+    // Prevent duplicate close operations
+    if (closingTasks.has(taskId)) {
+        console.log('⚠️ Task already being closed, skipping...');
+        return;
+    }
+    
     const task = tasksData.find(t => t.id === taskId);
     if (!task) {
         showToast('error', 'Lỗi!', 'Không tìm thấy sự vụ.');
@@ -1477,8 +1485,13 @@ async function closeTask(taskId) {
     );
     
     if (!confirmed) {
+        console.log('❌ Close task cancelled by user');
         return;
     }
+    
+    // Mark as closing
+    closingTasks.add(taskId);
+    console.log('🔐 Marked task as closing:', taskId);
     
     try {
         // Update task status
@@ -1499,12 +1512,24 @@ async function closeTask(taskId) {
         renderTasksList();
         
     } catch (error) {
-        console.error('Error closing task:', error);
+        console.error('❌ Error closing task:', error);
         showToast('error', 'Lỗi!', 'Không thể đóng sự vụ.');
+    } finally {
+        // Always remove from closing set
+        closingTasks.delete(taskId);
+        console.log('🔓 Removed task from closing set:', taskId);
     }
 }
 
 async function confirmTransfer(transferId) {
+    console.log('✅ confirmTransfer called for:', transferId);
+    
+    // Prevent duplicate confirm operations
+    if (confirmingTransfers.has(transferId)) {
+        console.log('⚠️ Transfer already being confirmed, skipping...');
+        return;
+    }
+    
     const transfer = transfersData.find(t => t.id === transferId);
     if (!transfer) {
         showToast('error', 'Lỗi!', 'Không tìm thấy chuyển kho.');
@@ -1530,8 +1555,13 @@ async function confirmTransfer(transferId) {
     );
     
     if (!confirmed) {
+        console.log('❌ Transfer confirm cancelled by user');
         return;
     }
+    
+    // Mark as confirming
+    confirmingTransfers.add(transferId);
+    console.log('🔐 Marked transfer as confirming:', transferId);
     
     try {
         // Update transfer status
@@ -1588,8 +1618,12 @@ async function confirmTransfer(transferId) {
         renderInventoryTable();
         
     } catch (error) {
-        console.error('Error confirming transfer:', error);
+        console.error('❌ Error confirming transfer:', error);
         showToast('error', 'Lỗi!', 'Không thể xác nhận chuyển kho.');
+    } finally {
+        // Always remove from confirming set
+        confirmingTransfers.delete(transferId);
+        console.log('🔓 Removed transfer from confirming set:', transferId);
     }
 }
 
@@ -1632,7 +1666,20 @@ function editItem(itemId) {
     openModal('itemModal');
 }
 
+// Track operations in progress to prevent duplicates
+const deletingItems = new Set();
+const closingTasks = new Set();
+const confirmingTransfers = new Set();
+
 async function deleteItem(itemId) {
+    console.log('🗑️ deleteItem called for:', itemId);
+    
+    // Prevent duplicate delete operations
+    if (deletingItems.has(itemId)) {
+        console.log('⚠️ Item already being deleted, skipping...');
+        return;
+    }
+    
     const item = inventoryData.find(i => i.id === itemId);
     if (!item) {
         showToast('error', 'Lỗi!', 'Không tìm thấy vật tư.');
@@ -1660,8 +1707,13 @@ async function deleteItem(itemId) {
     );
     
     if (!confirmed) {
+        console.log('❌ Delete cancelled by user');
         return;
     }
+    
+    // Mark as deleting
+    deletingItems.add(itemId);
+    console.log('🔒 Marked item as deleting:', itemId);
     
     try {
         // Delete from Firebase
@@ -1685,8 +1737,12 @@ async function deleteItem(itemId) {
         renderInventoryTable();
         
     } catch (error) {
-        console.error('Error deleting item:', error);
+        console.error('❌ Error deleting item:', error);
         showToast('error', 'Lỗi!', 'Không thể xóa vật tư.');
+    } finally {
+        // Always remove from deleting set
+        deletingItems.delete(itemId);
+        console.log('🔓 Removed item from deleting set:', itemId);
     }
 }
 
