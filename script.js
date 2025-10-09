@@ -1681,8 +1681,192 @@ function showConfirmDialog(title, message, confirmText = 'Xác nhận', cancelTe
 
 // Placeholder functions for future implementation
 function viewTask(taskId) {
-    showToast('info', 'Xem sự vụ', `Xem chi tiết sự vụ #${taskId}`);
+    const task = tasksData.find(t => t.id === taskId);
+    if (!task) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy sự vụ.');
+        return;
+    }
+    
+    // Get assigned items
+    const assignedItems = inventoryData.filter(item => 
+        task.assignedItems && task.assignedItems.includes(item.id)
+    );
+    
+    // Get delivery requests for this task
+    const taskDeliveries = deliveryRequestsData.filter(r => r.taskId === taskId);
+    
+    // Get return requests for items from this task
+    const taskReturns = returnRequestsData.filter(r => r.taskId === taskId);
+    
+    // Get logs related to this task
+    const taskLogs = logsData.filter(log => 
+        log.details.toLowerCase().includes(task.name.toLowerCase()) ||
+        log.details.includes(`#${taskId}`)
+    ).sort((a, b) => b.timestamp - a.timestamp);
+    
+    // Build modal content
+    let content = `
+        <!-- Task Information -->
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin-top: 0; color: #2c3e50;">
+                <i class="fas fa-tasks"></i> ${task.name}
+            </h3>
+            <div style="display: grid; grid-template-columns: 150px 1fr; gap: 12px; margin-top: 15px;">
+                <strong>Loại sự vụ:</strong> <span>${getTaskTypeText(task.type)}</span>
+                <strong>Trạng thái:</strong> <span class="status-badge ${task.status}">${getTaskStatusText(task.status)}</span>
+                <strong>Độ ưu tiên:</strong> <span class="priority-badge ${task.priority}">${getPriorityText(task.priority)}</span>
+                <strong>Địa điểm:</strong> <span>${task.location}</span>
+                <strong>Người tạo:</strong> <span>${task.createdBy || 'Không rõ'}${task.createdByWarehouse ? ` (${task.createdByWarehouse})` : ''}</span>
+                <strong>Ngày tạo:</strong> <span>${formatDateTime(task.createdDate)}</span>
+                ${task.status === 'completed' ? `
+                    <strong>Hoàn thành:</strong> <span>${formatDateTime(task.completedDate)} bởi ${task.completedBy}</span>
+                ` : ''}
+            </div>
+            <div style="margin-top: 15px;">
+                <strong>Mô tả:</strong>
+                <p style="margin-top: 5px; color: #555;">${task.description}</p>
+            </div>
+        </div>
+        
+        <!-- Assigned Items Section -->
+        <div style="margin-bottom: 20px;">
+            <h4 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 8px;">
+                <i class="fas fa-boxes"></i> Vật Tư Được Gán (${assignedItems.length})
+            </h4>
+            ${assignedItems.length === 0 ? `
+                <p class="no-data">Chưa có vật tư nào được gán</p>
+            ` : `
+                <table style="width: 100%; margin-top: 10px; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #ecf0f1;">
+                            <th style="padding: 8px; text-align: left;">Serial</th>
+                            <th style="padding: 8px; text-align: left;">Tên</th>
+                            <th style="padding: 8px; text-align: left;">Tình trạng</th>
+                            <th style="padding: 8px; text-align: left;">Kho hiện tại</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${assignedItems.map(item => `
+                            <tr style="border-bottom: 1px solid #ecf0f1;">
+                                <td style="padding: 8px;"><strong>${item.serial}</strong></td>
+                                <td style="padding: 8px;">${item.name}</td>
+                                <td style="padding: 8px;"><span class="status-badge ${item.condition}">${getConditionText(item.condition)}</span></td>
+                                <td style="padding: 8px;"><span class="warehouse-badge ${item.warehouse}">${getWarehouseName(item.warehouse)}</span></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `}
+        </div>
+        
+        <!-- Delivery History Section -->
+        <div style="margin-bottom: 20px;">
+            <h4 style="color: #2c3e50; border-bottom: 2px solid #2ecc71; padding-bottom: 8px;">
+                <i class="fas fa-shipping-fast"></i> Lịch Sử Giao Nhận (${taskDeliveries.length})
+            </h4>
+            ${taskDeliveries.length === 0 ? `
+                <p class="no-data">Chưa có lịch sử giao nhận</p>
+            ` : `
+                <div style="margin-top: 10px;">
+                    ${taskDeliveries.map(delivery => `
+                        <div style="padding: 12px; background: ${delivery.status === 'confirmed' ? '#e8f8f5' : '#fff9e6'}; border-left: 4px solid ${delivery.status === 'confirmed' ? '#27ae60' : '#f39c12'}; margin-bottom: 10px; border-radius: 4px;">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div>
+                                    <strong style="color: #2c3e50;">${delivery.itemSerial} - ${delivery.itemName}</strong>
+                                    <div style="color: #7f8c8d; font-size: 0.9rem; margin-top: 5px;">
+                                        <i class="fas fa-user"></i> Yêu cầu bởi: ${delivery.requestedBy}
+                                        <br>
+                                        <i class="fas fa-calendar"></i> ${formatDateTime(delivery.requestedDate)}
+                                    </div>
+                                    ${delivery.status === 'confirmed' ? `
+                                        <div style="color: #27ae60; font-size: 0.9rem; margin-top: 5px;">
+                                            <i class="fas fa-check-circle"></i> Xác nhận bởi: ${delivery.confirmedBy}
+                                            <br>
+                                            <i class="fas fa-calendar-check"></i> ${formatDateTime(delivery.confirmedDate)}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                                <span class="status-badge ${delivery.status === 'confirmed' ? 'completed' : 'pending'}">
+                                    ${delivery.status === 'confirmed' ? 'Đã xác nhận' : 'Chờ xác nhận'}
+                                </span>
+                            </div>
+                            ${delivery.notes ? `<div style="margin-top: 8px; color: #555; font-style: italic;">Ghi chú: ${delivery.notes}</div>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `}
+        </div>
+        
+        <!-- Return History Section -->
+        <div style="margin-bottom: 20px;">
+            <h4 style="color: #2c3e50; border-bottom: 2px solid #e67e22; padding-bottom: 8px;">
+                <i class="fas fa-undo"></i> Lịch Sử Chuyển Trả (${taskReturns.length})
+            </h4>
+            ${taskReturns.length === 0 ? `
+                <p class="no-data">Chưa có lịch sử chuyển trả</p>
+            ` : `
+                <div style="margin-top: 10px;">
+                    ${taskReturns.map(returnReq => `
+                        <div style="padding: 12px; background: ${returnReq.status === 'confirmed' ? '#fef5e7' : '#fff3cd'}; border-left: 4px solid ${returnReq.status === 'confirmed' ? '#e67e22' : '#f39c12'}; margin-bottom: 10px; border-radius: 4px;">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div>
+                                    <strong style="color: #2c3e50;">${returnReq.itemSerial} - ${returnReq.itemName}</strong>
+                                    <span class="status-badge ${returnReq.itemCondition}" style="margin-left: 10px; font-size: 0.85rem;">${getConditionText(returnReq.itemCondition)}</span>
+                                    <div style="color: #7f8c8d; font-size: 0.9rem; margin-top: 5px;">
+                                        <i class="fas fa-user"></i> Yêu cầu trả bởi: ${returnReq.requestedBy}
+                                        <br>
+                                        <i class="fas fa-calendar"></i> ${formatDateTime(returnReq.requestedDate)}
+                                    </div>
+                                    ${returnReq.status === 'confirmed' ? `
+                                        <div style="color: #e67e22; font-size: 0.9rem; margin-top: 5px;">
+                                            <i class="fas fa-check-circle"></i> Nhận trả bởi: ${returnReq.confirmedBy}
+                                            <br>
+                                            <i class="fas fa-calendar-check"></i> ${formatDateTime(returnReq.confirmedDate)}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                                <span class="status-badge ${returnReq.status === 'confirmed' ? 'completed' : 'pending'}">
+                                    ${returnReq.status === 'confirmed' ? 'Đã trả' : 'Chờ xác nhận'}
+                                </span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `}
+        </div>
+        
+        <!-- Activity Logs Section -->
+        <div style="margin-bottom: 20px;">
+            <h4 style="color: #2c3e50; border-bottom: 2px solid #9b59b6; padding-bottom: 8px;">
+                <i class="fas fa-history"></i> Lịch Sử Hoạt Động (${taskLogs.length})
+            </h4>
+            ${taskLogs.length === 0 ? `
+                <p class="no-data">Chưa có hoạt động nào</p>
+            ` : `
+                <div style="margin-top: 10px; max-height: 300px; overflow-y: auto;">
+                    ${taskLogs.map(log => `
+                        <div style="padding: 10px; border-bottom: 1px solid #ecf0f1; display: flex; gap: 12px;">
+                            <div style="background: ${getActivityColor(log.type)}; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <i class="${getActivityIcon(log.type)}" style="color: white;"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <strong style="color: #2c3e50;">${log.action}</strong>
+                                <p style="margin: 5px 0 0 0; color: #555; font-size: 0.9rem;">${log.details}</p>
+                                <small style="color: #95a5a6;">${formatTimeAgo(log.timestamp)} - ${formatDateTime(log.timestamp)}</small>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `}
+        </div>
+    `;
+    
+    document.getElementById('taskDetailsContent').innerHTML = content;
+    openModal('taskDetailsModal');
 }
+
+// Make function global
+window.viewTask = viewTask;
 
 function requestItems(taskId) {
     showToast('info', 'Yêu cầu vật tư', `Yêu cầu vật tư cho sự vụ #${taskId}`);
@@ -2365,7 +2549,8 @@ function updateItemCondition(itemId) {
 }
 
 function viewTaskLogs(taskId) {
-    showToast('info', 'Lịch sử sự vụ', `Xem lịch sử sự vụ #${taskId}`);
+    // Just call viewTask - it already shows all logs
+    viewTask(taskId);
 }
 
 function viewTransferDetails(transferId) {

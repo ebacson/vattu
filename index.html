@@ -492,6 +492,24 @@
         </div>
     </div>
 
+    <!-- Task Details Modal -->
+    <div id="taskDetailsModal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2 id="taskDetailsTitle">Chi Tiết Sự Vụ</h2>
+                <span class="close" onclick="closeModal('taskDetailsModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="taskDetailsContent">
+                    <!-- Content will be loaded dynamically -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('taskDetailsModal')">Đóng</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Confirmation Modal -->
     <div id="confirmationModal" class="modal">
         <div class="modal-content">
