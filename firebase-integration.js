@@ -399,6 +399,30 @@ async function deleteTransferFromFirebase(transferId) {
     }
 }
 
+// Delete delivery request from Firebase
+async function deleteDeliveryRequestFromFirebase(requestId) {
+    try {
+        const requestRef = ref(database, `${DB_PATHS.DELIVERY_REQUESTS}/${requestId}`);
+        await remove(requestRef);
+        console.log('✅ Delivery request deleted from Firebase:', requestId);
+    } catch (error) {
+        console.error('❌ Error deleting delivery request:', error);
+        throw error;
+    }
+}
+
+// Delete return request from Firebase
+async function deleteReturnRequestFromFirebase(requestId) {
+    try {
+        const requestRef = ref(database, `${DB_PATHS.RETURN_REQUESTS}/${requestId}`);
+        await remove(requestRef);
+        console.log('✅ Return request deleted from Firebase:', requestId);
+    } catch (error) {
+        console.error('❌ Error deleting return request:', error);
+        throw error;
+    }
+}
+
 // Export functions for use in script.js
 window.loadAllDataFromFirebase = loadAllDataFromFirebase;
 window.loadInventoryFromRealtimeDB = loadInventoryFromRealtimeDB;
@@ -416,3 +440,5 @@ window.saveReturnRequestToFirebase = saveReturnRequestToFirebase;
 window.deleteInventoryFromFirebase = deleteInventoryFromFirebase;
 window.deleteTaskFromFirebase = deleteTaskFromFirebase;
 window.deleteTransferFromFirebase = deleteTransferFromFirebase;
+window.deleteDeliveryRequestFromFirebase = deleteDeliveryRequestFromFirebase;
+window.deleteReturnRequestFromFirebase = deleteReturnRequestFromFirebase;

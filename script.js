@@ -36,7 +36,7 @@ function waitForFirebaseFunctions() {
     return new Promise((resolve) => {
         const checkFirebase = () => {
             if (window.loadAllDataFromFirebase && window.saveInventoryToFirebase) {
-                console.log('✅ Firebase functions ready');
+                console.log('✅functions ready');
                 resolve();
             } else {
                 console.log('⏳ Waiting for Firebase functions...');
@@ -521,22 +521,48 @@ function renderInventoryTable() {
                         ${(() => {
                             // Check if there's a pending delivery request (Net → Infrastructure)
                             const pendingDeliveryRequest = deliveryRequestsData.find(r => r.itemId === item.id && r.status === 'pending');
-                            if (pendingDeliveryRequest && userWarehouse === 'infrastructure') {
-                                return `
-                                    <button class="btn btn-sm btn-warning" onclick="confirmDeliveryRequest(${pendingDeliveryRequest.id})" title="Xác nhận nhận vật tư">
-                                        <i class="fas fa-check-circle"></i> Xác nhận nhận
-                                    </button>
-                                `;
+                            if (pendingDeliveryRequest) {
+                                if (userWarehouse === 'infrastructure') {
+                                    // Infrastructure warehouse can confirm or reject
+                                    return `
+                                        <button class="btn btn-sm btn-success" onclick="confirmDeliveryRequest(${pendingDeliveryRequest.id})" title="Xác nhận nhận vật tư">
+                                            <i class="fas fa-check-circle"></i> Xác nhận
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="rejectDeliveryRequest(${pendingDeliveryRequest.id})" title="Từ chối nhận vật tư">
+                                            <i class="fas fa-times-circle"></i> Từ chối
+                                        </button>
+                                    `;
+                                } else if (userWarehouse === 'net') {
+                                    // Net warehouse can cancel their own delivery request
+                                    return `
+                                        <button class="btn btn-sm btn-warning" onclick="cancelDeliveryRequest(${pendingDeliveryRequest.id})" title="Hủy yêu cầu giao">
+                                            <i class="fas fa-ban"></i> Hủy giao
+                                        </button>
+                                    `;
+                                }
                             }
                             
                             // Check if there's a pending return request (Infrastructure → Net)
                             const pendingReturnRequest = returnRequestsData.find(r => r.itemId === item.id && r.status === 'pending');
-                            if (pendingReturnRequest && userWarehouse === 'net') {
-                                return `
-                                    <button class="btn btn-sm btn-warning" onclick="confirmReturnRequest(${pendingReturnRequest.id})" title="Xác nhận nhận trả">
-                                        <i class="fas fa-check-circle"></i> Xác nhận trả
-                                    </button>
-                                `;
+                            if (pendingReturnRequest) {
+                                if (userWarehouse === 'net') {
+                                    // Net warehouse can confirm or reject return
+                                    return `
+                                        <button class="btn btn-sm btn-success" onclick="confirmReturnRequest(${pendingReturnRequest.id})" title="Xác nhận nhận trả">
+                                            <i class="fas fa-check-circle"></i> Xác nhận
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="rejectReturnRequest(${pendingReturnRequest.id})" title="Từ chối nhận trả">
+                                            <i class="fas fa-times-circle"></i> Từ chối
+                                        </button>
+                                    `;
+                                } else if (userWarehouse === 'infrastructure') {
+                                    // Infrastructure warehouse can cancel their own return request
+                                    return `
+                                        <button class="btn btn-sm btn-warning" onclick="cancelReturnRequest(${pendingReturnRequest.id})" title="Hủy yêu cầu trả">
+                                            <i class="fas fa-ban"></i> Hủy trả
+                                        </button>
+                                    `;
+                                }
                             }
                             
                             return '';
@@ -686,18 +712,20 @@ function renderPendingRequestsList() {
         const task = tasksData.find(t => t.id === request.taskId);
         const item = inventoryData.find(i => i.id === request.itemId);
         const isPending = request.status === 'pending';
+        const isRejected = request.status === 'rejected';
+        const isConfirmed = request.status === 'confirmed';
         const canConfirm = (request.type === 'delivery' && userWarehouse === 'infrastructure') ||
                           (request.type === 'return' && userWarehouse === 'net');
         
         return `
-            <div class="transfer-card" style="border-left: 4px solid ${request.color};">
+            <div class="transfer-card" style="border-left: 4px solid ${isRejected ? '#e74c3c' : request.color};">
                 <div class="transfer-header">
                     <h3>
                         <i class="fas ${request.icon}"></i> 
                         ${request.type === 'delivery' ? 'Giao Nhận' : 'Chuyển Trả'}
                     </h3>
-                    <span class="status-badge ${isPending ? 'pending' : 'completed'}">
-                        ${isPending ? 'Chờ xác nhận' : 'Đã xác nhận'}
+                    <span class="status-badge ${isPending ? 'pending' : isRejected ? 'damaged' : 'completed'}">
+                        ${isPending ? 'Chờ xác nhận' : isRejected ? '❌ Đã từ chối' : '✅ Đã xác nhận'}
                     </span>
                 </div>
                 <div class="transfer-info">
@@ -707,9 +735,13 @@ function renderPendingRequestsList() {
                     <p><i class="fas fa-tasks"></i> Sự vụ: ${request.taskName || task?.name || 'Không có'}</p>
                     <p><i class="fas fa-user"></i> Yêu cầu bởi: ${request.requestedBy}</p>
                     <p><i class="fas fa-calendar"></i> Ngày yêu cầu: ${formatDateTime(request.requestedDate)}</p>
-                    ${!isPending ? `
+                    ${isConfirmed ? `
                         <p><i class="fas fa-check-circle"></i> Xác nhận bởi: ${request.confirmedBy}</p>
                         <p><i class="fas fa-calendar-check"></i> Ngày xác nhận: ${formatDateTime(request.confirmedDate)}</p>
+                    ` : ''}
+                    ${isRejected ? `
+                        <p style="color: #e74c3c;"><i class="fas fa-times-circle"></i> Từ chối bởi: ${request.rejectedBy}</p>
+                        <p style="color: #e74c3c;"><i class="fas fa-calendar-times"></i> Ngày từ chối: ${formatDateTime(request.rejectedDate)}</p>
                     ` : ''}
                 </div>
                 ${request.notes ? `
@@ -3438,11 +3470,255 @@ async function confirmReturnRequest(requestId) {
     }
 }
 
+// Cancel delivery request (Net warehouse user - cancels their own request)
+async function cancelDeliveryRequest(requestId) {
+    const request = deliveryRequestsData.find(r => r.id === requestId);
+    if (!request) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy yêu cầu.');
+        return;
+    }
+    
+    const item = inventoryData.find(i => i.id === request.itemId);
+    if (!item) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy vật tư.');
+        return;
+    }
+    
+    const task = tasksData.find(t => t.id === request.taskId);
+    const taskName = task ? task.name : 'Không rõ';
+    
+    // Show confirmation
+    const confirmed = await showConfirmDialog(
+        'Hủy yêu cầu giao',
+        `Bạn có chắc muốn hủy yêu cầu giao vật tư này?<br><br>
+        <strong>Vật tư:</strong> ${item.serial} - ${item.name}<br>
+        <strong>Sự vụ:</strong> ${taskName}<br>
+        <strong>Ngày yêu cầu:</strong> ${formatDateTime(request.requestedDate)}`,
+        'Hủy yêu cầu',
+        'Không'
+    );
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    try {
+        // Remove request from Firebase
+        if (typeof window.deleteDeliveryRequestFromFirebase === 'function') {
+            await window.deleteDeliveryRequestFromFirebase(requestId);
+        }
+        
+        // Remove from local array
+        const index = deliveryRequestsData.findIndex(r => r.id === requestId);
+        if (index > -1) {
+            deliveryRequestsData.splice(index, 1);
+        }
+        
+        // Add log
+        await addLog('delivery-cancelled', 'Hủy yêu cầu giao', 
+            `Hủy yêu cầu giao vật tư ${item.serial} - ${item.name} cho sự vụ "${taskName}"`, 
+            getWarehouseName(currentWarehouse));
+        
+        showToast('success', 'Đã hủy!', 'Yêu cầu giao vật tư đã được hủy.');
+        
+        updateDashboard();
+        renderInventoryTable();
+        renderPendingRequestsList();
+        
+    } catch (error) {
+        console.error('❌ Error cancelling delivery:', error);
+        showToast('error', 'Lỗi!', 'Không thể hủy yêu cầu giao.');
+    }
+}
+
+// Reject delivery request (Infrastructure warehouse user)
+async function rejectDeliveryRequest(requestId) {
+    const request = deliveryRequestsData.find(r => r.id === requestId);
+    if (!request) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy yêu cầu.');
+        return;
+    }
+    
+    const item = inventoryData.find(i => i.id === request.itemId);
+    if (!item) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy vật tư.');
+        return;
+    }
+    
+    const task = tasksData.find(t => t.id === request.taskId);
+    const taskName = task ? task.name : 'Không rõ';
+    
+    // Show confirmation
+    const confirmed = await showConfirmDialog(
+        'Từ chối nhận vật tư',
+        `Bạn có chắc muốn từ chối nhận vật tư này?<br><br>
+        <strong>Vật tư:</strong> ${item.serial} - ${item.name}<br>
+        <strong>Sự vụ:</strong> ${taskName}<br>
+        <strong>Người yêu cầu:</strong> ${request.requestedBy}<br>
+        <strong>Ngày yêu cầu:</strong> ${formatDateTime(request.requestedDate)}<br><br>
+        <em style="color: #e74c3c;">Lưu ý: Người yêu cầu sẽ được thông báo về việc từ chối này.</em>`,
+        'Từ chối',
+        'Không'
+    );
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    try {
+        // Update request status to rejected
+        request.status = 'rejected';
+        request.rejectedBy = currentUser ? (currentUser.displayName || currentUser.email) : 'Unknown';
+        request.rejectedDate = new Date();
+        
+        // Save to Firebase
+        if (typeof window.saveDeliveryRequestToFirebase === 'function') {
+            await window.saveDeliveryRequestToFirebase(request);
+        }
+        
+        // Add log
+        await addLog('delivery-rejected', 'Từ chối giao vật tư', 
+            `Từ chối nhận vật tư ${item.serial} - ${item.name} cho sự vụ "${taskName}" (Yêu cầu bởi: ${request.requestedBy})`, 
+            getWarehouseName(currentWarehouse));
+        
+        showToast('warning', 'Đã từ chối!', 'Yêu cầu giao vật tư đã bị từ chối.');
+        
+        updateDashboard();
+        renderInventoryTable();
+        renderPendingRequestsList();
+        
+    } catch (error) {
+        console.error('❌ Error rejecting delivery:', error);
+        showToast('error', 'Lỗi!', 'Không thể từ chối yêu cầu.');
+    }
+}
+
+// Cancel return request (Infrastructure warehouse user - cancels their own request)
+async function cancelReturnRequest(requestId) {
+    const request = returnRequestsData.find(r => r.id === requestId);
+    if (!request) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy yêu cầu.');
+        return;
+    }
+    
+    const item = inventoryData.find(i => i.id === request.itemId);
+    if (!item) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy vật tư.');
+        return;
+    }
+    
+    // Show confirmation
+    const confirmed = await showConfirmDialog(
+        'Hủy yêu cầu trả',
+        `Bạn có chắc muốn hủy yêu cầu trả vật tư này?<br><br>
+        <strong>Vật tư:</strong> ${item.serial} - ${item.name}<br>
+        <strong>Tình trạng:</strong> ${getConditionText(request.itemCondition)}<br>
+        <strong>Ngày yêu cầu:</strong> ${formatDateTime(request.requestedDate)}`,
+        'Hủy yêu cầu',
+        'Không'
+    );
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    try {
+        // Remove request from Firebase
+        if (typeof window.deleteReturnRequestFromFirebase === 'function') {
+            await window.deleteReturnRequestFromFirebase(requestId);
+        }
+        
+        // Remove from local array
+        const index = returnRequestsData.findIndex(r => r.id === requestId);
+        if (index > -1) {
+            returnRequestsData.splice(index, 1);
+        }
+        
+        // Add log
+        await addLog('return-cancelled', 'Hủy yêu cầu trả', 
+            `Hủy yêu cầu trả vật tư ${item.serial} - ${item.name} về Kho Net`, 
+            getWarehouseName(currentWarehouse));
+        
+        showToast('success', 'Đã hủy!', 'Yêu cầu trả vật tư đã được hủy.');
+        
+        updateDashboard();
+        renderInventoryTable();
+        renderPendingRequestsList();
+        
+    } catch (error) {
+        console.error('❌ Error cancelling return:', error);
+        showToast('error', 'Lỗi!', 'Không thể hủy yêu cầu trả.');
+    }
+}
+
+// Reject return request (Net warehouse user)
+async function rejectReturnRequest(requestId) {
+    const request = returnRequestsData.find(r => r.id === requestId);
+    if (!request) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy yêu cầu.');
+        return;
+    }
+    
+    const item = inventoryData.find(i => i.id === request.itemId);
+    if (!item) {
+        showToast('error', 'Lỗi!', 'Không tìm thấy vật tư.');
+        return;
+    }
+    
+    // Show confirmation
+    const confirmed = await showConfirmDialog(
+        'Từ chối nhận trả vật tư',
+        `Bạn có chắc muốn từ chối nhận trả vật tư này?<br><br>
+        <strong>Vật tư:</strong> ${item.serial} - ${item.name}<br>
+        <strong>Tình trạng:</strong> ${getConditionText(request.itemCondition)}<br>
+        <strong>Người yêu cầu:</strong> ${request.requestedBy}<br>
+        <strong>Ngày yêu cầu:</strong> ${formatDateTime(request.requestedDate)}<br><br>
+        <em style="color: #e74c3c;">Lưu ý: Người yêu cầu sẽ được thông báo về việc từ chối này.</em>`,
+        'Từ chối',
+        'Không'
+    );
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    try {
+        // Update request status to rejected
+        request.status = 'rejected';
+        request.rejectedBy = currentUser ? (currentUser.displayName || currentUser.email) : 'Unknown';
+        request.rejectedDate = new Date();
+        
+        // Save to Firebase
+        if (typeof window.saveReturnRequestToFirebase === 'function') {
+            await window.saveReturnRequestToFirebase(request);
+        }
+        
+        // Add log
+        await addLog('return-rejected', 'Từ chối nhận trả', 
+            `Từ chối nhận trả vật tư ${item.serial} - ${item.name} từ Kho Hạ Tầng (Yêu cầu bởi: ${request.requestedBy})`, 
+            getWarehouseName(currentWarehouse));
+        
+        showToast('warning', 'Đã từ chối!', 'Yêu cầu trả vật tư đã bị từ chối.');
+        
+        updateDashboard();
+        renderInventoryTable();
+        renderPendingRequestsList();
+        
+    } catch (error) {
+        console.error('❌ Error rejecting return:', error);
+        showToast('error', 'Lỗi!', 'Không thể từ chối yêu cầu.');
+    }
+}
+
 // Make functions global
 window.returnItemToNet = returnItemToNet;
 window.deliverItemToTask = deliverItemToTask;
 window.confirmDeliveryRequest = confirmDeliveryRequest;
 window.confirmReturnRequest = confirmReturnRequest;
+window.cancelDeliveryRequest = cancelDeliveryRequest;
+window.rejectDeliveryRequest = rejectDeliveryRequest;
+window.cancelReturnRequest = cancelReturnRequest;
+window.rejectReturnRequest = rejectReturnRequest;
 
 function viewItemHistory(itemId) {
     showToast('info', 'Lịch sử vật tư', `Xem lịch sử vật tư #${itemId}`);
