@@ -1529,7 +1529,7 @@ function showAddItemModal() {
     // Reset button text
     const submitBtn = document.querySelector('#itemModal .modal-footer button[type="submit"]');
     if (submitBtn) {
-        submitBtn.textContent = 'Thêm Vật Tư';
+        submitBtn.innerHTML = '<i class="fas fa-plus"></i> Thêm Vật Tư';
     }
     
     // Handle warehouse change to show/hide task field
@@ -2992,10 +2992,10 @@ function editItem(itemId) {
     document.getElementById('itemCondition').value = item.condition;
     document.getElementById('itemDescription').value = item.description || '';
     
-    // Change button text
-    const submitBtn = document.querySelector('#itemForm button[type="submit"]');
+    // Change button text to "Lưu" for editing
+    const submitBtn = document.querySelector('#itemModal .modal-footer button[type="submit"]');
     if (submitBtn) {
-        submitBtn.innerHTML = '<i class="fas fa-save"></i> Cập Nhật';
+        submitBtn.innerHTML = '<i class="fas fa-save"></i> Lưu';
     }
     
     // Open modal
