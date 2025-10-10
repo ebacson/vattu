@@ -361,6 +361,11 @@ function updateDashboard() {
 
     updateRecentActivities();
     updateActiveTasks();
+    
+    // Update statistics charts
+    if (typeof updateCharts === 'function') {
+        updateCharts();
+    }
 }
 
 function updateRecentActivities() {
@@ -2276,7 +2281,78 @@ function switchTab(tabName) {
 }
 
 // Charts
+function updateStatisticsMetrics() {
+    const metricsGrid = document.getElementById('statsMetricsGrid');
+    if (!metricsGrid) return;
+    
+    // Calculate metrics
+    const totalItems = inventoryData.length;
+    const totalTasks = tasksData.length;
+    const activeTasks = tasksData.filter(t => t.status !== 'completed' && t.status !== 'cancelled').length;
+    const completedTasks = tasksData.filter(t => t.status === 'completed').length;
+    const pendingDeliveries = deliveryRequestsData.filter(r => r.status === 'pending').length;
+    const pendingReturns = returnRequestsData.filter(r => r.status === 'pending').length;
+    const damagedItems = inventoryData.filter(i => i.condition === 'damaged').length;
+    const availableItems = inventoryData.filter(i => i.condition === 'available').length;
+    
+    metricsGrid.innerHTML = `
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 12px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="font-size: 2.5rem; font-weight: bold;">${totalItems}</div>
+            <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 5px;">
+                <i class="fas fa-boxes"></i> Tổng Vật Tư
+            </div>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 12px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="font-size: 2.5rem; font-weight: bold;">${totalTasks}</div>
+            <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 5px;">
+                <i class="fas fa-tasks"></i> Tổng Sự Vụ
+            </div>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 20px; border-radius: 12px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="font-size: 2.5rem; font-weight: bold;">${activeTasks}</div>
+            <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 5px;">
+                <i class="fas fa-spinner"></i> Sự Vụ Hoạt Động
+            </div>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); padding: 20px; border-radius: 12px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="font-size: 2.5rem; font-weight: bold;">${completedTasks}</div>
+            <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 5px;">
+                <i class="fas fa-check-circle"></i> Đã Hoàn Thành
+            </div>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 20px; border-radius: 12px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="font-size: 2.5rem; font-weight: bold;">${pendingDeliveries + pendingReturns}</div>
+            <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 5px;">
+                <i class="fas fa-clock"></i> Chờ Xác Nhận
+            </div>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); padding: 20px; border-radius: 12px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="font-size: 2.5rem; font-weight: bold;">${availableItems}</div>
+            <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 5px;">
+                <i class="fas fa-check"></i> Sẵn Sàng
+            </div>
+        </div>
+        
+        ${damagedItems > 0 ? `
+            <div style="background: linear-gradient(135deg, #f83600 0%, #f9d423 100%); padding: 20px; border-radius: 12px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="font-size: 2.5rem; font-weight: bold;">${damagedItems}</div>
+                <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 5px;">
+                    <i class="fas fa-exclamation-triangle"></i> Vật Tư Hỏng
+                </div>
+            </div>
+        ` : ''}
+    `;
+}
+
 function initializeCharts() {
+    // Update metrics
+    updateStatisticsMetrics();
+    
     // Warehouse Chart
     const warehouseCtx = document.getElementById('warehouseChart').getContext('2d');
     charts.warehouse = new Chart(warehouseCtx, {
@@ -2285,19 +2361,46 @@ function initializeCharts() {
             labels: ['Kho Net', 'Kho Hạ Tầng'],
             datasets: [{
                 data: [0, 0],
-                backgroundColor: ['#3498db', '#e74c3c']
+                backgroundColor: ['#3498db', '#9b59b6']
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    
+    // Condition Chart
+    const conditionCtx = document.getElementById('conditionChart').getContext('2d');
+    charts.condition = new Chart(conditionCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Sẵn sàng', 'Đang sử dụng', 'Bảo trì', 'Hỏng'],
+            datasets: [{
+                data: [0, 0, 0, 0],
+                backgroundColor: ['#27ae60', '#3498db', '#f39c12', '#e74c3c']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
         }
     });
 
     // Task Status Chart
     const taskStatusCtx = document.getElementById('taskStatusChart').getContext('2d');
     charts.taskStatus = new Chart(taskStatusCtx, {
-        type: 'pie',
+        type: 'doughnut',
         data: {
             labels: ['Chờ xử lý', 'Đang thực hiện', 'Hoàn thành'],
             datasets: [{
@@ -2307,63 +2410,199 @@ function initializeCharts() {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
         }
     });
 
-    // Transfer Trend Chart
-    const transferTrendCtx = document.getElementById('transferTrendChart').getContext('2d');
-    charts.transferTrend = new Chart(transferTrendCtx, {
+    // Activity Trend Chart (Last 7 days)
+    const activityTrendCtx = document.getElementById('activityTrendChart').getContext('2d');
+    charts.activityTrend = new Chart(activityTrendCtx, {
         type: 'line',
         data: {
             labels: [],
             datasets: [{
-                label: 'Chuyển kho',
+                label: 'Hoạt động',
                 data: [],
                 borderColor: '#3498db',
-                backgroundColor: 'rgba(52, 152, 219, 0.1)'
+                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                tension: 0.4,
+                fill: true
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
         }
     });
-
-    // Performance Chart
-    const performanceCtx = document.getElementById('performanceChart').getContext('2d');
-    charts.performance = new Chart(performanceCtx, {
+    
+    // Task Type Chart
+    const taskTypeCtx = document.getElementById('taskTypeChart').getContext('2d');
+    charts.taskType = new Chart(taskTypeCtx, {
         type: 'bar',
         data: {
-            labels: ['Tuần này', 'Tháng này', 'Quý này'],
+            labels: ['Lắp đặt', 'Swap', 'Xử lý', 'Nâng cấp', 'Bảo trì', 'Khác'],
             datasets: [{
-                label: 'Sự vụ hoàn thành',
-                data: [0, 0, 0],
-                backgroundColor: '#27ae60'
+                label: 'Số lượng',
+                data: [0, 0, 0, 0, 0, 0],
+                backgroundColor: ['#3498db', '#9b59b6', '#e67e22', '#1abc9c', '#f39c12', '#95a5a6']
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
         }
     });
+    
+    // Pending Requests Chart
+    const pendingRequestsCtx = document.getElementById('pendingRequestsChart').getContext('2d');
+    charts.pendingRequests = new Chart(pendingRequestsCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Giao nhận', 'Chuyển trả'],
+            datasets: [{
+                label: 'Chờ xác nhận',
+                data: [0, 0],
+                backgroundColor: ['#3498db', '#e67e22']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+    
+    // Initial update
+    updateCharts();
 }
 
 function updateCharts() {
+    // Update metrics cards
+    updateStatisticsMetrics();
+    
     // Update warehouse chart
     const netCount = inventoryData.filter(item => item.warehouse === 'net').length;
     const infraCount = inventoryData.filter(item => item.warehouse === 'infrastructure').length;
     
-    charts.warehouse.data.datasets[0].data = [netCount, infraCount];
-    charts.warehouse.update();
+    if (charts.warehouse) {
+        charts.warehouse.data.datasets[0].data = [netCount, infraCount];
+        charts.warehouse.update();
+    }
+    
+    // Update condition chart
+    const availableCount = inventoryData.filter(i => i.condition === 'available').length;
+    const inUseCount = inventoryData.filter(i => i.condition === 'in-use').length;
+    const maintenanceCount = inventoryData.filter(i => i.condition === 'maintenance').length;
+    const damagedCount = inventoryData.filter(i => i.condition === 'damaged').length;
+    
+    if (charts.condition) {
+        charts.condition.data.datasets[0].data = [availableCount, inUseCount, maintenanceCount, damagedCount];
+        charts.condition.update();
+    }
 
     // Update task status chart
     const pendingCount = tasksData.filter(task => task.status === 'pending').length;
     const inProgressCount = tasksData.filter(task => task.status === 'in-progress').length;
     const completedCount = tasksData.filter(task => task.status === 'completed').length;
     
-    charts.taskStatus.data.datasets[0].data = [pendingCount, inProgressCount, completedCount];
-    charts.taskStatus.update();
+    if (charts.taskStatus) {
+        charts.taskStatus.data.datasets[0].data = [pendingCount, inProgressCount, completedCount];
+        charts.taskStatus.update();
+    }
+    
+    // Update activity trend (last 7 days)
+    const last7Days = [];
+    const activityCounts = [];
+    
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = formatDate(date);
+        last7Days.push(dateStr.substring(0, 5)); // DD/MM
+        
+        const dayLogs = logsData.filter(log => formatDate(log.timestamp) === dateStr);
+        activityCounts.push(dayLogs.length);
+    }
+    
+    if (charts.activityTrend) {
+        charts.activityTrend.data.labels = last7Days;
+        charts.activityTrend.data.datasets[0].data = activityCounts;
+        charts.activityTrend.update();
+    }
+    
+    // Update task type chart
+    const taskTypeCounts = {
+        'lapdat': tasksData.filter(t => t.type === 'lapdat').length,
+        'swap': tasksData.filter(t => t.type === 'swap').length,
+        'xuly': tasksData.filter(t => t.type === 'xuly').length,
+        'nangcap': tasksData.filter(t => t.type === 'nangcap').length,
+        'baotri': tasksData.filter(t => t.type === 'baotri').length,
+        'khac': tasksData.filter(t => t.type === 'khac').length
+    };
+    
+    if (charts.taskType) {
+        charts.taskType.data.datasets[0].data = [
+            taskTypeCounts.lapdat,
+            taskTypeCounts.swap,
+            taskTypeCounts.xuly,
+            taskTypeCounts.nangcap,
+            taskTypeCounts.baotri,
+            taskTypeCounts.khac
+        ];
+        charts.taskType.update();
+    }
+    
+    // Update pending requests chart
+    const pendingDeliveries = deliveryRequestsData.filter(r => r.status === 'pending').length;
+    const pendingReturns = returnRequestsData.filter(r => r.status === 'pending').length;
+    
+    if (charts.pendingRequests) {
+        charts.pendingRequests.data.datasets[0].data = [pendingDeliveries, pendingReturns];
+        charts.pendingRequests.update();
+    }
 }
 
 // Modal Functions

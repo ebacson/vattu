@@ -282,22 +282,40 @@
 
         <!-- Statistics Tab -->
         <div id="statistics" class="tab-content">
+            <h2 style="margin: 0 0 20px 0; color: #2c3e50;">
+                <i class="fas fa-chart-bar"></i> Thống Kê Tổng Quan
+            </h2>
+            
+            <!-- Key Metrics Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;" id="statsMetricsGrid">
+                <!-- Will be populated by JavaScript -->
+            </div>
+            
+            <!-- Charts Grid -->
             <div class="stats-grid">
                 <div class="chart-container">
                     <h3>Phân Bố Vật Tư Theo Kho</h3>
                     <canvas id="warehouseChart"></canvas>
                 </div>
                 <div class="chart-container">
+                    <h3>Tình Trạng Vật Tư</h3>
+                    <canvas id="conditionChart"></canvas>
+                </div>
+                <div class="chart-container">
                     <h3>Trạng Thái Sự Vụ</h3>
                     <canvas id="taskStatusChart"></canvas>
                 </div>
                 <div class="chart-container">
-                    <h3>Lượng Chuyển Kho Theo Tháng</h3>
-                    <canvas id="transferTrendChart"></canvas>
+                    <h3>Hoạt Động 7 Ngày Qua</h3>
+                    <canvas id="activityTrendChart"></canvas>
                 </div>
                 <div class="chart-container">
-                    <h3>Hiệu Suất Xử Lý Sự Vụ</h3>
-                    <canvas id="performanceChart"></canvas>
+                    <h3>Loại Sự Vụ</h3>
+                    <canvas id="taskTypeChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Yêu Cầu Chờ Xác Nhận</h3>
+                    <canvas id="pendingRequestsChart"></canvas>
                 </div>
             </div>
         </div>
