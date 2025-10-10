@@ -795,10 +795,14 @@ function renderTasksReport(dateRange, container) {
     const completedTasks = filteredTasks.filter(t => t.status === 'completed');
     const activeTasks = filteredTasks.filter(t => t.status !== 'completed' && t.status !== 'cancelled');
     
+    // Calculate total items
+    let totalItemsDelivered = 0;
+    let totalItemsReturned = 0;
+    
     let html = `
         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
             <h3 style="margin-top: 0;">
-                <i class="fas fa-tasks"></i> Báo Cáo Danh Sách Sự Vụ
+                <i class="fas fa-tasks"></i> Báo Cáo Sự Vụ & Vật Tư
             </h3>
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px;">
                 <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
@@ -815,38 +819,138 @@ function renderTasksReport(dateRange, container) {
                 </div>
             </div>
         </div>
-        
-        <table style="width: 100%; border-collapse: collapse; background: white;">
-            <thead>
-                <tr style="background: #34495e; color: white;">
-                    <th style="padding: 12px; text-align: left;">Tên Sự Vụ</th>
-                    <th style="padding: 12px; text-align: left;">Loại</th>
-                    <th style="padding: 12px; text-align: left;">Địa Điểm</th>
-                    <th style="padding: 12px; text-align: left;">Người Tạo</th>
-                    <th style="padding: 12px; text-align: left;">Ngày Tạo</th>
-                    <th style="padding: 12px; text-align: left;">Trạng Thái</th>
-                    <th style="padding: 12px; text-align: center;">Vật Tư</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${filteredTasks.length === 0 ? `
-                    <tr><td colspan="7" style="padding: 20px; text-align: center; color: #95a5a6;">Không có sự vụ trong khoảng thời gian này</td></tr>
-                ` : filteredTasks.map(task => `
-                    <tr style="border-bottom: 1px solid #ecf0f1;">
-                        <td style="padding: 12px;"><strong>${task.name}</strong></td>
-                        <td style="padding: 12px;">${getTaskTypeText(task.type)}</td>
-                        <td style="padding: 12px;">${task.location}</td>
-                        <td style="padding: 12px;">${task.createdBy || 'Không rõ'}</td>
-                        <td style="padding: 12px;">${formatDate(task.createdDate)}</td>
-                        <td style="padding: 12px;">
-                            <span class="status-badge ${task.status}">${getTaskStatusText(task.status)}</span>
-                        </td>
-                        <td style="padding: 12px; text-align: center;">${task.assignedItems ? task.assignedItems.length : 0}</td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
     `;
+    
+    if (filteredTasks.length === 0) {
+        html += '<p class="no-data">Không có sự vụ trong khoảng thời gian này</p>';
+    } else {
+        // Render each task with its items
+        filteredTasks.forEach(task => {
+            const assignedItems = inventoryData.filter(item => 
+                task.assignedItems && task.assignedItems.includes(item.id)
+            );
+            
+            const taskDeliveries = deliveryRequestsData.filter(r => r.taskId === task.id);
+            const taskReturns = returnRequestsData.filter(r => r.taskId === task.id);
+            
+            totalItemsDelivered += taskDeliveries.filter(d => d.status === 'confirmed').length;
+            totalItemsReturned += taskReturns.filter(r => r.status === 'confirmed').length;
+            
+            html += `
+                <div style="background: white; border: 1px solid #e1e8ed; border-radius: 8px; margin-bottom: 20px; overflow: hidden;">
+                    <!-- Task Header -->
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px; color: white;">
+                        <h3 style="margin: 0; display: flex; justify-content: space-between; align-items: center;">
+                            <span><i class="fas fa-tasks"></i> ${task.name}</span>
+                            <span class="status-badge ${task.status}" style="background: rgba(255,255,255,0.3);">${getTaskStatusText(task.status)}</span>
+                        </h3>
+                        <div style="margin-top: 10px; font-size: 0.9rem; opacity: 0.95;">
+                            <span><i class="fas fa-tag"></i> ${getTaskTypeText(task.type)}</span> • 
+                            <span><i class="fas fa-map-marker-alt"></i> ${task.location}</span> • 
+                            <span><i class="fas fa-user"></i> ${task.createdBy}</span> • 
+                            <span><i class="fas fa-calendar"></i> ${formatDate(task.createdDate)}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Items Currently Assigned -->
+                    <div style="padding: 15px; border-bottom: 1px solid #e1e8ed;">
+                        <h4 style="margin-top: 0; color: #2c3e50;">
+                            <i class="fas fa-boxes"></i> Vật Tư Hiện Tại (${assignedItems.length})
+                        </h4>
+                        ${assignedItems.length === 0 ? `
+                            <p style="color: #95a5a6; font-style: italic;">Chưa có vật tư</p>
+                        ` : `
+                            <table style="width: 100%; font-size: 0.9rem;">
+                                <thead>
+                                    <tr style="background: #f8f9fa;">
+                                        <th style="padding: 8px; text-align: left;">Serial</th>
+                                        <th style="padding: 8px; text-align: left;">Tên</th>
+                                        <th style="padding: 8px; text-align: left;">Tình Trạng</th>
+                                        <th style="padding: 8px; text-align: left;">Kho</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${assignedItems.map(item => `
+                                        <tr style="border-bottom: 1px solid #f0f0f0;">
+                                            <td style="padding: 8px;"><strong>${item.serial}</strong></td>
+                                            <td style="padding: 8px;">${item.name}</td>
+                                            <td style="padding: 8px;"><span class="status-badge ${item.condition}">${getConditionText(item.condition)}</span></td>
+                                            <td style="padding: 8px;">${getWarehouseName(item.warehouse)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        `}
+                    </div>
+                    
+                    <!-- Delivery Timeline -->
+                    ${taskDeliveries.length > 0 ? `
+                        <div style="padding: 15px; background: #e8f8f5; border-bottom: 1px solid #e1e8ed;">
+                            <h4 style="margin-top: 0; color: #27ae60;">
+                                <i class="fas fa-shipping-fast"></i> Vật Tư Đã Giao (${taskDeliveries.filter(d => d.status === 'confirmed').length})
+                            </h4>
+                            ${taskDeliveries.filter(d => d.status === 'confirmed').map(delivery => `
+                                <div style="padding: 10px; background: white; margin-bottom: 8px; border-radius: 4px; border-left: 3px solid #27ae60;">
+                                    <strong>${delivery.itemSerial} - ${delivery.itemName}</strong>
+                                    <div style="color: #7f8c8d; font-size: 0.85rem; margin-top: 3px;">
+                                        📤 Giao: ${formatDateTime(delivery.requestedDate)} (${delivery.requestedBy})
+                                        <br>
+                                        ✅ Nhận: ${formatDateTime(delivery.confirmedDate)} (${delivery.confirmedBy})
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    <!-- Return Timeline -->
+                    ${taskReturns.length > 0 ? `
+                        <div style="padding: 15px; background: #fef5e7;">
+                            <h4 style="margin-top: 0; color: #e67e22;">
+                                <i class="fas fa-undo"></i> Vật Tư Đã Trả (${taskReturns.filter(r => r.status === 'confirmed').length})
+                            </h4>
+                            ${taskReturns.filter(r => r.status === 'confirmed').map(returnReq => `
+                                <div style="padding: 10px; background: white; margin-bottom: 8px; border-radius: 4px; border-left: 3px solid #e67e22;">
+                                    <strong>${returnReq.itemSerial} - ${returnReq.itemName}</strong>
+                                    <span class="status-badge ${returnReq.itemCondition}" style="margin-left: 8px; font-size: 0.8rem;">${getConditionText(returnReq.itemCondition)}</span>
+                                    <div style="color: #7f8c8d; font-size: 0.85rem; margin-top: 3px;">
+                                        📥 Trả: ${formatDateTime(returnReq.requestedDate)} (${returnReq.requestedBy})
+                                        <br>
+                                        ✅ Nhận: ${formatDateTime(returnReq.confirmedDate)} (${returnReq.confirmedBy})
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        });
+        
+        // Add summary at end
+        html += `
+            <div style="background: #34495e; color: white; padding: 20px; border-radius: 8px; margin-top: 20px;">
+                <h4 style="margin-top: 0;">
+                    <i class="fas fa-chart-bar"></i> Tổng Kết
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                    <div>
+                        <strong>Sự Vụ:</strong>
+                        <ul style="margin: 5px 0; padding-left: 20px;">
+                            <li>Tổng: ${filteredTasks.length}</li>
+                            <li>Hoạt động: ${activeTasks.length}</li>
+                            <li>Hoàn thành: ${completedTasks.length}</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <strong>Vật Tư:</strong>
+                        <ul style="margin: 5px 0; padding-left: 20px;">
+                            <li>Đã giao: ${totalItemsDelivered}</li>
+                            <li>Đã trả: ${totalItemsReturned}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
     
     container.innerHTML = html;
 }
@@ -1037,14 +1141,15 @@ function exportTasksToExcel(workbook, dateRange) {
         task.createdDate >= dateRange.start && task.createdDate <= dateRange.end
     );
     
-    // Create worksheet data
+    // Create main worksheet
     const wsData = [
-        ['BÁO CÁO DANH SÁCH SỰ VỤ'],
+        ['BÁO CÁO SỰ VỤ & VẬT TƯ'],
         [`Từ ngày: ${formatDate(dateRange.start)} - Đến ngày: ${formatDate(dateRange.end)}`],
         [],
-        ['STT', 'Tên Sự Vụ', 'Loại', 'Địa Điểm', 'Người Tạo', 'Ngày Tạo', 'Trạng Thái', 'Số Vật Tư', 'Hoàn Thành Bởi', 'Ngày Hoàn Thành']
+        ['STT', 'Tên Sự Vụ', 'Loại', 'Địa Điểm', 'Người Tạo', 'Ngày Tạo', 'Trạng Thái']
     ];
     
+    let rowIndex = 5;
     filteredTasks.forEach((task, index) => {
         wsData.push([
             index + 1,
@@ -1053,11 +1158,64 @@ function exportTasksToExcel(workbook, dateRange) {
             task.location,
             task.createdBy || 'Không rõ',
             formatDateTime(task.createdDate),
-            getTaskStatusText(task.status),
-            task.assignedItems ? task.assignedItems.length : 0,
-            task.completedBy || '-',
-            task.completedDate ? formatDateTime(task.completedDate) : '-'
+            getTaskStatusText(task.status)
         ]);
+        rowIndex++;
+        
+        // Get items for this task
+        const assignedItems = inventoryData.filter(item => 
+            task.assignedItems && task.assignedItems.includes(item.id)
+        );
+        
+        const taskDeliveries = deliveryRequestsData.filter(r => r.taskId === task.id && r.status === 'confirmed');
+        const taskReturns = returnRequestsData.filter(r => r.taskId === task.id && r.status === 'confirmed');
+        
+        // Add items section
+        if (assignedItems.length > 0 || taskDeliveries.length > 0 || taskReturns.length > 0) {
+            wsData.push(['', '  VẬT TƯ CỦA SỰ VỤ NÀY:']);
+            rowIndex++;
+            
+            // Current items
+            if (assignedItems.length > 0) {
+                wsData.push(['', '', 'Serial', 'Tên VT', 'Tình Trạng', 'Kho']);
+                rowIndex++;
+                assignedItems.forEach(item => {
+                    wsData.push(['', '', item.serial, item.name, getConditionText(item.condition), getWarehouseName(item.warehouse)]);
+                    rowIndex++;
+                });
+            }
+            
+            // Delivered items timeline
+            if (taskDeliveries.length > 0) {
+                wsData.push(['', '', 'VẬT TƯ ĐÃ GIAO:']);
+                rowIndex++;
+                wsData.push(['', '', 'Serial', 'Tên', 'Ngày Giao', 'Người Giao', 'Ngày Nhận', 'Người Nhận']);
+                rowIndex++;
+                taskDeliveries.forEach(d => {
+                    wsData.push(['', '', d.itemSerial, d.itemName, 
+                        formatDateTime(d.requestedDate), d.requestedBy,
+                        formatDateTime(d.confirmedDate), d.confirmedBy]);
+                    rowIndex++;
+                });
+            }
+            
+            // Returned items timeline
+            if (taskReturns.length > 0) {
+                wsData.push(['', '', 'VẬT TƯ ĐÃ TRẢ:']);
+                rowIndex++;
+                wsData.push(['', '', 'Serial', 'Tên', 'Tình Trạng', 'Ngày Trả', 'Người Trả', 'Ngày Nhận', 'Người Nhận']);
+                rowIndex++;
+                taskReturns.forEach(r => {
+                    wsData.push(['', '', r.itemSerial, r.itemName, getConditionText(r.itemCondition),
+                        formatDateTime(r.requestedDate), r.requestedBy,
+                        formatDateTime(r.confirmedDate), r.confirmedBy]);
+                    rowIndex++;
+                });
+            }
+            
+            wsData.push([]);
+            rowIndex++;
+        }
     });
     
     // Add summary
@@ -1068,14 +1226,9 @@ function exportTasksToExcel(workbook, dateRange) {
     wsData.push(['Đã hoàn thành:', filteredTasks.filter(t => t.status === 'completed').length]);
     
     const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols'] = [{wch: 5}, {wch: 35}, {wch: 15}, {wch: 25}, {wch: 20}, {wch: 20}, {wch: 15}];
     
-    // Set column widths
-    ws['!cols'] = [
-        {wch: 5}, {wch: 30}, {wch: 15}, {wch: 20}, {wch: 20}, 
-        {wch: 18}, {wch: 15}, {wch: 10}, {wch: 20}, {wch: 18}
-    ];
-    
-    XLSX.utils.book_append_sheet(workbook, ws, 'Danh Sách Sự Vụ');
+    XLSX.utils.book_append_sheet(workbook, ws, 'Báo Cáo Sự Vụ');
 }
 
 function exportInventoryChangesToExcel(workbook, dateRange) {
