@@ -746,6 +746,9 @@ function generateReport() {
     const dateRange = getDateRange(period);
     
     switch(reportType) {
+        case 'inventory-list':
+            renderInventoryListReport(dateRange, reportContent);
+            break;
         case 'tasks':
             renderTasksReport(dateRange, reportContent);
             break;
@@ -785,6 +788,104 @@ function getDateRange(period) {
         default:
             return { start: new Date(0), end: now };
     }
+}
+
+function renderInventoryListReport(dateRange, container) {
+    // Get all items added in the date range
+    const filteredItems = inventoryData.filter(item => 
+        item.dateAdded >= dateRange.start && item.dateAdded <= dateRange.end
+    );
+    
+    let html = `
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin-top: 0;">
+                <i class="fas fa-boxes"></i> Báo Cáo Danh Sách Vật Tư
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 15px;">
+                <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2rem; color: #3498db; font-weight: bold;">${filteredItems.length}</div>
+                    <div style="color: #7f8c8d;">Tổng vật tư</div>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2rem; color: #2ecc71; font-weight: bold;">${filteredItems.filter(i => i.warehouse === 'net').length}</div>
+                    <div style="color: #7f8c8d;">Kho Net</div>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2rem; color: #9b59b6; font-weight: bold;">${filteredItems.filter(i => i.warehouse === 'infrastructure').length}</div>
+                    <div style="color: #7f8c8d;">Kho Hạ Tầng</div>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2rem; color: #e74c3c; font-weight: bold;">${filteredItems.filter(i => i.condition === 'damaged').length}</div>
+                    <div style="color: #7f8c8d;">Hỏng</div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #34495e; color: white;">
+                        <th style="padding: 12px; text-align: left;">STT</th>
+                        <th style="padding: 12px; text-align: left;">Serial</th>
+                        <th style="padding: 12px; text-align: left;">Tên Vật Tư</th>
+                        <th style="padding: 12px; text-align: left;">Kho</th>
+                        <th style="padding: 12px; text-align: left;">Tình Trạng</th>
+                        <th style="padding: 12px; text-align: left;">Sự Vụ</th>
+                        <th style="padding: 12px; text-align: left;">Ngày Nhập</th>
+                        <th style="padding: 12px; text-align: left;">Ngày Giao</th>
+                        <th style="padding: 12px; text-align: left;">Người Giao</th>
+                        <th style="padding: 12px; text-align: left;">Ngày Nhận</th>
+                        <th style="padding: 12px; text-align: left;">Người Nhận</th>
+                        <th style="padding: 12px; text-align: left;">Ngày Trả</th>
+                        <th style="padding: 12px; text-align: left;">Người Trả</th>
+                        <th style="padding: 12px; text-align: left;">Ngày Nhận Trả</th>
+                        <th style="padding: 12px; text-align: left;">Người Nhận Trả</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    if (filteredItems.length === 0) {
+        html += '<tr><td colspan="15" style="padding: 20px; text-align: center; color: #95a5a6;">Không có vật tư trong khoảng thời gian này</td></tr>';
+    } else {
+        filteredItems.forEach((item, index) => {
+            const task = item.taskId ? tasksData.find(t => t.id === item.taskId) : null;
+            
+            // Find delivery request for this item
+            const delivery = deliveryRequestsData.find(r => r.itemId === item.id && r.status === 'confirmed');
+            
+            // Find return request for this item
+            const returnReq = returnRequestsData.find(r => r.itemId === item.id && r.status === 'confirmed');
+            
+            html += `
+                <tr style="border-bottom: 1px solid #ecf0f1; ${item.condition === 'damaged' ? 'background: #ffebee;' : ''}">
+                    <td style="padding: 12px;">${index + 1}</td>
+                    <td style="padding: 12px;"><strong>${item.serial}</strong></td>
+                    <td style="padding: 12px;">${item.name}</td>
+                    <td style="padding: 12px;"><span class="warehouse-badge ${item.warehouse}">${getWarehouseName(item.warehouse)}</span></td>
+                    <td style="padding: 12px;"><span class="status-badge ${item.condition}">${getConditionText(item.condition)}</span></td>
+                    <td style="padding: 12px;">${task ? task.name : '-'}</td>
+                    <td style="padding: 12px;">${formatDate(item.dateAdded)}</td>
+                    <td style="padding: 12px;">${delivery ? formatDateTime(delivery.requestedDate) : '-'}</td>
+                    <td style="padding: 12px;">${delivery ? delivery.requestedBy : '-'}</td>
+                    <td style="padding: 12px;">${delivery ? formatDateTime(delivery.confirmedDate) : '-'}</td>
+                    <td style="padding: 12px;">${delivery ? delivery.confirmedBy : '-'}</td>
+                    <td style="padding: 12px;">${returnReq ? formatDateTime(returnReq.requestedDate) : '-'}</td>
+                    <td style="padding: 12px;">${returnReq ? returnReq.requestedBy : '-'}</td>
+                    <td style="padding: 12px;">${returnReq ? formatDateTime(returnReq.confirmedDate) : '-'}</td>
+                    <td style="padding: 12px;">${returnReq ? returnReq.confirmedBy : '-'}</td>
+                </tr>
+            `;
+        });
+    }
+    
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    container.innerHTML = html;
 }
 
 function renderTasksReport(dateRange, container) {
@@ -1114,6 +1215,10 @@ function exportReportToExcel() {
     let fileName = '';
     
     switch(reportType) {
+        case 'inventory-list':
+            exportInventoryListToExcel(workbook, dateRange);
+            fileName = `BaoCao_DanhSachVatTu_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
+            break;
         case 'tasks':
             exportTasksToExcel(workbook, dateRange);
             fileName = `BaoCao_SuVu_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
@@ -1134,6 +1239,66 @@ function exportReportToExcel() {
     // Save file
     XLSX.writeFile(workbook, fileName);
     showToast('success', 'Xuất Excel thành công!', `File đã được tải: ${fileName}`);
+}
+
+function exportInventoryListToExcel(workbook, dateRange) {
+    const filteredItems = inventoryData.filter(item => 
+        item.dateAdded >= dateRange.start && item.dateAdded <= dateRange.end
+    );
+    
+    const wsData = [
+        ['BÁO CÁO DANH SÁCH VẬT TƯ'],
+        [`Từ ngày: ${formatDate(dateRange.start)} - Đến ngày: ${formatDate(dateRange.end)}`],
+        [],
+        ['STT', 'Serial', 'Tên Vật Tư', 'Kho', 'Tình Trạng', 'Sự Vụ', 'Ngày Nhập', 
+         'Ngày Giao', 'Người Giao', 'Ngày Nhận', 'Người Nhận',
+         'Ngày Trả', 'Người Trả', 'Ngày Nhận Trả', 'Người Nhận Trả']
+    ];
+    
+    filteredItems.forEach((item, index) => {
+        const task = item.taskId ? tasksData.find(t => t.id === item.taskId) : null;
+        const delivery = deliveryRequestsData.find(r => r.itemId === item.id && r.status === 'confirmed');
+        const returnReq = returnRequestsData.find(r => r.itemId === item.id && r.status === 'confirmed');
+        
+        wsData.push([
+            index + 1,
+            item.serial,
+            item.name,
+            getWarehouseName(item.warehouse),
+            getConditionText(item.condition),
+            task ? task.name : '-',
+            formatDate(item.dateAdded),
+            delivery ? formatDateTime(delivery.requestedDate) : '-',
+            delivery ? delivery.requestedBy : '-',
+            delivery ? formatDateTime(delivery.confirmedDate) : '-',
+            delivery ? delivery.confirmedBy : '-',
+            returnReq ? formatDateTime(returnReq.requestedDate) : '-',
+            returnReq ? returnReq.requestedBy : '-',
+            returnReq ? formatDateTime(returnReq.confirmedDate) : '-',
+            returnReq ? returnReq.confirmedBy : '-'
+        ]);
+    });
+    
+    // Add summary
+    wsData.push([]);
+    wsData.push(['TỔNG KẾT']);
+    wsData.push(['Tổng vật tư:', filteredItems.length]);
+    wsData.push(['Kho Net:', filteredItems.filter(i => i.warehouse === 'net').length]);
+    wsData.push(['Kho Hạ Tầng:', filteredItems.filter(i => i.warehouse === 'infrastructure').length]);
+    wsData.push(['Đã giao:', filteredItems.filter(i => deliveryRequestsData.find(r => r.itemId === i.id && r.status === 'confirmed')).length]);
+    wsData.push(['Đã trả:', filteredItems.filter(i => returnRequestsData.find(r => r.itemId === i.id && r.status === 'confirmed')).length]);
+    wsData.push(['Hỏng:', filteredItems.filter(i => i.condition === 'damaged').length]);
+    
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    
+    // Set column widths
+    ws['!cols'] = [
+        {wch: 5}, {wch: 15}, {wch: 25}, {wch: 12}, {wch: 12}, {wch: 25}, {wch: 12},
+        {wch: 18}, {wch: 20}, {wch: 18}, {wch: 20}, 
+        {wch: 18}, {wch: 20}, {wch: 18}, {wch: 20}
+    ];
+    
+    XLSX.utils.book_append_sheet(workbook, ws, 'Danh Sách Vật Tư');
 }
 
 function exportTasksToExcel(workbook, dateRange) {
