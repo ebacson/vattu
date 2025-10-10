@@ -997,8 +997,163 @@ function renderActivityLogsReport(dateRange, container) {
 }
 
 function exportReportToExcel() {
-    showToast('info', 'Xuất Excel', 'Tính năng xuất Excel đang được phát triển.');
-    // TODO: Implement Excel export using SheetJS or similar library
+    const reportType = document.getElementById('reportTypeSelect').value;
+    const period = document.getElementById('reportPeriodSelect').value;
+    const dateRange = getDateRange(period);
+    
+    if (typeof XLSX === 'undefined') {
+        showToast('error', 'Lỗi!', 'Thư viện Excel chưa được tải.');
+        return;
+    }
+    
+    let workbook = XLSX.utils.book_new();
+    let fileName = '';
+    
+    switch(reportType) {
+        case 'tasks':
+            exportTasksToExcel(workbook, dateRange);
+            fileName = `BaoCao_SuVu_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
+            break;
+        case 'inventory-changes':
+            exportInventoryChangesToExcel(workbook, dateRange);
+            fileName = `BaoCao_BienDongVatTu_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
+            break;
+        case 'activity-logs':
+            exportActivityLogsToExcel(workbook, dateRange);
+            fileName = `BaoCao_LichSuHoatDong_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
+            break;
+        default:
+            showToast('error', 'Lỗi!', 'Vui lòng chọn loại báo cáo trước.');
+            return;
+    }
+    
+    // Save file
+    XLSX.writeFile(workbook, fileName);
+    showToast('success', 'Xuất Excel thành công!', `File đã được tải: ${fileName}`);
+}
+
+function exportTasksToExcel(workbook, dateRange) {
+    const filteredTasks = tasksData.filter(task => 
+        task.createdDate >= dateRange.start && task.createdDate <= dateRange.end
+    );
+    
+    // Create worksheet data
+    const wsData = [
+        ['BÁO CÁO DANH SÁCH SỰ VỤ'],
+        [`Từ ngày: ${formatDate(dateRange.start)} - Đến ngày: ${formatDate(dateRange.end)}`],
+        [],
+        ['STT', 'Tên Sự Vụ', 'Loại', 'Địa Điểm', 'Người Tạo', 'Ngày Tạo', 'Trạng Thái', 'Số Vật Tư', 'Hoàn Thành Bởi', 'Ngày Hoàn Thành']
+    ];
+    
+    filteredTasks.forEach((task, index) => {
+        wsData.push([
+            index + 1,
+            task.name,
+            getTaskTypeText(task.type),
+            task.location,
+            task.createdBy || 'Không rõ',
+            formatDateTime(task.createdDate),
+            getTaskStatusText(task.status),
+            task.assignedItems ? task.assignedItems.length : 0,
+            task.completedBy || '-',
+            task.completedDate ? formatDateTime(task.completedDate) : '-'
+        ]);
+    });
+    
+    // Add summary
+    wsData.push([]);
+    wsData.push(['TỔNG KẾT']);
+    wsData.push(['Tổng số sự vụ:', filteredTasks.length]);
+    wsData.push(['Đang hoạt động:', filteredTasks.filter(t => t.status !== 'completed').length]);
+    wsData.push(['Đã hoàn thành:', filteredTasks.filter(t => t.status === 'completed').length]);
+    
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    
+    // Set column widths
+    ws['!cols'] = [
+        {wch: 5}, {wch: 30}, {wch: 15}, {wch: 20}, {wch: 20}, 
+        {wch: 18}, {wch: 15}, {wch: 10}, {wch: 20}, {wch: 18}
+    ];
+    
+    XLSX.utils.book_append_sheet(workbook, ws, 'Danh Sách Sự Vụ');
+}
+
+function exportInventoryChangesToExcel(workbook, dateRange) {
+    const inventoryLogs = logsData.filter(log => 
+        (log.type === 'inventory' || log.type === 'delivery' || log.type === 'return' || 
+         log.type === 'delivery-request' || log.type === 'delivery-confirmed' || 
+         log.type === 'return-request' || log.type === 'return-confirmed') &&
+        log.timestamp >= dateRange.start && log.timestamp <= dateRange.end
+    ).sort((a, b) => b.timestamp - a.timestamp);
+    
+    const wsData = [
+        ['BÁO CÁO BIẾN ĐỘNG VẬT TƯ'],
+        [`Từ ngày: ${formatDate(dateRange.start)} - Đến ngày: ${formatDate(dateRange.end)}`],
+        [],
+        ['STT', 'Ngày Giờ', 'Loại Hoạt Động', 'Chi Tiết', 'Người Thực Hiện']
+    ];
+    
+    inventoryLogs.forEach((log, index) => {
+        wsData.push([
+            index + 1,
+            formatDateTime(log.timestamp),
+            log.action,
+            log.details,
+            log.user
+        ]);
+    });
+    
+    // Add summary
+    wsData.push([]);
+    wsData.push(['TỔNG KẾT']);
+    wsData.push(['Tổng biến động:', inventoryLogs.length]);
+    wsData.push(['Giao nhận:', inventoryLogs.filter(l => l.type.includes('delivery')).length]);
+    wsData.push(['Chuyển trả:', inventoryLogs.filter(l => l.type.includes('return')).length]);
+    wsData.push(['Thêm/Sửa/Xóa:', inventoryLogs.filter(l => l.type === 'inventory').length]);
+    
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols'] = [{wch: 5}, {wch: 20}, {wch: 25}, {wch: 60}, {wch: 20}];
+    
+    XLSX.utils.book_append_sheet(workbook, ws, 'Biến Động Vật Tư');
+}
+
+function exportActivityLogsToExcel(workbook, dateRange) {
+    const filteredLogs = logsData.filter(log => 
+        log.timestamp >= dateRange.start && log.timestamp <= dateRange.end
+    ).sort((a, b) => b.timestamp - a.timestamp);
+    
+    const wsData = [
+        ['BÁO CÁO LỊCH SỬ HOẠT ĐỘNG'],
+        [`Từ ngày: ${formatDate(dateRange.start)} - Đến ngày: ${formatDate(dateRange.end)}`],
+        [],
+        ['STT', 'Ngày Giờ', 'Loại', 'Hành Động', 'Chi Tiết', 'Người Thực Hiện']
+    ];
+    
+    filteredLogs.forEach((log, index) => {
+        wsData.push([
+            index + 1,
+            formatDateTime(log.timestamp),
+            log.type,
+            log.action,
+            log.details,
+            log.user
+        ]);
+    });
+    
+    // Add summary by type
+    wsData.push([]);
+    wsData.push(['THỐNG KÊ THEO LOẠI']);
+    wsData.push(['Vật tư:', filteredLogs.filter(l => l.type === 'inventory').length]);
+    wsData.push(['Sự vụ:', filteredLogs.filter(l => l.type === 'task').length]);
+    wsData.push(['Giao nhận:', filteredLogs.filter(l => l.type.includes('delivery')).length]);
+    wsData.push(['Chuyển trả:', filteredLogs.filter(l => l.type.includes('return')).length]);
+    wsData.push(['Chuyển kho:', filteredLogs.filter(l => l.type === 'transfer').length]);
+    wsData.push(['Tổng cộng:', filteredLogs.length]);
+    
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols'] = [{wch: 5}, {wch: 20}, {wch: 20}, {wch: 30}, {wch: 60}, {wch: 20}];
+    
+    XLSX.utils.book_append_sheet(workbook, ws, 'Lịch Sử Hoạt Động');
 }
 
 // Make functions global
