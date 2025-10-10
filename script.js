@@ -207,6 +207,22 @@ function setupEventListeners() {
             renderAvailableItems(this.value);
         });
     }
+    
+    // Report period selector
+    const reportPeriodSelect = document.getElementById('reportPeriodSelect');
+    if (reportPeriodSelect) {
+        reportPeriodSelect.addEventListener('change', function() {
+            const startDate = document.getElementById('reportStartDate');
+            const endDate = document.getElementById('reportEndDate');
+            if (this.value === 'custom') {
+                startDate.style.display = 'inline-block';
+                endDate.style.display = 'inline-block';
+            } else {
+                startDate.style.display = 'none';
+                endDate.style.display = 'none';
+            }
+        });
+    }
 
     // Modal close on outside click
     window.addEventListener('click', function(event) {
@@ -717,6 +733,277 @@ function renderPendingRequestsList() {
         `;
     }).join('');
 }
+
+// Reports Management
+function generateReport() {
+    const reportType = document.getElementById('reportTypeSelect').value;
+    const period = document.getElementById('reportPeriodSelect').value;
+    const reportContent = document.getElementById('reportContent');
+    
+    console.log('📊 Generating report:', reportType, 'Period:', period);
+    
+    // Get date range
+    const dateRange = getDateRange(period);
+    
+    switch(reportType) {
+        case 'tasks':
+            renderTasksReport(dateRange, reportContent);
+            break;
+        case 'inventory-changes':
+            renderInventoryChangesReport(dateRange, reportContent);
+            break;
+        case 'activity-logs':
+            renderActivityLogsReport(dateRange, reportContent);
+            break;
+        default:
+            reportContent.innerHTML = '<p class="no-data">Chọn loại báo cáo</p>';
+    }
+}
+
+function getDateRange(period) {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    switch(period) {
+        case 'today':
+            return { start: today, end: new Date(today.getTime() + 86400000) };
+        case 'week':
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - today.getDay());
+            return { start: weekStart, end: now };
+        case 'month':
+            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            return { start: monthStart, end: now };
+        case 'custom':
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
+            return { 
+                start: startDate ? new Date(startDate) : new Date(0), 
+                end: endDate ? new Date(endDate) : now 
+            };
+        case 'all':
+        default:
+            return { start: new Date(0), end: now };
+    }
+}
+
+function renderTasksReport(dateRange, container) {
+    const filteredTasks = tasksData.filter(task => 
+        task.createdDate >= dateRange.start && task.createdDate <= dateRange.end
+    );
+    
+    const completedTasks = filteredTasks.filter(t => t.status === 'completed');
+    const activeTasks = filteredTasks.filter(t => t.status !== 'completed' && t.status !== 'cancelled');
+    
+    let html = `
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin-top: 0;">
+                <i class="fas fa-tasks"></i> Báo Cáo Danh Sách Sự Vụ
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px;">
+                <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2rem; color: #3498db; font-weight: bold;">${filteredTasks.length}</div>
+                    <div style="color: #7f8c8d;">Tổng sự vụ</div>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2rem; color: #f39c12; font-weight: bold;">${activeTasks.length}</div>
+                    <div style="color: #7f8c8d;">Đang hoạt động</div>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2rem; color: #27ae60; font-weight: bold;">${completedTasks.length}</div>
+                    <div style="color: #7f8c8d;">Đã hoàn thành</div>
+                </div>
+            </div>
+        </div>
+        
+        <table style="width: 100%; border-collapse: collapse; background: white;">
+            <thead>
+                <tr style="background: #34495e; color: white;">
+                    <th style="padding: 12px; text-align: left;">Tên Sự Vụ</th>
+                    <th style="padding: 12px; text-align: left;">Loại</th>
+                    <th style="padding: 12px; text-align: left;">Địa Điểm</th>
+                    <th style="padding: 12px; text-align: left;">Người Tạo</th>
+                    <th style="padding: 12px; text-align: left;">Ngày Tạo</th>
+                    <th style="padding: 12px; text-align: left;">Trạng Thái</th>
+                    <th style="padding: 12px; text-align: center;">Vật Tư</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${filteredTasks.length === 0 ? `
+                    <tr><td colspan="7" style="padding: 20px; text-align: center; color: #95a5a6;">Không có sự vụ trong khoảng thời gian này</td></tr>
+                ` : filteredTasks.map(task => `
+                    <tr style="border-bottom: 1px solid #ecf0f1;">
+                        <td style="padding: 12px;"><strong>${task.name}</strong></td>
+                        <td style="padding: 12px;">${getTaskTypeText(task.type)}</td>
+                        <td style="padding: 12px;">${task.location}</td>
+                        <td style="padding: 12px;">${task.createdBy || 'Không rõ'}</td>
+                        <td style="padding: 12px;">${formatDate(task.createdDate)}</td>
+                        <td style="padding: 12px;">
+                            <span class="status-badge ${task.status}">${getTaskStatusText(task.status)}</span>
+                        </td>
+                        <td style="padding: 12px; text-align: center;">${task.assignedItems ? task.assignedItems.length : 0}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    
+    container.innerHTML = html;
+}
+
+function renderInventoryChangesReport(dateRange, container) {
+    // Get all logs related to inventory changes
+    const inventoryLogs = logsData.filter(log => 
+        (log.type === 'inventory' || log.type === 'delivery' || log.type === 'return' || 
+         log.type === 'delivery-request' || log.type === 'delivery-confirmed' || 
+         log.type === 'return-request' || log.type === 'return-confirmed') &&
+        log.timestamp >= dateRange.start && log.timestamp <= dateRange.end
+    ).sort((a, b) => b.timestamp - a.timestamp);
+    
+    // Group by date
+    const byDate = {};
+    inventoryLogs.forEach(log => {
+        const dateKey = formatDate(log.timestamp);
+        if (!byDate[dateKey]) {
+            byDate[dateKey] = [];
+        }
+        byDate[dateKey].push(log);
+    });
+    
+    let html = `
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin-top: 0;">
+                <i class="fas fa-exchange-alt"></i> Báo Cáo Biến Động Vật Tư
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 15px;">
+                <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2rem; color: #3498db; font-weight: bold;">${inventoryLogs.length}</div>
+                    <div style="color: #7f8c8d;">Tổng biến động</div>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2rem; color: #2ecc71; font-weight: bold;">${inventoryLogs.filter(l => l.type.includes('delivery')).length}</div>
+                    <div style="color: #7f8c8d;">Giao nhận</div>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2rem; color: #e67e22; font-weight: bold;">${inventoryLogs.filter(l => l.type.includes('return')).length}</div>
+                    <div style="color: #7f8c8d;">Chuyển trả</div>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2rem; color: #9b59b6; font-weight: bold;">${inventoryLogs.filter(l => l.type === 'inventory').length}</div>
+                    <div style="color: #7f8c8d;">Thêm/Sửa/Xóa</div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    if (Object.keys(byDate).length === 0) {
+        html += '<p class="no-data">Không có biến động trong khoảng thời gian này</p>';
+    } else {
+        Object.keys(byDate).sort().reverse().forEach(date => {
+            const logs = byDate[date];
+            html += `
+                <div style="margin-bottom: 25px;">
+                    <h4 style="background: #34495e; color: white; padding: 10px; margin: 0; border-radius: 8px 8px 0 0;">
+                        <i class="fas fa-calendar-day"></i> ${date} (${logs.length} hoạt động)
+                    </h4>
+                    <div style="border: 1px solid #ecf0f1; border-top: none; border-radius: 0 0 8px 8px; padding: 15px; background: white;">
+                        ${logs.map(log => `
+                            <div style="display: flex; gap: 12px; padding: 10px; border-bottom: 1px solid #f0f0f0;">
+                                <div style="background: ${getActivityColor(log.type)}; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <i class="${getActivityIcon(log.type)}" style="color: white;"></i>
+                                </div>
+                                <div style="flex: 1;">
+                                    <strong style="color: #2c3e50;">${log.action}</strong>
+                                    <p style="margin: 5px 0 0 0; color: #555;">${log.details}</p>
+                                    <small style="color: #95a5a6;">${formatDateTime(log.timestamp)}</small>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    container.innerHTML = html;
+}
+
+function renderActivityLogsReport(dateRange, container) {
+    const filteredLogs = logsData.filter(log => 
+        log.timestamp >= dateRange.start && log.timestamp <= dateRange.end
+    ).sort((a, b) => b.timestamp - a.timestamp);
+    
+    const byType = {
+        'inventory': filteredLogs.filter(l => l.type === 'inventory').length,
+        'task': filteredLogs.filter(l => l.type === 'task').length,
+        'delivery': filteredLogs.filter(l => l.type.includes('delivery')).length,
+        'return': filteredLogs.filter(l => l.type.includes('return')).length,
+        'transfer': filteredLogs.filter(l => l.type === 'transfer').length,
+    };
+    
+    let html = `
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin-top: 0;">
+                <i class="fas fa-history"></i> Báo Cáo Lịch Sử Hoạt Động
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 15px;">
+                <div style="background: white; padding: 12px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 1.5rem; color: #3498db; font-weight: bold;">${byType.inventory}</div>
+                    <div style="color: #7f8c8d; font-size: 0.85rem;">Vật tư</div>
+                </div>
+                <div style="background: white; padding: 12px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 1.5rem; color: #9b59b6; font-weight: bold;">${byType.task}</div>
+                    <div style="color: #7f8c8d; font-size: 0.85rem;">Sự vụ</div>
+                </div>
+                <div style="background: white; padding: 12px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 1.5rem; color: #2ecc71; font-weight: bold;">${byType.delivery}</div>
+                    <div style="color: #7f8c8d; font-size: 0.85rem;">Giao nhận</div>
+                </div>
+                <div style="background: white; padding: 12px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 1.5rem; color: #e67e22; font-weight: bold;">${byType.return}</div>
+                    <div style="color: #7f8c8d; font-size: 0.85rem;">Chuyển trả</div>
+                </div>
+                <div style="background: white; padding: 12px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 1.5rem; color: #34495e; font-weight: bold;">${filteredLogs.length}</div>
+                    <div style="color: #7f8c8d; font-size: 0.85rem;">Tổng cộng</div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px;">
+            ${filteredLogs.length === 0 ? `
+                <p class="no-data">Không có hoạt động trong khoảng thời gian này</p>
+            ` : `
+                ${filteredLogs.map(log => `
+                    <div style="display: flex; gap: 12px; padding: 12px; border-bottom: 1px solid #ecf0f1;">
+                        <div style="background: ${getActivityColor(log.type)}; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <i class="${getActivityIcon(log.type)}" style="color: white;"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <strong style="color: #2c3e50;">${log.action}</strong>
+                                <small style="color: #95a5a6;">${formatTimeAgo(log.timestamp)}</small>
+                            </div>
+                            <p style="margin: 5px 0 0 0; color: #555;">${log.details}</p>
+                            <small style="color: #95a5a6;">${formatDateTime(log.timestamp)} - ${log.user}</small>
+                        </div>
+                    </div>
+                `).join('')}
+            `}
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+function exportReportToExcel() {
+    showToast('info', 'Xuất Excel', 'Tính năng xuất Excel đang được phát triển.');
+    // TODO: Implement Excel export using SheetJS or similar library
+}
+
+// Make functions global
+window.generateReport = generateReport;
+window.exportReportToExcel = exportReportToExcel;
 
 // Logs Management
 function renderLogsList() {
