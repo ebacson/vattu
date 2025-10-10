@@ -832,10 +832,6 @@ function renderInventoryListReport(dateRange, container) {
                         <th style="padding: 12px; text-align: left;">Tình Trạng</th>
                         <th style="padding: 12px; text-align: left;">Sự Vụ</th>
                         <th style="padding: 12px; text-align: left;">Ngày Nhập</th>
-                        <th style="padding: 12px; text-align: left;">Ngày Giao</th>
-                        <th style="padding: 12px; text-align: left;">Người Giao</th>
-                        <th style="padding: 12px; text-align: left;">Ngày Nhận</th>
-                        <th style="padding: 12px; text-align: left;">Người Nhận</th>
                         <th style="padding: 12px; text-align: left;">Ngày Trả</th>
                         <th style="padding: 12px; text-align: left;">Người Trả</th>
                         <th style="padding: 12px; text-align: left;">Ngày Nhận Trả</th>
@@ -846,13 +842,10 @@ function renderInventoryListReport(dateRange, container) {
     `;
     
     if (filteredItems.length === 0) {
-        html += '<tr><td colspan="15" style="padding: 20px; text-align: center; color: #95a5a6;">Không có vật tư trong khoảng thời gian này</td></tr>';
+        html += '<tr><td colspan="11" style="padding: 20px; text-align: center; color: #95a5a6;">Không có vật tư trong khoảng thời gian này</td></tr>';
     } else {
         filteredItems.forEach((item, index) => {
             const task = item.taskId ? tasksData.find(t => t.id === item.taskId) : null;
-            
-            // Find delivery request for this item
-            const delivery = deliveryRequestsData.find(r => r.itemId === item.id && r.status === 'confirmed');
             
             // Find return request for this item
             const returnReq = returnRequestsData.find(r => r.itemId === item.id && r.status === 'confirmed');
@@ -866,10 +859,6 @@ function renderInventoryListReport(dateRange, container) {
                     <td style="padding: 12px;"><span class="status-badge ${item.condition}">${getConditionText(item.condition)}</span></td>
                     <td style="padding: 12px;">${task ? task.name : '-'}</td>
                     <td style="padding: 12px;">${formatDate(item.dateAdded)}</td>
-                    <td style="padding: 12px;">${delivery ? formatDateTime(delivery.requestedDate) : '-'}</td>
-                    <td style="padding: 12px;">${delivery ? delivery.requestedBy : '-'}</td>
-                    <td style="padding: 12px;">${delivery ? formatDateTime(delivery.confirmedDate) : '-'}</td>
-                    <td style="padding: 12px;">${delivery ? delivery.confirmedBy : '-'}</td>
                     <td style="padding: 12px;">${returnReq ? formatDateTime(returnReq.requestedDate) : '-'}</td>
                     <td style="padding: 12px;">${returnReq ? returnReq.requestedBy : '-'}</td>
                     <td style="padding: 12px;">${returnReq ? formatDateTime(returnReq.confirmedDate) : '-'}</td>
@@ -1251,13 +1240,11 @@ function exportInventoryListToExcel(workbook, dateRange) {
         [`Từ ngày: ${formatDate(dateRange.start)} - Đến ngày: ${formatDate(dateRange.end)}`],
         [],
         ['STT', 'Serial', 'Tên Vật Tư', 'Kho', 'Tình Trạng', 'Sự Vụ', 'Ngày Nhập', 
-         'Ngày Giao', 'Người Giao', 'Ngày Nhận', 'Người Nhận',
          'Ngày Trả', 'Người Trả', 'Ngày Nhận Trả', 'Người Nhận Trả']
     ];
     
     filteredItems.forEach((item, index) => {
         const task = item.taskId ? tasksData.find(t => t.id === item.taskId) : null;
-        const delivery = deliveryRequestsData.find(r => r.itemId === item.id && r.status === 'confirmed');
         const returnReq = returnRequestsData.find(r => r.itemId === item.id && r.status === 'confirmed');
         
         wsData.push([
@@ -1268,10 +1255,6 @@ function exportInventoryListToExcel(workbook, dateRange) {
             getConditionText(item.condition),
             task ? task.name : '-',
             formatDate(item.dateAdded),
-            delivery ? formatDateTime(delivery.requestedDate) : '-',
-            delivery ? delivery.requestedBy : '-',
-            delivery ? formatDateTime(delivery.confirmedDate) : '-',
-            delivery ? delivery.confirmedBy : '-',
             returnReq ? formatDateTime(returnReq.requestedDate) : '-',
             returnReq ? returnReq.requestedBy : '-',
             returnReq ? formatDateTime(returnReq.confirmedDate) : '-',
@@ -1285,7 +1268,6 @@ function exportInventoryListToExcel(workbook, dateRange) {
     wsData.push(['Tổng vật tư:', filteredItems.length]);
     wsData.push(['Kho Net:', filteredItems.filter(i => i.warehouse === 'net').length]);
     wsData.push(['Kho Hạ Tầng:', filteredItems.filter(i => i.warehouse === 'infrastructure').length]);
-    wsData.push(['Đã giao:', filteredItems.filter(i => deliveryRequestsData.find(r => r.itemId === i.id && r.status === 'confirmed')).length]);
     wsData.push(['Đã trả:', filteredItems.filter(i => returnRequestsData.find(r => r.itemId === i.id && r.status === 'confirmed')).length]);
     wsData.push(['Hỏng:', filteredItems.filter(i => i.condition === 'damaged').length]);
     
@@ -1293,9 +1275,8 @@ function exportInventoryListToExcel(workbook, dateRange) {
     
     // Set column widths
     ws['!cols'] = [
-        {wch: 5}, {wch: 15}, {wch: 25}, {wch: 12}, {wch: 12}, {wch: 25}, {wch: 12},
-        {wch: 18}, {wch: 20}, {wch: 18}, {wch: 20}, 
-        {wch: 18}, {wch: 20}, {wch: 18}, {wch: 20}
+        {wch: 5}, {wch: 15}, {wch: 30}, {wch: 12}, {wch: 12}, {wch: 30}, {wch: 12},
+        {wch: 18}, {wch: 25}, {wch: 18}, {wch: 25}
     ];
     
     XLSX.utils.book_append_sheet(workbook, ws, 'Danh Sách Vật Tư');
