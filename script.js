@@ -159,7 +159,7 @@ function initializeApp() {
         window.initializeFormValidation();
     }
     
-    showToast('success', 'Hệ thống đã sẵn sàng!', 'Chào mừng đến với hệ thống quản lý vật tư 2 kho với Firebase.');
+    showToast('success', 'Online', 'Hệ thống đã kết nối thành công.');
 }
 
 // Setup Event Listeners
@@ -324,7 +324,7 @@ async function loadAllDataFromFirebase() {
         } else {
             console.log('Firebase functions not available, using sample data');
             loadSampleData();
-            showToast('warning', 'Sử dụng dữ liệu mẫu', 'Firebase chưa sẵn sàng, sử dụng dữ liệu mẫu.');
+            showToast('warning', 'Offline', 'Chưa kết nối được, sử dụng dữ liệu mẫu.');
         }
         
     } catch (error) {
