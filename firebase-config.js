@@ -49,7 +49,7 @@ function updateAuthStatus(status, message) {
 }
 
 // Initialize authentication status
-updateAuthStatus('success', 'Firebase đã sẵn sàng');
+updateAuthStatus('success', 'Online');
 
 // Export for use in other files
 export { app, auth, database, DB_PATHS, isAuthenticated };
