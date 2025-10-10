@@ -2397,28 +2397,6 @@ function initializeCharts() {
         }
     });
 
-    // Task Status Chart
-    const taskStatusCtx = document.getElementById('taskStatusChart').getContext('2d');
-    charts.taskStatus = new Chart(taskStatusCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Chờ xử lý', 'Đang thực hiện', 'Hoàn thành'],
-            datasets: [{
-                data: [0, 0, 0],
-                backgroundColor: ['#f39c12', '#3498db', '#27ae60']
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
-        }
-    });
-
     // Activity Trend Chart (Last 7 days)
     const activityTrendCtx = document.getElementById('activityTrendChart').getContext('2d');
     charts.activityTrend = new Chart(activityTrendCtx, {
@@ -2432,68 +2410,6 @@ function initializeCharts() {
                 backgroundColor: 'rgba(52, 152, 219, 0.1)',
                 tension: 0.4,
                 fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
-                }
-            }
-        }
-    });
-    
-    // Task Type Chart
-    const taskTypeCtx = document.getElementById('taskTypeChart').getContext('2d');
-    charts.taskType = new Chart(taskTypeCtx, {
-        type: 'bar',
-        data: {
-            labels: ['Lắp đặt', 'Swap', 'Xử lý', 'Nâng cấp', 'Bảo trì', 'Khác'],
-            datasets: [{
-                label: 'Số lượng',
-                data: [0, 0, 0, 0, 0, 0],
-                backgroundColor: ['#3498db', '#9b59b6', '#e67e22', '#1abc9c', '#f39c12', '#95a5a6']
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
-                }
-            }
-        }
-    });
-    
-    // Pending Requests Chart
-    const pendingRequestsCtx = document.getElementById('pendingRequestsChart').getContext('2d');
-    charts.pendingRequests = new Chart(pendingRequestsCtx, {
-        type: 'bar',
-        data: {
-            labels: ['Giao nhận', 'Chuyển trả'],
-            datasets: [{
-                label: 'Chờ xác nhận',
-                data: [0, 0],
-                backgroundColor: ['#3498db', '#e67e22']
             }]
         },
         options: {
@@ -2543,16 +2459,6 @@ function updateCharts() {
         charts.condition.update();
     }
 
-    // Update task status chart
-    const pendingCount = tasksData.filter(task => task.status === 'pending').length;
-    const inProgressCount = tasksData.filter(task => task.status === 'in-progress').length;
-    const completedCount = tasksData.filter(task => task.status === 'completed').length;
-    
-    if (charts.taskStatus) {
-        charts.taskStatus.data.datasets[0].data = [pendingCount, inProgressCount, completedCount];
-        charts.taskStatus.update();
-    }
-    
     // Update activity trend (last 7 days)
     const last7Days = [];
     const activityCounts = [];
@@ -2571,37 +2477,6 @@ function updateCharts() {
         charts.activityTrend.data.labels = last7Days;
         charts.activityTrend.data.datasets[0].data = activityCounts;
         charts.activityTrend.update();
-    }
-    
-    // Update task type chart
-    const taskTypeCounts = {
-        'lapdat': tasksData.filter(t => t.type === 'lapdat').length,
-        'swap': tasksData.filter(t => t.type === 'swap').length,
-        'xuly': tasksData.filter(t => t.type === 'xuly').length,
-        'nangcap': tasksData.filter(t => t.type === 'nangcap').length,
-        'baotri': tasksData.filter(t => t.type === 'baotri').length,
-        'khac': tasksData.filter(t => t.type === 'khac').length
-    };
-    
-    if (charts.taskType) {
-        charts.taskType.data.datasets[0].data = [
-            taskTypeCounts.lapdat,
-            taskTypeCounts.swap,
-            taskTypeCounts.xuly,
-            taskTypeCounts.nangcap,
-            taskTypeCounts.baotri,
-            taskTypeCounts.khac
-        ];
-        charts.taskType.update();
-    }
-    
-    // Update pending requests chart
-    const pendingDeliveries = deliveryRequestsData.filter(r => r.status === 'pending').length;
-    const pendingReturns = returnRequestsData.filter(r => r.status === 'pending').length;
-    
-    if (charts.pendingRequests) {
-        charts.pendingRequests.data.datasets[0].data = [pendingDeliveries, pendingReturns];
-        charts.pendingRequests.update();
     }
 }
 

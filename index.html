@@ -292,7 +292,7 @@
             </div>
             
             <!-- Charts Grid -->
-            <div class="stats-grid">
+            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
                 <div class="chart-container">
                     <h3>Phân Bố Vật Tư Theo Kho</h3>
                     <canvas id="warehouseChart"></canvas>
@@ -302,20 +302,8 @@
                     <canvas id="conditionChart"></canvas>
                 </div>
                 <div class="chart-container">
-                    <h3>Trạng Thái Sự Vụ</h3>
-                    <canvas id="taskStatusChart"></canvas>
-                </div>
-                <div class="chart-container">
                     <h3>Hoạt Động 7 Ngày Qua</h3>
                     <canvas id="activityTrendChart"></canvas>
-                </div>
-                <div class="chart-container">
-                    <h3>Loại Sự Vụ</h3>
-                    <canvas id="taskTypeChart"></canvas>
-                </div>
-                <div class="chart-container">
-                    <h3>Yêu Cầu Chờ Xác Nhận</h3>
-                    <canvas id="pendingRequestsChart"></canvas>
                 </div>
             </div>
         </div>
