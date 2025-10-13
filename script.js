@@ -1110,6 +1110,20 @@ function renderItemsByTaskReport(dateRange, container) {
             <p style="color: #7f8c8d; margin: 10px 0;">
                 Thống kê chi tiết vật tư được gán cho từng sự vụ, bao gồm lịch sử giao nhận và trả về.
             </p>
+            <div style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+                <label style="font-weight: 600; color: #2c3e50;">
+                    <i class="fas fa-filter"></i> Lọc theo sự vụ:
+                </label>
+                <select id="taskFilterSelect" onchange="filterItemsByTask()" style="padding: 8px 12px; border: 2px solid #e1e8ed; border-radius: 6px; font-size: 0.9rem; min-width: 250px;">
+                    <option value="all">Tất cả sự vụ (${sortedTasks.length})</option>
+                    ${sortedTasks.map(task => `
+                        <option value="${task.id}">${task.name} - ${getTaskStatusText(task.status)}</option>
+                    `).join('')}
+                </select>
+                <button onclick="exportItemsByTaskToExcel()" class="btn btn-sm btn-success" style="margin-left: auto;">
+                    <i class="fas fa-file-excel"></i> Xuất Excel
+                </button>
+            </div>
         </div>
     `;
     
@@ -1138,7 +1152,7 @@ function renderItemsByTaskReport(dateRange, container) {
                                task.status === 'in-progress' ? '#f39c12' : '#3498db';
             
             html += `
-                <div style="background: white; border: 1px solid #e1e8ed; border-left: 4px solid ${statusColor}; border-radius: 8px; margin-bottom: 20px; overflow: hidden;">
+                <div class="task-report-item" data-task-id="${task.id}" style="background: white; border: 1px solid #e1e8ed; border-left: 4px solid ${statusColor}; border-radius: 8px; margin-bottom: 20px; overflow: hidden;">
                     <!-- Task Header -->
                     <div style="background: #f8f9fa; padding: 15px; border-bottom: 2px solid #e1e8ed;">
                         <div style="display: flex; justify-content: space-between; align-items: start;">
@@ -1307,6 +1321,186 @@ function renderItemsByTaskReport(dateRange, container) {
     }
     
     container.innerHTML = html;
+}
+
+// Filter items by task in the report
+function filterItemsByTask() {
+    const selectedTaskId = document.getElementById('taskFilterSelect').value;
+    const taskItems = document.querySelectorAll('.task-report-item');
+    
+    taskItems.forEach(item => {
+        if (selectedTaskId === 'all') {
+            item.style.display = 'block';
+        } else {
+            if (item.dataset.taskId == selectedTaskId) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        }
+    });
+}
+
+// Export Items by Task report to Excel
+function exportItemsByTaskToExcel() {
+    const selectedTaskId = document.getElementById('taskFilterSelect').value;
+    const period = document.getElementById('reportPeriodSelect').value;
+    const dateRange = getDateRange(period);
+    
+    // Filter tasks
+    let tasksToExport = tasksData.filter(task => 
+        task.createdDate >= dateRange.start && task.createdDate <= dateRange.end
+    );
+    
+    // If specific task selected, filter to that task only
+    if (selectedTaskId !== 'all') {
+        tasksToExport = tasksToExport.filter(t => t.id == selectedTaskId);
+    }
+    
+    // Sort tasks
+    tasksToExport.sort((a, b) => {
+        if (a.status === 'completed' && b.status !== 'completed') return 1;
+        if (a.status !== 'completed' && b.status === 'completed') return -1;
+        return b.createdDate - a.createdDate;
+    });
+    
+    const wsData = [];
+    
+    // Title
+    wsData.push(['BÁO CÁO VẬT TƯ THEO SỰ VỤ']);
+    wsData.push([]);
+    wsData.push(['Thời gian:', `${formatDate(dateRange.start)} - ${formatDate(dateRange.end)}`]);
+    wsData.push(['Kho:', getWarehouseName(userWarehouse)]);
+    wsData.push(['Số sự vụ:', tasksToExport.length]);
+    wsData.push([]);
+    
+    // For each task
+    tasksToExport.forEach((task, index) => {
+        const assignedItems = inventoryData.filter(item => 
+            task.assignedItems && task.assignedItems.includes(item.id)
+        );
+        
+        const taskDeliveries = deliveryRequestsData.filter(r => 
+            r.taskId === task.id && r.status === 'confirmed'
+        );
+        const taskReturns = returnRequestsData.filter(r => 
+            r.taskId === task.id && r.status === 'confirmed'
+        );
+        
+        // Task header
+        wsData.push([`SỰ VỤ ${index + 1}: ${task.name}`]);
+        wsData.push(['Loại:', getTaskTypeText(task.type)]);
+        wsData.push(['Địa điểm:', task.location]);
+        wsData.push(['Người tạo:', task.createdBy]);
+        wsData.push(['Ngày tạo:', formatDate(task.createdDate)]);
+        wsData.push(['Trạng thái:', getTaskStatusText(task.status)]);
+        if (task.status === 'completed' && task.completedDate) {
+            wsData.push(['Ngày hoàn thành:', formatDate(task.completedDate)]);
+        }
+        wsData.push([]);
+        
+        // Summary stats
+        wsData.push(['THỐNG KÊ:']);
+        wsData.push(['Vật tư hiện tại:', assignedItems.length]);
+        wsData.push([userWarehouse === 'infrastructure' ? 'Đã nhận:' : 'Đã giao:', taskDeliveries.length]);
+        wsData.push([userWarehouse === 'net' ? 'Thu hồi:' : 'Đã trả:', taskReturns.length]);
+        wsData.push([]);
+        
+        // Current items
+        if (assignedItems.length > 0) {
+            wsData.push(['VẬT TƯ HIỆN TẠI:']);
+            wsData.push(['Serial', 'Tên', 'Tình Trạng', 'Kho', 'Nguồn']);
+            assignedItems.forEach(item => {
+                wsData.push([
+                    item.serial,
+                    item.name,
+                    getConditionText(item.condition),
+                    getWarehouseName(item.warehouse),
+                    item.source || '-'
+                ]);
+            });
+            wsData.push([]);
+        }
+        
+        // Delivery history
+        if (taskDeliveries.length > 0) {
+            wsData.push([userWarehouse === 'infrastructure' ? 'LỊCH SỬ NHẬN:' : 'LỊCH SỬ GIAO:']);
+            wsData.push(['Serial', 'Tên', 'Ngày Yêu Cầu', 'Người Yêu Cầu', 'Ngày Xác Nhận', 'Người Xác Nhận']);
+            taskDeliveries.forEach(d => {
+                wsData.push([
+                    d.itemSerial,
+                    d.itemName,
+                    formatDateTime(d.requestedDate),
+                    d.requestedBy,
+                    formatDateTime(d.confirmedDate),
+                    d.confirmedBy
+                ]);
+            });
+            wsData.push([]);
+        }
+        
+        // Return history
+        if (taskReturns.length > 0) {
+            wsData.push([userWarehouse === 'net' ? 'LỊCH SỬ THU HỒI:' : 'LỊCH SỬ TRẢ:']);
+            wsData.push(['Serial', 'Tên', 'Tình Trạng', 'Ngày Yêu Cầu', 'Người Yêu Cầu', 'Ngày Xác Nhận', 'Người Xác Nhận']);
+            taskReturns.forEach(r => {
+                wsData.push([
+                    r.itemSerial,
+                    r.itemName,
+                    getConditionText(r.itemCondition),
+                    formatDateTime(r.requestedDate),
+                    r.requestedBy,
+                    formatDateTime(r.confirmedDate),
+                    r.confirmedBy
+                ]);
+            });
+            wsData.push([]);
+        }
+        
+        wsData.push(['---']);
+        wsData.push([]);
+    });
+    
+    // Overall summary
+    const totalItems = tasksToExport.reduce((sum, task) => {
+        const items = inventoryData.filter(item => 
+            task.assignedItems && task.assignedItems.includes(item.id)
+        );
+        return sum + items.length;
+    }, 0);
+    
+    const totalDelivered = tasksToExport.reduce((sum, task) => {
+        return sum + deliveryRequestsData.filter(r => r.taskId === task.id && r.status === 'confirmed').length;
+    }, 0);
+    
+    const totalReturned = tasksToExport.reduce((sum, task) => {
+        return sum + returnRequestsData.filter(r => r.taskId === task.id && r.status === 'confirmed').length;
+    }, 0);
+    
+    wsData.push(['TỔNG KẾT:']);
+    wsData.push(['Tổng số sự vụ:', tasksToExport.length]);
+    wsData.push(['Tổng vật tư hiện tại:', totalItems]);
+    wsData.push([userWarehouse === 'infrastructure' ? 'Tổng đã nhận:' : 'Tổng đã giao:', totalDelivered]);
+    wsData.push([userWarehouse === 'net' ? 'Tổng thu hồi:' : 'Tổng đã trả:', totalReturned]);
+    
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    
+    // Set column widths
+    ws['!cols'] = [
+        { wch: 20 }, { wch: 30 }, { wch: 15 }, { wch: 20 }, { wch: 20 }, { wch: 20 }
+    ];
+    
+    XLSX.utils.book_append_sheet(wb, ws, 'Vật Tư Theo Sự Vụ');
+    
+    // Generate filename
+    const taskName = selectedTaskId === 'all' ? 'Tat-Ca' : tasksToExport[0]?.name.replace(/[^a-zA-Z0-9]/g, '-') || 'Task';
+    const filename = `Vat-Tu-Theo-Su-Vu_${taskName}_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
+    
+    // Download
+    XLSX.writeFile(wb, filename);
+    showToast('success', 'Xuất Excel thành công!', `File đã được tải: ${filename}`);
 }
 
 function renderInventoryChangesReport(dateRange, container) {
