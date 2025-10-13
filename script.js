@@ -789,6 +789,9 @@ function generateReport() {
         case 'tasks':
             renderTasksReport(dateRange, reportContent);
             break;
+        case 'items-by-task':
+            renderItemsByTaskReport(dateRange, reportContent);
+            break;
         case 'inventory-changes':
             renderInventoryChangesReport(dateRange, reportContent);
             break;
@@ -1073,6 +1076,230 @@ function renderTasksReport(dateRange, container) {
                             <li>Đã giao: ${totalItemsDelivered}</li>
                             <li>Đã trả: ${totalItemsReturned}</li>
                         </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = html;
+}
+
+function renderItemsByTaskReport(dateRange, container) {
+    // Filter tasks by date range
+    const filteredTasks = tasksData.filter(task => 
+        task.createdDate >= dateRange.start && task.createdDate <= dateRange.end
+    );
+    
+    // Sort tasks: active first, then by date
+    const sortedTasks = filteredTasks.sort((a, b) => {
+        if (a.status === 'completed' && b.status !== 'completed') return 1;
+        if (a.status !== 'completed' && b.status === 'completed') return -1;
+        return b.createdDate - a.createdDate;
+    });
+    
+    let totalItems = 0;
+    let totalDelivered = 0;
+    let totalReturned = 0;
+    
+    let html = `
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin-top: 0;">
+                <i class="fas fa-boxes"></i> Báo Cáo Vật Tư Theo Sự Vụ
+            </h3>
+            <p style="color: #7f8c8d; margin: 10px 0;">
+                Thống kê chi tiết vật tư được gán cho từng sự vụ, bao gồm lịch sử giao nhận và trả về.
+            </p>
+        </div>
+    `;
+    
+    if (sortedTasks.length === 0) {
+        html += '<p class="no-data">Không có sự vụ trong khoảng thời gian này</p>';
+    } else {
+        sortedTasks.forEach(task => {
+            // Get items currently assigned to this task
+            const assignedItems = inventoryData.filter(item => 
+                task.assignedItems && task.assignedItems.includes(item.id)
+            );
+            
+            // Get delivery and return history
+            const taskDeliveries = deliveryRequestsData.filter(r => 
+                r.taskId === task.id && r.status === 'confirmed'
+            );
+            const taskReturns = returnRequestsData.filter(r => 
+                r.taskId === task.id && r.status === 'confirmed'
+            );
+            
+            totalItems += assignedItems.length;
+            totalDelivered += taskDeliveries.length;
+            totalReturned += taskReturns.length;
+            
+            const statusColor = task.status === 'completed' ? '#27ae60' : 
+                               task.status === 'in-progress' ? '#f39c12' : '#3498db';
+            
+            html += `
+                <div style="background: white; border: 1px solid #e1e8ed; border-left: 4px solid ${statusColor}; border-radius: 8px; margin-bottom: 20px; overflow: hidden;">
+                    <!-- Task Header -->
+                    <div style="background: #f8f9fa; padding: 15px; border-bottom: 2px solid #e1e8ed;">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div>
+                                <h3 style="margin: 0 0 8px 0; color: #2c3e50;">
+                                    <i class="fas fa-tasks"></i> ${task.name}
+                                </h3>
+                                <div style="font-size: 0.9rem; color: #7f8c8d;">
+                                    <span><i class="fas fa-tag"></i> ${getTaskTypeText(task.type)}</span> • 
+                                    <span><i class="fas fa-map-marker-alt"></i> ${task.location}</span> • 
+                                    <span><i class="fas fa-user"></i> ${task.createdBy}</span>
+                                </div>
+                                <div style="font-size: 0.85rem; color: #95a5a6; margin-top: 5px;">
+                                    <i class="fas fa-calendar"></i> Tạo: ${formatDate(task.createdDate)}
+                                    ${task.status === 'completed' && task.completedDate ? 
+                                        ` • <i class="fas fa-check-circle"></i> Hoàn thành: ${formatDate(task.completedDate)}` : ''}
+                                </div>
+                            </div>
+                            <span class="status-badge ${task.status}" style="font-size: 0.9rem;">
+                                ${getTaskStatusText(task.status)}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Summary Stats -->
+                    <div style="padding: 15px; background: #fefefe; border-bottom: 1px solid #e1e8ed;">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                            <div style="text-align: center; padding: 10px; background: #e3f2fd; border-radius: 6px;">
+                                <div style="font-size: 1.5rem; font-weight: bold; color: #2196f3;">${assignedItems.length}</div>
+                                <div style="font-size: 0.85rem; color: #7f8c8d;">Vật tư hiện tại</div>
+                            </div>
+                            <div style="text-align: center; padding: 10px; background: #e8f5e9; border-radius: 6px;">
+                                <div style="font-size: 1.5rem; font-weight: bold; color: #4caf50;">${taskDeliveries.length}</div>
+                                <div style="font-size: 0.85rem; color: #7f8c8d;">${userWarehouse === 'infrastructure' ? 'Đã nhận' : 'Đã giao'}</div>
+                            </div>
+                            <div style="text-align: center; padding: 10px; background: #fff3e0; border-radius: 6px;">
+                                <div style="font-size: 1.5rem; font-weight: bold; color: #ff9800;">${taskReturns.length}</div>
+                                <div style="font-size: 0.85rem; color: #7f8c8d;">${userWarehouse === 'net' ? 'Thu hồi' : 'Đã trả'}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Current Items -->
+                    ${assignedItems.length > 0 ? `
+                        <div style="padding: 15px;">
+                            <h4 style="margin: 0 0 12px 0; color: #2c3e50;">
+                                <i class="fas fa-box"></i> Vật Tư Hiện Tại (${assignedItems.length})
+                            </h4>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                                <thead>
+                                    <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                                        <th style="padding: 10px; text-align: left;">Serial</th>
+                                        <th style="padding: 10px; text-align: left;">Tên Vật Tư</th>
+                                        <th style="padding: 10px; text-align: center;">Tình Trạng</th>
+                                        <th style="padding: 10px; text-align: center;">Kho</th>
+                                        <th style="padding: 10px; text-align: left;">Nguồn</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${assignedItems.map(item => `
+                                        <tr style="border-bottom: 1px solid #f0f0f0;">
+                                            <td style="padding: 10px;"><strong>${item.serial}</strong></td>
+                                            <td style="padding: 10px;">${item.name}</td>
+                                            <td style="padding: 10px; text-align: center;">
+                                                <span class="status-badge ${item.condition}">${getConditionText(item.condition)}</span>
+                                            </td>
+                                            <td style="padding: 10px; text-align: center;">
+                                                <span class="warehouse-badge ${item.warehouse}">${getWarehouseName(item.warehouse)}</span>
+                                            </td>
+                                            <td style="padding: 10px;">${item.source || '-'}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- Delivery History -->
+                    ${taskDeliveries.length > 0 ? `
+                        <div style="padding: 15px; background: #f0f9ff; border-top: 1px solid #e1e8ed;">
+                            <h4 style="margin: 0 0 12px 0; color: #2c3e50;">
+                                <i class="fas fa-shipping-fast"></i> ${userWarehouse === 'infrastructure' ? 'Lịch Sử Nhận Vật Tư' : 'Lịch Sử Giao Vật Tư'} (${taskDeliveries.length})
+                            </h4>
+                            <div style="display: grid; gap: 10px;">
+                                ${taskDeliveries.map(delivery => `
+                                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #2196f3;">
+                                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                                            <div>
+                                                <strong style="color: #2c3e50;">${delivery.itemSerial} - ${delivery.itemName}</strong>
+                                                <div style="font-size: 0.85rem; color: #7f8c8d; margin-top: 4px;">
+                                                    📤 Giao: ${formatDateTime(delivery.requestedDate)} (${delivery.requestedBy})
+                                                    <br>
+                                                    ✅ Nhận: ${formatDateTime(delivery.confirmedDate)} (${delivery.confirmedBy})
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- Return History -->
+                    ${taskReturns.length > 0 ? `
+                        <div style="padding: 15px; background: #fff8e1; border-top: 1px solid #e1e8ed;">
+                            <h4 style="margin: 0 0 12px 0; color: #2c3e50;">
+                                <i class="fas fa-undo"></i> ${userWarehouse === 'net' ? 'Lịch Sử Thu Hồi' : 'Lịch Sử Trả Vật Tư'} (${taskReturns.length})
+                            </h4>
+                            <div style="display: grid; gap: 10px;">
+                                ${taskReturns.map(returnReq => `
+                                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #ff9800;">
+                                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                                            <div>
+                                                <strong style="color: #2c3e50;">${returnReq.itemSerial} - ${returnReq.itemName}</strong>
+                                                <div style="font-size: 0.85rem; color: #7f8c8d; margin-top: 4px;">
+                                                    Tình trạng: <span class="status-badge ${returnReq.itemCondition}">${getConditionText(returnReq.itemCondition)}</span>
+                                                    <br>
+                                                    📤 Trả: ${formatDateTime(returnReq.requestedDate)} (${returnReq.requestedBy})
+                                                    <br>
+                                                    ✅ Nhận: ${formatDateTime(returnReq.confirmedDate)} (${returnReq.confirmedBy})
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${assignedItems.length === 0 && taskDeliveries.length === 0 && taskReturns.length === 0 ? `
+                        <div style="padding: 20px; text-align: center; color: #95a5a6;">
+                            <i class="fas fa-inbox" style="font-size: 2rem; opacity: 0.5;"></i>
+                            <p style="margin: 10px 0 0 0;">Chưa có vật tư nào được gán cho sự vụ này</p>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        });
+        
+        // Summary at the end
+        html += `
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; color: white; margin-top: 20px;">
+                <h3 style="margin: 0 0 15px 0;">
+                    <i class="fas fa-chart-bar"></i> Tổng Kết
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold;">${sortedTasks.length}</div>
+                        <div style="font-size: 0.9rem; opacity: 0.9;">Sự vụ</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold;">${totalItems}</div>
+                        <div style="font-size: 0.9rem; opacity: 0.9;">Vật tư hiện tại</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold;">${totalDelivered}</div>
+                        <div style="font-size: 0.9rem; opacity: 0.9;">${userWarehouse === 'infrastructure' ? 'Đã nhận' : 'Đã giao'}</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold;">${totalReturned}</div>
+                        <div style="font-size: 0.9rem; opacity: 0.9;">${userWarehouse === 'net' ? 'Thu hồi' : 'Đã trả'}</div>
                     </div>
                 </div>
             </div>
