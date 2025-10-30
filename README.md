@@ -218,7 +218,7 @@ vattu/
 - Kiểm tra network connection
 
 ### Lỗi Authentication
-- Kiểm tra Email/Password authentication đã enable
+- Kiểm tra Email/Password authentication đã enable.
 - Kiểm tra Firebase configuration
 - Kiểm tra browser console
 
