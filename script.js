@@ -2719,16 +2719,39 @@ function formatDate(date) {
 }
 
 function formatDateTime(date) {
-    if (!date) {
+    // Check for null, undefined, empty string, or invalid values
+    if (!date || date === null || date === undefined || date === '') {
         return '-';
     }
-    // Handle both Date objects and timestamps
-    const dateObj = date instanceof Date ? date : new Date(date);
-    // Check if date is valid
-    if (isNaN(dateObj.getTime())) {
+    
+    try {
+        // Handle both Date objects and timestamps
+        let dateObj;
+        if (date instanceof Date) {
+            dateObj = date;
+        } else if (typeof date === 'number') {
+            dateObj = new Date(date);
+        } else if (typeof date === 'string') {
+            dateObj = new Date(date);
+        } else {
+            return '-';
+        }
+        
+        // Check if date is valid
+        if (!dateObj || isNaN(dateObj.getTime())) {
+            return '-';
+        }
+        
+        // Ensure toLocaleString method exists
+        if (typeof dateObj.toLocaleString !== 'function') {
+            return '-';
+        }
+        
+        return dateObj.toLocaleString('vi-VN');
+    } catch (error) {
+        console.error('Error formatting date:', date, error);
         return '-';
     }
-    return dateObj.toLocaleString('vi-VN');
 }
 
 function formatTimeAgo(date) {
@@ -3130,7 +3153,7 @@ function viewTask(taskId) {
                 <strong>Độ ưu tiên:</strong> <span class="priority-badge ${task.priority}">${getPriorityText(task.priority)}</span>
                 <strong>Địa điểm:</strong> <span>${task.location}</span>
                 <strong>Người tạo:</strong> <span>${task.createdBy || 'Không rõ'}${task.createdByWarehouse ? ` (${task.createdByWarehouse})` : ''}</span>
-                <strong>Ngày tạo:</strong> <span>${formatDateTime(task.createdDate)}</span>
+                <strong>Ngày tạo:</strong> <span>${task.createdDate ? formatDateTime(task.createdDate) : '-'}</span>
                 ${task.status === 'completed' && task.completedDate ? `
                     <strong>Hoàn thành:</strong> <span>${formatDateTime(task.completedDate)} bởi ${task.completedBy || 'Không rõ'}</span>
                 ` : ''}
