@@ -1,0 +1,1235 @@
+{
+  "deliveryRequests": [
+    null,
+    {
+      "confirmedBy": "Tạ Bắc Sơn",
+      "confirmedDate": "2025-10-15T04:53:56.306Z",
+      "id": 1,
+      "itemId": 5,
+      "itemName": "PM5+cáp nguồn",
+      "itemSerial": "766124400247",
+      "notes": "Giao Hùng xử lý TTS 7092139 trạm UL-HLG047M_QTI\n",
+      "requestedBy": "Bùi Thị Thúy Vân",
+      "requestedDate": "2025-10-15T04:50:32.001Z",
+      "requestedFrom": "net",
+      "status": "confirmed",
+      "taskId": 1,
+      "taskName": "Xử lý UL-HLG047M"
+    },
+    {
+      "confirmedBy": "Tạ Bắc Sơn",
+      "confirmedDate": "2025-10-15T04:53:49.412Z",
+      "id": 2,
+      "itemId": 6,
+      "itemName": "FA3C",
+      "itemSerial": "219437050469",
+      "notes": "Giao Hùng xử lý TTS 7092139 trạm UL-HLG047M_QTI\n",
+      "requestedBy": "Bùi Thị Thúy Vân",
+      "requestedDate": "2025-10-15T04:50:42.471Z",
+      "requestedFrom": "net",
+      "status": "confirmed",
+      "taskId": 1,
+      "taskName": "Xử lý UL-HLG047M"
+    },
+    {
+      "confirmedBy": "Tạ Bắc Sơn",
+      "confirmedDate": "2025-10-15T04:53:43.396Z",
+      "id": 3,
+      "itemId": 7,
+      "itemName": "FS5A",
+      "itemSerial": "771781000018",
+      "notes": "Giao Hùng xử lý TTS 7092139 trạm UL-HLG047M_QTI\n",
+      "requestedBy": "Bùi Thị Thúy Vân",
+      "requestedDate": "2025-10-15T04:50:52.086Z",
+      "requestedFrom": "net",
+      "status": "confirmed",
+      "taskId": 1,
+      "taskName": "Xử lý UL-HLG047M"
+    },
+    {
+      "confirmedBy": "Tạ Bắc Sơn",
+      "confirmedDate": "2025-10-15T04:53:37.970Z",
+      "id": 4,
+      "itemId": 8,
+      "itemName": "BPQ7",
+      "itemSerial": "771227400029",
+      "notes": "Giao Hùng xử lý TTS 7092139 trạm UL-HLG047M_QTI\n",
+      "requestedBy": "Bùi Thị Thúy Vân",
+      "requestedDate": "2025-10-15T04:50:59.702Z",
+      "requestedFrom": "net",
+      "status": "confirmed",
+      "taskId": 1,
+      "taskName": "Xử lý UL-HLG047M"
+    },
+    {
+      "confirmedBy": "Tạ Bắc Sơn",
+      "confirmedDate": "2025-10-16T02:05:03.839Z",
+      "id": 5,
+      "itemId": 4,
+      "itemName": "R8862A S2100",
+      "itemSerial": "219531983889",
+      "notes": "Giao Sơn xử lý TTS 7093655 trạm UL_HLG549B_QTI ngày 16/10/2025",
+      "requestedBy": "Bùi Thị Thúy Vân",
+      "requestedDate": "2025-10-16T02:04:07.455Z",
+      "requestedFrom": "net",
+      "status": "confirmed",
+      "taskId": 2,
+      "taskName": "Xử lý UL-HLG549"
+    },
+    {
+      "confirmedBy": "Tạ Bắc Sơn",
+      "confirmedDate": "2025-10-16T02:09:23.615Z",
+      "id": 6,
+      "itemId": 13,
+      "itemName": "BPQ7",
+      "itemSerial": "771227400022",
+      "notes": "Giao Hùng xử lý TTS 7092139 trạm UL-HLG047M_QTI\n",
+      "requestedBy": "Bùi Thị Thúy Vân",
+      "requestedDate": "2025-10-16T02:08:35.395Z",
+      "requestedFrom": "net",
+      "status": "confirmed",
+      "taskId": 1,
+      "taskName": "Xử lý UL-HLG047M"
+    },
+    {
+      "confirmedBy": "Tạ Bắc Sơn",
+      "confirmedDate": "2025-10-16T03:12:52.305Z",
+      "id": 7,
+      "itemId": 14,
+      "itemName": "SFP 10G 1,4km",
+      "itemSerial": "HB222600082254",
+      "notes": "A Sơn nhận xử lý TTS 7100525, UL VLH004M_QTI\n",
+      "requestedBy": "Bùi Thị Thúy Vân",
+      "requestedDate": "2025-10-16T03:02:12.601Z",
+      "requestedFrom": "net",
+      "status": "confirmed",
+      "taskId": 3,
+      "taskName": "Xử lý UL-VLH004M"
+    },
+    {
+      "confirmedBy": "Tạ Bắc Sơn",
+      "confirmedDate": "2025-10-16T03:12:50.024Z",
+      "id": 8,
+      "itemId": 15,
+      "itemName": "SFP 10G 1,4km",
+      "itemSerial": "HB222600080461",
+      "notes": "A Sơn nhận xử lý TTS 7100525, UL VLH004M_QTI\n",
+      "requestedBy": "Bùi Thị Thúy Vân",
+      "requestedDate": "2025-10-16T03:02:26.599Z",
+      "requestedFrom": "net",
+      "status": "confirmed",
+      "taskId": 3,
+      "taskName": "Xử lý UL-VLH004M"
+    },
+    {
+      "confirmedBy": "Tạ Bắc Sơn",
+      "confirmedDate": "2025-10-20T10:02:11.117Z",
+      "id": 9,
+      "itemId": 19,
+      "itemName": "R9264 M1821+Jack nguồn",
+      "itemSerial": "219531874789",
+      "notes": "Giao a Sơn theo SVĐ 1254  ĐH/KTM-VNPT Net ngày 22/09/2025\n1700 TTr-KT ngày 30/09/2025",
+      "requestedBy": "Bùi Thị Thúy Vân",
+      "requestedDate": "2025-10-20T10:01:39.384Z",
+      "requestedFrom": "net",
+      "status": "confirmed",
+      "taskId": 4,
+      "taskName": "SVĐ 1254 ĐH/KTM-VNPT NET"
+    }
+  ],
+  "inventory": [
+    null,
+    {
+      "condition": "available",
+      "dateAdded": "2025-10-14T01:57:52.628Z",
+      "description": "",
+      "id": 1,
+      "name": "R8862A S2100",
+      "serial": "219446108373",
+      "source": "Nhận DHI",
+      "warehouse": "net"
+    },
+    {
+      "condition": "available",
+      "dateAdded": "2025-10-14T01:58:41.975Z",
+      "description": "Hỏng, xem lại  vì còn tiền\n",
+      "id": 2,
+      "name": "R8862A S2100",
+      "serial": "219531983881",
+      "source": "Nhận từ Kho TT Net3",
+      "warehouse": "net"
+    },
+    {
+      "condition": "available",
+      "dateAdded": "2025-10-14T01:59:25.965Z",
+      "description": "",
+      "id": 3,
+      "name": "R8862A S2100",
+      "serial": "219446108376",
+      "source": "Nhận từ kho TT Net3",
+      "warehouse": "net"
+    },
+    {
+      "condition": "in-use",
+      "dateAdded": "2025-10-14T02:00:07.838Z",
+      "description": "",
+      "id": 4,
+      "name": "R8862A S2100",
+      "serial": "219531983889",
+      "source": "Nhận từ kho TT Net3",
+      "taskId": 2,
+      "warehouse": "infrastructure"
+    },
+    {
+      "condition": "in-use",
+      "dateAdded": "2025-10-15T04:48:09.437Z",
+      "description": "Giao Hùng xử lý TTS 7092139 trạm UL-HLG047M_QTI\n",
+      "id": 5,
+      "name": "PM5+cáp nguồn",
+      "serial": "766124400247",
+      "source": "Nhận từ kho TT Net3",
+      "taskId": 1,
+      "warehouse": "infrastructure"
+    },
+    {
+      "condition": "in-use",
+      "dateAdded": "2025-10-15T04:48:46.529Z",
+      "description": "Giao Hùng xử lý TTS 7092139 trạm UL-HLG047M_QTI\n",
+      "id": 6,
+      "name": "FA3C",
+      "serial": "219437050469",
+      "source": "Nhận từ kho TT Net3",
+      "taskId": 1,
+      "warehouse": "infrastructure"
+    },
+    {
+      "condition": "in-use",
+      "dateAdded": "2025-10-15T04:49:18.610Z",
+      "description": "Giao Hùng xử lý TTS 7092139 trạm UL-HLG047M_QTI\n",
+      "id": 7,
+      "name": "FS5A",
+      "serial": "771781000018",
+      "source": "Nhận từ kho TT Net3",
+      "taskId": 1,
+      "warehouse": "infrastructure"
+    },
+    {
+      "condition": "damaged",
+      "dateAdded": "2025-10-15T04:49:50.685Z",
+      "description": "Giao Hùng xử lý TTS 7092139 trạm UL-HLG047M_QTI\nCard mới cấp nhưng hỏng không sữ dụng được (15/10/2025)\n",
+      "id": 8,
+      "name": "BPQ7",
+      "serial": "771227400029",
+      "source": "Nhận từ kho TT Net3",
+      "warehouse": "net"
+    },
+    {
+      "condition": "available",
+      "dateAdded": "2025-10-15T07:24:43.119Z",
+      "description": "",
+      "id": 9,
+      "name": "FS0",
+      "serial": "254315100451",
+      "source": "Thu hồi trạm UL-HLG047M",
+      "warehouse": "net"
+    },
+    {
+      "condition": "damaged",
+      "dateAdded": "2025-10-15T07:25:22.759Z",
+      "description": "",
+      "id": 10,
+      "name": "BPC",
+      "serial": "249878300937",
+      "source": "Thu hồi trạm UL-HLG047M",
+      "warehouse": "net"
+    },
+    {
+      "condition": "available",
+      "dateAdded": "2025-10-15T07:26:19.070Z",
+      "description": "Kèm dây nguồn",
+      "id": 11,
+      "name": "PM3 + Cáp nguồn",
+      "serial": "716937700801",
+      "source": "Thu hồi trạm UL-HLG047M",
+      "warehouse": "net"
+    },
+    {
+      "condition": "available",
+      "dateAdded": "2025-10-15T07:29:04.454Z",
+      "description": "",
+      "id": 12,
+      "name": "FA0A",
+      "serial": "219115037507",
+      "source": "Thu hồi trạm UL-HLG047M",
+      "warehouse": "net"
+    },
+    {
+      "condition": "in-use",
+      "dateAdded": "2025-10-16T02:07:34.904Z",
+      "description": "Giao Hùng xử lý TTS 7092139 trạm UL-HLG047M_QTI\n",
+      "id": 13,
+      "name": "BPQ7",
+      "serial": "771227400022",
+      "source": "Nhận theo 1645 TTr-KT ngày 22/09/2025 Về việc điều chuyển vật tư dự phòng cho VNPT tỉnh/thành phục vụ xử lý lỗi thiết bị vô tuyến di động (đợt tháng 09/2025)",
+      "taskId": 1,
+      "warehouse": "infrastructure"
+    },
+    {
+      "condition": "in-use",
+      "dateAdded": "2025-10-16T03:00:55.723Z",
+      "description": "A Sơn nhận xử lý TTS 7100525, UL VLH004M_QTI\n",
+      "id": 14,
+      "name": "SFP 10G 1,4km",
+      "serial": "HB222600082254",
+      "source": "Kho HDA",
+      "taskId": 3,
+      "warehouse": "infrastructure"
+    },
+    {
+      "condition": "in-use",
+      "dateAdded": "2025-10-16T03:01:41.470Z",
+      "description": "A Sơn nhận xử lý TTS 7100525, UL VLH004M_QTI\n",
+      "id": 15,
+      "name": "SFP 10G 1,4km",
+      "serial": "HB222600080461",
+      "source": "Kho DHA",
+      "taskId": 3,
+      "warehouse": "infrastructure"
+    },
+    {
+      "condition": "damaged",
+      "dateAdded": "2025-10-20T00:51:08.041Z",
+      "description": "",
+      "id": 16,
+      "name": "SFP 10G 1.4km",
+      "serial": "ZTE24150061718",
+      "source": "Thu hồi UL-VLH004M",
+      "warehouse": "net"
+    },
+    {
+      "condition": "damaged",
+      "dateAdded": "2025-10-20T00:52:23.912Z",
+      "description": "",
+      "id": 17,
+      "name": "SFP 10G 10km",
+      "serial": "BT2405080457",
+      "source": "Thu hồi UL-VLH004M",
+      "warehouse": "net"
+    },
+    {
+      "condition": "available",
+      "dateAdded": "2025-10-20T06:30:06.217Z",
+      "description": "",
+      "id": 18,
+      "name": "RRU 9224E",
+      "serial": "219370784824",
+      "source": "Thu trạm DHA014 Swap với RRU 9264 Net cấp.",
+      "taskId": 4,
+      "warehouse": "infrastructure"
+    },
+    {
+      "condition": "in-use",
+      "dateAdded": "2025-10-20T10:01:01.883Z",
+      "description": "Giao a Sơn theo SVĐ 1254  ĐH/KTM-VNPT Net ngày 22/09/2025\n",
+      "id": 19,
+      "name": "R9264 M1821+Jack nguồn",
+      "serial": "219531874789",
+      "source": "\"Thu hồisau khi PSLĐ theo cv 1295/TTr-KT ngày 08/08/2024 Bàn giao vật tư cho VNPT QTI Iắp đặt phát sóng trạm lưu động phục vụ Lễ hội hành hương La Vang tại tỉnh Quảng Trị về nhập kho trung tâm \"",
+      "taskId": 4,
+      "warehouse": "infrastructure"
+    },
+    {
+      "condition": "available",
+      "dateAdded": "2025-10-23T00:16:56.087Z",
+      "description": "Giao Hùng xử lý TTS 7151137 trạm SR_GLH004M_QTI ngày 22/10/2025\n",
+      "id": 20,
+      "name": "DCPD7",
+      "serial": "NA1",
+      "source": "Thu hồi CSHT_QTI_00214",
+      "warehouse": "net"
+    },
+    {
+      "condition": "damaged",
+      "dateAdded": "2025-10-23T06:50:15.765Z",
+      "description": "Đại(HT QTI) xử lý GU-HLG021M ",
+      "id": 21,
+      "name": "BPC",
+      "serial": "249878301157",
+      "source": "Thu hồi trạm GU-HLG021M",
+      "taskId": 6,
+      "warehouse": "infrastructure"
+    },
+    {
+      "condition": "available",
+      "dateAdded": "2025-10-23T06:51:48.797Z",
+      "description": "Đại thu hồi 23/10/2025",
+      "id": 22,
+      "name": "FS0",
+      "serial": "248805800538",
+      "source": "Thu hồi trạm GU-HLG021M",
+      "taskId": 6,
+      "warehouse": "infrastructure"
+    },
+    {
+      "condition": "available",
+      "dateAdded": "2025-10-23T06:55:27.942Z",
+      "description": "Đại thu trạm GU-HLG021(swap card)",
+      "id": 23,
+      "name": "FAN",
+      "serial": "210040061797",
+      "source": "Thu hồi trạm GU-HLG021M",
+      "taskId": 6,
+      "warehouse": "infrastructure"
+    },
+    {
+      "condition": "available",
+      "dateAdded": "2025-10-23T06:57:28.124Z",
+      "description": "Đại thu hồi trạm GU-HLG021M (swap card PM5)",
+      "id": 24,
+      "name": "PM0",
+      "serial": "249219300825",
+      "source": "Thu hồi trạm GU-HLG021M",
+      "taskId": 6,
+      "warehouse": "infrastructure"
+    },
+    {
+      "condition": "damaged",
+      "dateAdded": "2025-10-23T07:24:43.405Z",
+      "description": "Thu trạm SR-GLH004M Quán ngang 22/10/2025 (cháy hỏng)",
+      "id": 25,
+      "name": "DCPD10B",
+      "serial": "ZG5622273320",
+      "source": "Thu hồi trạm SR-GLH004M",
+      "taskId": 5,
+      "warehouse": "infrastructure"
+    }
+  ],
+  "logs": [
+    null,
+    {
+      "action": "Tạo sự vụ",
+      "details": "Tạo sự vụ: Xử lý UL-HLG047M",
+      "id": 1,
+      "timestamp": "2025-10-15T02:57:34.434Z",
+      "type": "task",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: PM5+cáp nguồn vào Kho Net",
+      "id": 2,
+      "timestamp": "2025-10-15T04:48:09.695Z",
+      "type": "inventory",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: FA3C vào Kho Net",
+      "id": 3,
+      "timestamp": "2025-10-15T04:48:46.775Z",
+      "type": "inventory",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: FS5A vào Kho Net",
+      "id": 4,
+      "timestamp": "2025-10-15T04:49:18.856Z",
+      "type": "inventory",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: BPQ7 vào Kho Net",
+      "id": 5,
+      "timestamp": "2025-10-15T04:49:50.922Z",
+      "type": "inventory",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Yêu cầu giao vật tư",
+      "details": "Tạo yêu cầu giao vật tư 766124400247 - PM5+cáp nguồn cho sự vụ \"Xử lý UL-HLG047M\". Ghi chú: Giao Hùng xử lý TTS 7092139 trạm UL-HLG047M_QTI\n",
+      "id": 6,
+      "timestamp": "2025-10-15T04:50:32.263Z",
+      "type": "delivery-request",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Yêu cầu giao vật tư",
+      "details": "Tạo yêu cầu giao vật tư 219437050469 - FA3C cho sự vụ \"Xử lý UL-HLG047M\". Ghi chú: Giao Hùng xử lý TTS 7092139 trạm UL-HLG047M_QTI\n",
+      "id": 7,
+      "timestamp": "2025-10-15T04:50:42.719Z",
+      "type": "delivery-request",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Yêu cầu giao vật tư",
+      "details": "Tạo yêu cầu giao vật tư 771781000018 - FS5A cho sự vụ \"Xử lý UL-HLG047M\". Ghi chú: Giao Hùng xử lý TTS 7092139 trạm UL-HLG047M_QTI\n",
+      "id": 8,
+      "timestamp": "2025-10-15T04:50:52.333Z",
+      "type": "delivery-request",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Yêu cầu giao vật tư",
+      "details": "Tạo yêu cầu giao vật tư 771227400029 - BPQ7 cho sự vụ \"Xử lý UL-HLG047M\". Ghi chú: Giao Hùng xử lý TTS 7092139 trạm UL-HLG047M_QTI\n",
+      "id": 9,
+      "timestamp": "2025-10-15T04:50:59.947Z",
+      "type": "delivery-request",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Xác nhận giao vật tư",
+      "details": "Xác nhận nhận vật tư 771227400029 - BPQ7 cho sự vụ \"Xử lý UL-HLG047M\" (Yêu cầu bởi: Bùi Thị Thúy Vân)",
+      "id": 10,
+      "timestamp": "2025-10-15T04:53:38.274Z",
+      "type": "delivery-confirmed",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Xác nhận giao vật tư",
+      "details": "Xác nhận nhận vật tư 771781000018 - FS5A cho sự vụ \"Xử lý UL-HLG047M\" (Yêu cầu bởi: Bùi Thị Thúy Vân)",
+      "id": 11,
+      "timestamp": "2025-10-15T04:53:43.715Z",
+      "type": "delivery-confirmed",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Xác nhận giao vật tư",
+      "details": "Xác nhận nhận vật tư 219437050469 - FA3C cho sự vụ \"Xử lý UL-HLG047M\" (Yêu cầu bởi: Bùi Thị Thúy Vân)",
+      "id": 12,
+      "timestamp": "2025-10-15T04:53:49.743Z",
+      "type": "delivery-confirmed",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Xác nhận giao vật tư",
+      "details": "Xác nhận nhận vật tư 766124400247 - PM5+cáp nguồn cho sự vụ \"Xử lý UL-HLG047M\" (Yêu cầu bởi: Bùi Thị Thúy Vân)",
+      "id": 13,
+      "timestamp": "2025-10-15T04:53:56.608Z",
+      "type": "delivery-confirmed",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: FS0 vào Kho Hạ Tầng",
+      "id": 14,
+      "timestamp": "2025-10-15T07:24:43.325Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: BPC vào Kho Hạ Tầng",
+      "id": 15,
+      "timestamp": "2025-10-15T07:25:22.957Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: PM3 vào Kho Hạ Tầng",
+      "id": 16,
+      "timestamp": "2025-10-15T07:26:19.270Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Cập nhật vật tư",
+      "details": "Cập nhật vật tư: PM3",
+      "id": 17,
+      "timestamp": "2025-10-15T07:27:38.237Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Cập nhật vật tư",
+      "details": "Cập nhật vật tư: BPC",
+      "id": 18,
+      "timestamp": "2025-10-15T07:28:04.387Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Cập nhật vật tư",
+      "details": "Cập nhật vật tư: FS0",
+      "id": 19,
+      "timestamp": "2025-10-15T07:28:14.622Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Cập nhật vật tư",
+      "details": "Cập nhật vật tư: PM3",
+      "id": 20,
+      "timestamp": "2025-10-15T07:28:19.763Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: FAN vào Kho Hạ Tầng",
+      "id": 21,
+      "timestamp": "2025-10-15T07:29:04.655Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Cập nhật vật tư",
+      "details": "Cập nhật vật tư: PM3 + Cáp nguồn",
+      "id": 22,
+      "timestamp": "2025-10-15T07:29:53.694Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Cập nhật vật tư",
+      "details": "Cập nhật vật tư: FA0A",
+      "id": 23,
+      "timestamp": "2025-10-15T07:30:28.093Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Tạo sự vụ",
+      "details": "Tạo sự vụ: Xử lý UL-HLG549",
+      "id": 24,
+      "timestamp": "2025-10-15T23:43:18.220Z",
+      "type": "task",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Cập nhật vật tư",
+      "details": "Cập nhật vật tư: BPQ7",
+      "id": 25,
+      "timestamp": "2025-10-16T00:54:20.352Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Yêu cầu chuyển trả",
+      "details": "Tạo yêu cầu chuyển trả vật tư 771227400029 - BPQ7 (Hỏng) từ Kho Hạ Tầng về Kho Net",
+      "id": 26,
+      "timestamp": "2025-10-16T00:54:25.237Z",
+      "type": "return-request",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Hủy yêu cầu trả",
+      "details": "Hủy yêu cầu trả vật tư 771227400029 - BPQ7 về Kho Net",
+      "id": 27,
+      "timestamp": "2025-10-16T00:54:41.384Z",
+      "type": "return-cancelled",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Cập nhật vật tư",
+      "details": "Cập nhật vật tư: BPQ7",
+      "id": 28,
+      "timestamp": "2025-10-16T01:04:00.136Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Yêu cầu chuyển trả",
+      "details": "Tạo yêu cầu chuyển trả vật tư 254315100451 - FS0 (Sẵn sàng) từ Kho Hạ Tầng về Kho Net",
+      "id": 29,
+      "timestamp": "2025-10-16T01:50:18.700Z",
+      "type": "return-request",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Yêu cầu chuyển trả",
+      "details": "Tạo yêu cầu chuyển trả vật tư 249878300937 - BPC (Hỏng) từ Kho Hạ Tầng về Kho Net",
+      "id": 30,
+      "timestamp": "2025-10-16T01:50:24.222Z",
+      "type": "return-request",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Yêu cầu chuyển trả",
+      "details": "Tạo yêu cầu chuyển trả vật tư 716937700801 - PM3 + Cáp nguồn (Sẵn sàng) từ Kho Hạ Tầng về Kho Net",
+      "id": 31,
+      "timestamp": "2025-10-16T01:50:29.270Z",
+      "type": "return-request",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Yêu cầu chuyển trả",
+      "details": "Tạo yêu cầu chuyển trả vật tư 219115037507 - FA0A (Sẵn sàng) từ Kho Hạ Tầng về Kho Net",
+      "id": 32,
+      "timestamp": "2025-10-16T01:50:31.510Z",
+      "type": "return-request",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Yêu cầu chuyển trả",
+      "details": "Tạo yêu cầu chuyển trả vật tư 771227400029 - BPQ7 (Hỏng) từ Kho Hạ Tầng về Kho Net",
+      "id": 33,
+      "timestamp": "2025-10-16T01:50:41.359Z",
+      "type": "return-request",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Xác nhận nhận trả",
+      "details": "Xác nhận nhận trả vật tư 771227400029 - BPQ7 (Hỏng) từ Kho Hạ Tầng (Yêu cầu bởi: Tạ Bắc Sơn)",
+      "id": 34,
+      "timestamp": "2025-10-16T01:56:24.480Z",
+      "type": "return-confirmed",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Xác nhận nhận trả",
+      "details": "Xác nhận nhận trả vật tư 716937700801 - PM3 + Cáp nguồn (Sẵn sàng) từ Kho Hạ Tầng (Yêu cầu bởi: Tạ Bắc Sơn)",
+      "id": 35,
+      "timestamp": "2025-10-16T01:56:39.972Z",
+      "type": "return-confirmed",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Xác nhận nhận trả",
+      "details": "Xác nhận nhận trả vật tư 219115037507 - FA0A (Sẵn sàng) từ Kho Hạ Tầng (Yêu cầu bởi: Tạ Bắc Sơn)",
+      "id": 36,
+      "timestamp": "2025-10-16T01:56:51.427Z",
+      "type": "return-confirmed",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Xác nhận nhận trả",
+      "details": "Xác nhận nhận trả vật tư 254315100451 - FS0 (Sẵn sàng) từ Kho Hạ Tầng (Yêu cầu bởi: Tạ Bắc Sơn)",
+      "id": 37,
+      "timestamp": "2025-10-16T01:57:03.283Z",
+      "type": "return-confirmed",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Xác nhận nhận trả",
+      "details": "Xác nhận nhận trả vật tư 249878300937 - BPC (Hỏng) từ Kho Hạ Tầng (Yêu cầu bởi: Tạ Bắc Sơn)",
+      "id": 38,
+      "timestamp": "2025-10-16T01:57:13.407Z",
+      "type": "return-confirmed",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Yêu cầu giao vật tư",
+      "details": "Tạo yêu cầu giao vật tư 219531983889 - R8862A S2100 cho sự vụ \"Xử lý UL-HLG549\". Ghi chú: Giao Sơn xử lý TTS 7093655 trạm UL_HLG549B_QTI ngày 16/10/2025",
+      "id": 39,
+      "timestamp": "2025-10-16T02:04:07.666Z",
+      "type": "delivery-request",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Xác nhận giao vật tư",
+      "details": "Xác nhận nhận vật tư 219531983889 - R8862A S2100 cho sự vụ \"Xử lý UL-HLG549\" (Yêu cầu bởi: Bùi Thị Thúy Vân)",
+      "id": 40,
+      "timestamp": "2025-10-16T02:05:04.070Z",
+      "type": "delivery-confirmed",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: BPQ7 vào Kho Net",
+      "id": 41,
+      "timestamp": "2025-10-16T02:07:35.099Z",
+      "type": "inventory",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Yêu cầu giao vật tư",
+      "details": "Tạo yêu cầu giao vật tư 771227400022 - BPQ7 cho sự vụ \"Xử lý UL-HLG047M\". Ghi chú: Giao Hùng xử lý TTS 7092139 trạm UL-HLG047M_QTI\n",
+      "id": 42,
+      "timestamp": "2025-10-16T02:08:35.593Z",
+      "type": "delivery-request",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Xác nhận giao vật tư",
+      "details": "Xác nhận nhận vật tư 771227400022 - BPQ7 cho sự vụ \"Xử lý UL-HLG047M\" (Yêu cầu bởi: Bùi Thị Thúy Vân)",
+      "id": 43,
+      "timestamp": "2025-10-16T02:09:23.813Z",
+      "type": "delivery-confirmed",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Đóng sự vụ",
+      "details": "Đóng sự vụ: Xử lý UL-HLG047M",
+      "id": 44,
+      "timestamp": "2025-10-16T02:10:39.601Z",
+      "type": "task",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Tạo sự vụ",
+      "details": "Tạo sự vụ: Xử lý UL-VLH004M",
+      "id": 45,
+      "timestamp": "2025-10-16T03:00:33.935Z",
+      "type": "task",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: SFP 10G 1,4km vào Kho Net",
+      "id": 46,
+      "timestamp": "2025-10-16T03:00:55.963Z",
+      "type": "inventory",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: SFP 10G 1,4km vào Kho Net",
+      "id": 47,
+      "timestamp": "2025-10-16T03:01:41.693Z",
+      "type": "inventory",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Yêu cầu giao vật tư",
+      "details": "Tạo yêu cầu giao vật tư HB222600082254 - SFP 10G 1,4km cho sự vụ \"Xử lý UL-VLH004M\". Ghi chú: A Sơn nhận xử lý TTS 7100525, UL VLH004M_QTI\n",
+      "id": 48,
+      "timestamp": "2025-10-16T03:02:12.818Z",
+      "type": "delivery-request",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Yêu cầu giao vật tư",
+      "details": "Tạo yêu cầu giao vật tư HB222600080461 - SFP 10G 1,4km cho sự vụ \"Xử lý UL-VLH004M\". Ghi chú: A Sơn nhận xử lý TTS 7100525, UL VLH004M_QTI\n",
+      "id": 49,
+      "timestamp": "2025-10-16T03:02:26.805Z",
+      "type": "delivery-request",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Xác nhận giao vật tư",
+      "details": "Xác nhận nhận vật tư HB222600080461 - SFP 10G 1,4km cho sự vụ \"Xử lý UL-VLH004M\" (Yêu cầu bởi: Bùi Thị Thúy Vân)",
+      "id": 50,
+      "timestamp": "2025-10-16T03:12:50.223Z",
+      "type": "delivery-confirmed",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Xác nhận giao vật tư",
+      "details": "Xác nhận nhận vật tư HB222600082254 - SFP 10G 1,4km cho sự vụ \"Xử lý UL-VLH004M\" (Yêu cầu bởi: Bùi Thị Thúy Vân)",
+      "id": 51,
+      "timestamp": "2025-10-16T03:12:52.506Z",
+      "type": "delivery-confirmed",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Tạo sự vụ",
+      "details": "Tạo sự vụ: SVĐ 1254 ĐH/KTM-VNPT NET",
+      "id": 52,
+      "timestamp": "2025-10-16T09:06:24.086Z",
+      "type": "task",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: SFP 10G 1.4km vào Kho Hạ Tầng",
+      "id": 53,
+      "timestamp": "2025-10-20T00:51:08.289Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: SFP 10G 10km vào Kho Hạ Tầng",
+      "id": 54,
+      "timestamp": "2025-10-20T00:52:24.156Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Cập nhật vật tư",
+      "details": "Cập nhật vật tư: SFP 10G 10km",
+      "id": 55,
+      "timestamp": "2025-10-20T00:52:46.692Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Yêu cầu chuyển trả",
+      "details": "Tạo yêu cầu chuyển trả vật tư ZTE24150061718 - SFP 10G 1.4km (Hỏng) từ Kho Hạ Tầng về Kho Net",
+      "id": 56,
+      "timestamp": "2025-10-20T01:31:33.984Z",
+      "type": "return-request",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Yêu cầu chuyển trả",
+      "details": "Tạo yêu cầu chuyển trả vật tư BT2405080457 - SFP 10G 10km (Hỏng) từ Kho Hạ Tầng về Kho Net",
+      "id": 57,
+      "timestamp": "2025-10-20T01:31:39.411Z",
+      "type": "return-request",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: RRU 9224E vào Kho Hạ Tầng",
+      "id": 58,
+      "timestamp": "2025-10-20T06:30:06.467Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Xác nhận nhận trả",
+      "details": "Xác nhận nhận trả vật tư ZTE24150061718 - SFP 10G 1.4km (Hỏng) từ Kho Hạ Tầng (Yêu cầu bởi: Tạ Bắc Sơn)",
+      "id": 59,
+      "timestamp": "2025-10-20T07:45:51.249Z",
+      "type": "return-confirmed",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Xác nhận nhận trả",
+      "details": "Xác nhận nhận trả vật tư BT2405080457 - SFP 10G 10km (Hỏng) từ Kho Hạ Tầng (Yêu cầu bởi: Tạ Bắc Sơn)",
+      "id": 60,
+      "timestamp": "2025-10-20T07:46:00.879Z",
+      "type": "return-confirmed",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Đóng sự vụ",
+      "details": "Đóng sự vụ: Xử lý UL-VLH004M",
+      "id": 61,
+      "timestamp": "2025-10-20T09:57:58.639Z",
+      "type": "task",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: R9264 M1821+Jack nguồn vào Kho Net",
+      "id": 62,
+      "timestamp": "2025-10-20T10:01:02.135Z",
+      "type": "inventory",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Yêu cầu giao vật tư",
+      "details": "Tạo yêu cầu giao vật tư 219531874789 - R9264 M1821+Jack nguồn cho sự vụ \"SVĐ 1254 ĐH/KTM-VNPT NET\". Ghi chú: Giao a Sơn theo SVĐ 1254  ĐH/KTM-VNPT Net ngày 22/09/2025\n1700 TTr-KT ngày 30/09/2025",
+      "id": 63,
+      "timestamp": "2025-10-20T10:01:39.632Z",
+      "type": "delivery-request",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Xác nhận giao vật tư",
+      "details": "Xác nhận nhận vật tư 219531874789 - R9264 M1821+Jack nguồn cho sự vụ \"SVĐ 1254 ĐH/KTM-VNPT NET\" (Yêu cầu bởi: Bùi Thị Thúy Vân)",
+      "id": 64,
+      "timestamp": "2025-10-20T10:02:11.362Z",
+      "type": "delivery-confirmed",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: DCPD7 vào Kho Net",
+      "id": 65,
+      "timestamp": "2025-10-23T00:16:56.355Z",
+      "type": "inventory",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Tạo sự vụ",
+      "details": "Tạo sự vụ: Xử lý SR-GLH004M",
+      "id": 66,
+      "timestamp": "2025-10-23T00:21:21.109Z",
+      "type": "task",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Tạo sự vụ",
+      "details": "Tạo sự vụ: Xử lý 3G-HLG021M",
+      "id": 67,
+      "timestamp": "2025-10-23T01:00:16.563Z",
+      "type": "task",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: BPC vào Kho Hạ Tầng",
+      "id": 68,
+      "timestamp": "2025-10-23T06:50:16.012Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: FS0 vào Kho Hạ Tầng",
+      "id": 69,
+      "timestamp": "2025-10-23T06:51:49.047Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Cập nhật vật tư",
+      "details": "Cập nhật vật tư: BPC",
+      "id": 70,
+      "timestamp": "2025-10-23T06:52:01.722Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: FAN vào Kho Hạ Tầng",
+      "id": 71,
+      "timestamp": "2025-10-23T06:55:28.189Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: PM0 vào Kho Hạ Tầng",
+      "id": 72,
+      "timestamp": "2025-10-23T06:57:28.369Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: DCPD10B vào Kho Hạ Tầng",
+      "id": 73,
+      "timestamp": "2025-10-23T07:24:43.651Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    }
+  ],
+  "returnRequests": [
+    null,
+    {
+      "confirmedBy": "Bùi Thị Thúy Vân",
+      "confirmedDate": "2025-10-16T01:57:03.077Z",
+      "id": 1,
+      "itemCondition": "available",
+      "itemId": 9,
+      "itemName": "FS0",
+      "itemSerial": "254315100451",
+      "notes": "Chuyển trả vật tư sẵn sàng",
+      "requestedBy": "Tạ Bắc Sơn",
+      "requestedDate": "2025-10-16T01:50:18.497Z",
+      "requestedFrom": "infrastructure",
+      "status": "confirmed",
+      "taskId": 1,
+      "taskName": "Xử lý UL-HLG047M"
+    },
+    {
+      "confirmedBy": "Bùi Thị Thúy Vân",
+      "confirmedDate": "2025-10-16T01:57:13.200Z",
+      "id": 2,
+      "itemCondition": "damaged",
+      "itemId": 10,
+      "itemName": "BPC",
+      "itemSerial": "249878300937",
+      "notes": "Chuyển trả vật tư hỏng",
+      "requestedBy": "Tạ Bắc Sơn",
+      "requestedDate": "2025-10-16T01:50:24.025Z",
+      "requestedFrom": "infrastructure",
+      "status": "confirmed",
+      "taskId": 1,
+      "taskName": "Xử lý UL-HLG047M"
+    },
+    {
+      "confirmedBy": "Bùi Thị Thúy Vân",
+      "confirmedDate": "2025-10-16T01:56:39.766Z",
+      "id": 3,
+      "itemCondition": "available",
+      "itemId": 11,
+      "itemName": "PM3 + Cáp nguồn",
+      "itemSerial": "716937700801",
+      "notes": "Chuyển trả vật tư sẵn sàng",
+      "requestedBy": "Tạ Bắc Sơn",
+      "requestedDate": "2025-10-16T01:50:29.072Z",
+      "requestedFrom": "infrastructure",
+      "status": "confirmed",
+      "taskId": 1,
+      "taskName": "Xử lý UL-HLG047M"
+    },
+    {
+      "confirmedBy": "Bùi Thị Thúy Vân",
+      "confirmedDate": "2025-10-16T01:56:51.222Z",
+      "id": 4,
+      "itemCondition": "available",
+      "itemId": 12,
+      "itemName": "FA0A",
+      "itemSerial": "219115037507",
+      "notes": "Chuyển trả vật tư sẵn sàng",
+      "requestedBy": "Tạ Bắc Sơn",
+      "requestedDate": "2025-10-16T01:50:31.312Z",
+      "requestedFrom": "infrastructure",
+      "status": "confirmed",
+      "taskId": 1,
+      "taskName": "Xử lý UL-HLG047M"
+    },
+    {
+      "confirmedBy": "Bùi Thị Thúy Vân",
+      "confirmedDate": "2025-10-16T01:56:24.256Z",
+      "id": 5,
+      "itemCondition": "damaged",
+      "itemId": 8,
+      "itemName": "BPQ7",
+      "itemSerial": "771227400029",
+      "notes": "Chuyển trả vật tư hỏng",
+      "requestedBy": "Tạ Bắc Sơn",
+      "requestedDate": "2025-10-16T01:50:41.160Z",
+      "requestedFrom": "infrastructure",
+      "status": "confirmed",
+      "taskId": 1,
+      "taskName": "Xử lý UL-HLG047M"
+    },
+    {
+      "confirmedBy": "Bùi Thị Thúy Vân",
+      "confirmedDate": "2025-10-20T07:45:50.970Z",
+      "id": 6,
+      "itemCondition": "damaged",
+      "itemId": 16,
+      "itemName": "SFP 10G 1.4km",
+      "itemSerial": "ZTE24150061718",
+      "notes": "Chuyển trả vật tư hỏng",
+      "requestedBy": "Tạ Bắc Sơn",
+      "requestedDate": "2025-10-20T01:31:33.735Z",
+      "requestedFrom": "infrastructure",
+      "status": "confirmed",
+      "taskId": 3,
+      "taskName": "Xử lý UL-VLH004M"
+    },
+    {
+      "confirmedBy": "Bùi Thị Thúy Vân",
+      "confirmedDate": "2025-10-20T07:46:00.630Z",
+      "id": 7,
+      "itemCondition": "damaged",
+      "itemId": 17,
+      "itemName": "SFP 10G 10km",
+      "itemSerial": "BT2405080457",
+      "notes": "Chuyển trả vật tư hỏng",
+      "requestedBy": "Tạ Bắc Sơn",
+      "requestedDate": "2025-10-20T01:31:39.167Z",
+      "requestedFrom": "infrastructure",
+      "status": "confirmed",
+      "taskId": 3,
+      "taskName": "Xử lý UL-VLH004M"
+    }
+  ],
+  "tasks": [
+    null,
+    {
+      "assignedItems": [
+        8,
+        7,
+        6,
+        5,
+        13
+      ],
+      "completedBy": "Tạ Bắc Sơn",
+      "createdBy": "Tạ Bắc Sơn",
+      "createdByWarehouse": "Kho Hạ Tầng",
+      "createdDate": "2025-10-15T02:57:34.233Z",
+      "description": "MLL 3 cell 3G lỗi card BPC",
+      "id": 1,
+      "location": "Hải Lăng",
+      "name": "Xử lý UL-HLG047M",
+      "priority": "medium",
+      "status": "completed",
+      "type": "xuly"
+    },
+    {
+      "assignedItems": [
+        4
+      ],
+      "createdBy": "Tạ Bắc Sơn",
+      "createdByWarehouse": "Kho Hạ Tầng",
+      "createdDate": "2025-10-15T23:43:17.949Z",
+      "description": "Xử lý MLL RRU ",
+      "id": 2,
+      "location": "Hải Lăng",
+      "name": "Xử lý UL-HLG549",
+      "priority": "medium",
+      "status": "pending",
+      "type": "xuly"
+    },
+    {
+      "assignedItems": [
+        15,
+        14
+      ],
+      "completedBy": "Tạ Bắc Sơn",
+      "createdBy": "Tạ Bắc Sơn",
+      "createdByWarehouse": "Kho Hạ Tầng",
+      "createdDate": "2025-10-16T03:00:33.734Z",
+      "description": "Mất LL cell RRU Thủy Ba tây 4G-604M11",
+      "id": 3,
+      "location": "Vĩnh Linh",
+      "name": "Xử lý UL-VLH004M",
+      "priority": "medium",
+      "status": "completed",
+      "type": "xuly"
+    },
+    {
+      "assignedItems": [
+        19
+      ],
+      "createdBy": "Tạ Bắc Sơn",
+      "createdByWarehouse": "Kho Hạ Tầng",
+      "createdDate": "2025-10-16T09:06:23.881Z",
+      "description": "Số: 1354 ĐH/KTM-VNPT NET Hà Nội, ngày 13 tháng 10 năm 2025\nTiếp theo Sự vụ điện số 1151ĐH-KTM/VNPT Net ngày 28/07/2025 của Ban Khai\nthác mạng về việc “Thực hiện khai báo lại cấu hình và điều chuyển license, bổ sung thiết\nbị cho các cell TSD cao tại các tỉnh miền Trung.”",
+      "id": 4,
+      "location": "Hướng Hóa",
+      "name": "SVĐ 1254 ĐH/KTM-VNPT NET",
+      "priority": "low",
+      "status": "pending",
+      "type": "swap"
+    },
+    {
+      "createdBy": "Tạ Bắc Sơn",
+      "createdByWarehouse": "Kho Hạ Tầng",
+      "createdDate": "2025-10-23T00:21:20.855Z",
+      "description": "Hỏng phối nguồn DCDP MLL SR-GLH004M và UL-GLH504",
+      "id": 5,
+      "location": "Gio Linh",
+      "name": "Xử lý SR-GLH004M",
+      "priority": "high",
+      "status": "pending",
+      "type": "xuly"
+    },
+    {
+      "createdBy": "Tạ Bắc Sơn",
+      "createdByWarehouse": "Kho Hạ Tầng",
+      "createdDate": "2025-10-23T01:00:16.310Z",
+      "description": "VTT nhu cầu card BPC trạm 3G-HLG021, mã phiếu 7152546",
+      "id": 6,
+      "location": "Hải Lăng",
+      "name": "Xử lý 3G-HLG021M",
+      "priority": "medium",
+      "status": "pending",
+      "type": "xuly"
+    }
+  ],
+  "users": {
+    "8OGyuR4xyqTPVzKycJvrIRcMNdR2": {
+      "admin": false,
+      "createdAt": "2025-10-14T02:10:03.896Z",
+      "displayName": "Bùi Thị Thúy Vân",
+      "email": "vanbtt@vnpt.vn",
+      "isActive": true,
+      "lastLogin": "2025-10-14T02:10:03.896Z",
+      "uid": "8OGyuR4xyqTPVzKycJvrIRcMNdR2",
+      "warehouse": "net"
+    },
+    "dONM2DHEvGPfuByAISx4i4D2fQP2": {
+      "admin": false,
+      "createdAt": "2025-10-10T03:39:33.423Z",
+      "displayName": "Tạ Bắc Sơn",
+      "email": "ebacson@gmail.com",
+      "isActive": true,
+      "lastLogin": "2025-10-10T03:39:33.423Z",
+      "uid": "dONM2DHEvGPfuByAISx4i4D2fQP2",
+      "warehouse": "infrastructure"
+    },
+    "rH4vl4Qv6sWnE7iYRnO0oXW6xf53": {
+      "admin": false,
+      "createdAt": "2025-10-14T01:54:29.491Z",
+      "displayName": "Hoàng Duy Hùng",
+      "email": "hunghd.qti@gmail.com",
+      "isActive": true,
+      "lastLogin": "2025-10-14T01:54:29.491Z",
+      "uid": "rH4vl4Qv6sWnE7iYRnO0oXW6xf53",
+      "warehouse": "infrastructure"
+    }
+  }
+}

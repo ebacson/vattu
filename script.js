@@ -3058,9 +3058,11 @@ function viewTask(taskId) {
     
     // Get delivery requests for this task
     const taskDeliveries = deliveryRequestsData.filter(r => r.taskId === taskId);
+    const confirmedDeliveries = taskDeliveries.filter(r => r.status === 'confirmed');
     
     // Get return requests for items from this task
     const taskReturns = returnRequestsData.filter(r => r.taskId === taskId);
+    const confirmedReturns = taskReturns.filter(r => r.status === 'confirmed');
     
     // Get logs related to this task
     const taskLogs = logsData.filter(log => 
@@ -3068,12 +3070,22 @@ function viewTask(taskId) {
         log.details.includes(`#${taskId}`)
     ).sort((a, b) => b.timestamp - a.timestamp);
     
+    // Calculate statistics
+    const totalDelivered = confirmedDeliveries.length;
+    const totalReturned = confirmedReturns.length;
+    const totalItemsEverAssigned = new Set([
+        ...assignedItems.map(i => i.id),
+        ...confirmedDeliveries.map(d => d.itemId),
+        ...confirmedReturns.map(r => r.itemId)
+    ]).size;
+    
     // Build modal content
     let content = `
         <!-- Task Information -->
         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
             <h3 style="margin-top: 0; color: #2c3e50;">
                 <i class="fas fa-tasks"></i> ${task.name}
+                ${task.status === 'completed' ? '<span class="status-badge completed" style="margin-left: 15px;">Đã hoàn thành</span>' : ''}
             </h3>
             <div style="display: grid; grid-template-columns: 150px 1fr; gap: 12px; margin-top: 15px;">
                 <strong>Loại sự vụ:</strong> <span>${getTaskTypeText(task.type)}</span>
@@ -3089,6 +3101,31 @@ function viewTask(taskId) {
             <div style="margin-top: 15px;">
                 <strong>Mô tả:</strong>
                 <p style="margin-top: 5px; color: #555;">${task.description}</p>
+            </div>
+        </div>
+        
+        <!-- Statistics Summary -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h4 style="margin-top: 0; color: white;">
+                <i class="fas fa-chart-bar"></i> Thống Kê Tổng Quan
+            </h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 15px;">
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 6px; text-align: center;">
+                    <div style="font-size: 2rem; font-weight: bold;">${totalItemsEverAssigned}</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">Tổng vật tư đã gán</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 6px; text-align: center;">
+                    <div style="font-size: 2rem; font-weight: bold;">${assignedItems.length}</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">Vật tư hiện tại</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 6px; text-align: center;">
+                    <div style="font-size: 2rem; font-weight: bold;">${totalDelivered}</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">${userWarehouse === 'infrastructure' ? 'Đã nhận' : 'Đã giao'}</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 6px; text-align: center;">
+                    <div style="font-size: 2rem; font-weight: bold;">${totalReturned}</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">${userWarehouse === 'net' ? 'Thu hồi' : 'Đã trả'}</div>
+                </div>
             </div>
         </div>
         
