@@ -642,7 +642,7 @@ function renderTasksList() {
                 <p>${task.description}</p>
             </div>
             <div class="task-actions">
-                <button class="btn btn-sm btn-primary" onclick="viewTask(${task.id})">Xem chi tiết</button>
+                <button class="btn btn-sm btn-primary view-task-btn" data-task-id="${task.id}">Xem chi tiết</button>
                 ${task.status !== 'completed' ? `
                     <button class="btn btn-sm btn-success" onclick="requestItems(${task.id})">Yêu cầu vật tư</button>
                     <button class="btn btn-sm btn-danger" onclick="closeTask(${task.id})">Đóng sự vụ</button>
@@ -651,6 +651,22 @@ function renderTasksList() {
             </div>
         </div>
     `).join('');
+    
+    // Add event listeners for view task buttons
+    tasksList.querySelectorAll('.view-task-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const taskId = parseInt(this.dataset.taskId, 10);
+            console.log('🔘 Button clicked, taskId:', taskId);
+            if (taskId && typeof viewTask === 'function') {
+                viewTask(taskId);
+            } else {
+                console.error('❌ Cannot call viewTask. taskId:', taskId, 'viewTask type:', typeof viewTask);
+                showToast('error', 'Lỗi!', 'Không thể mở chi tiết sự vụ.');
+            }
+        });
+    });
 }
 
 // Transfers Management
@@ -3045,11 +3061,23 @@ function showConfirmDialog(title, message, confirmText = 'Xác nhận', cancelTe
 
 // Placeholder functions for future implementation
 function viewTask(taskId) {
-    const task = tasksData.find(t => t.id === taskId);
+    console.log('🔍 viewTask called with taskId:', taskId, 'type:', typeof taskId);
+    
+    // Ensure taskId is a number
+    const numericTaskId = typeof taskId === 'string' ? parseInt(taskId, 10) : taskId;
+    
+    console.log('📊 tasksData length:', tasksData.length);
+    console.log('📋 All task IDs:', tasksData.map(t => ({ id: t.id, status: t.status, name: t.name })));
+    
+    const task = tasksData.find(t => t.id === numericTaskId || t.id === taskId);
+    
     if (!task) {
-        showToast('error', 'Lỗi!', 'Không tìm thấy sự vụ.');
+        console.error('❌ Task not found! taskId:', numericTaskId, 'Available IDs:', tasksData.map(t => t.id));
+        showToast('error', 'Lỗi!', `Không tìm thấy sự vụ với ID: ${numericTaskId}`);
         return;
     }
+    
+    console.log('✅ Task found:', task.name, 'Status:', task.status);
     
     // Get assigned items
     const assignedItems = inventoryData.filter(item => 
