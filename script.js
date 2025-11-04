@@ -2719,7 +2719,16 @@ function formatDate(date) {
 }
 
 function formatDateTime(date) {
-    return date.toLocaleString('vi-VN');
+    if (!date) {
+        return '-';
+    }
+    // Handle both Date objects and timestamps
+    const dateObj = date instanceof Date ? date : new Date(date);
+    // Check if date is valid
+    if (isNaN(dateObj.getTime())) {
+        return '-';
+    }
+    return dateObj.toLocaleString('vi-VN');
 }
 
 function formatTimeAgo(date) {
@@ -3122,8 +3131,8 @@ function viewTask(taskId) {
                 <strong>Địa điểm:</strong> <span>${task.location}</span>
                 <strong>Người tạo:</strong> <span>${task.createdBy || 'Không rõ'}${task.createdByWarehouse ? ` (${task.createdByWarehouse})` : ''}</span>
                 <strong>Ngày tạo:</strong> <span>${formatDateTime(task.createdDate)}</span>
-                ${task.status === 'completed' ? `
-                    <strong>Hoàn thành:</strong> <span>${formatDateTime(task.completedDate)} bởi ${task.completedBy}</span>
+                ${task.status === 'completed' && task.completedDate ? `
+                    <strong>Hoàn thành:</strong> <span>${formatDateTime(task.completedDate)} bởi ${task.completedBy || 'Không rõ'}</span>
                 ` : ''}
             </div>
             <div style="margin-top: 15px;">
