@@ -135,19 +135,95 @@
       "status": "confirmed",
       "taskId": 4,
       "taskName": "SVĐ 1254 ĐH/KTM-VNPT NET"
+    },
+    {
+      "confirmedBy": "Tạ Bắc Sơn",
+      "confirmedDate": "2025-10-27T00:44:34.261Z",
+      "id": 10,
+      "itemId": 26,
+      "itemName": "FA3C",
+      "itemSerial": "219521191128",
+      "notes": "",
+      "requestedBy": "Bùi Thị Thúy Vân",
+      "requestedDate": "2025-10-26T04:23:18.879Z",
+      "requestedFrom": "net",
+      "status": "confirmed",
+      "taskId": 6,
+      "taskName": "Xử lý 3G-HLG021M"
+    },
+    {
+      "confirmedBy": "Tạ Bắc Sơn",
+      "confirmedDate": "2025-10-27T00:44:37.082Z",
+      "id": 11,
+      "itemId": 27,
+      "itemName": "PM5+cáp nguồn",
+      "itemSerial": "766834600541",
+      "notes": "Anh Sơn nhận xử lý 3G-HLG021M_QTI; TTS 7152546\n",
+      "requestedBy": "Bùi Thị Thúy Vân",
+      "requestedDate": "2025-10-26T04:23:30.480Z",
+      "requestedFrom": "net",
+      "status": "confirmed",
+      "taskId": 6,
+      "taskName": "Xử lý 3G-HLG021M"
+    },
+    {
+      "confirmedBy": "Tạ Bắc Sơn",
+      "confirmedDate": "2025-10-27T00:44:39.800Z",
+      "id": 12,
+      "itemId": 28,
+      "itemName": "BPQ7",
+      "itemSerial": "771227400061",
+      "notes": "Anh Sơn nhận xử lý 3G-HLG021M_QTI; TTS 7152546\n",
+      "requestedBy": "Bùi Thị Thúy Vân",
+      "requestedDate": "2025-10-26T04:23:39.319Z",
+      "requestedFrom": "net",
+      "status": "confirmed",
+      "taskId": 6,
+      "taskName": "Xử lý 3G-HLG021M"
+    },
+    {
+      "confirmedBy": "Tạ Bắc Sơn",
+      "confirmedDate": "2025-10-27T00:44:42.035Z",
+      "id": 13,
+      "itemId": 29,
+      "itemName": "FS5A",
+      "itemSerial": "771781000082",
+      "notes": "Anh Sơn nhận xử lý 3G-HLG021M_QTI; TTS 7152546\n",
+      "requestedBy": "Bùi Thị Thúy Vân",
+      "requestedDate": "2025-10-26T04:23:49.837Z",
+      "requestedFrom": "net",
+      "status": "confirmed",
+      "taskId": 6,
+      "taskName": "Xử lý 3G-HLG021M"
+    },
+    {
+      "confirmedBy": "Tạ Bắc Sơn",
+      "confirmedDate": "2025-11-03T15:08:24.361Z",
+      "id": 14,
+      "itemId": 1,
+      "itemName": "R8862A S2100",
+      "itemSerial": "219446108373",
+      "notes": "Giao Anh Sơn xử lý DKG034M,  7214547\n",
+      "requestedBy": "Bùi Thị Thúy Vân",
+      "requestedDate": "2025-11-03T15:03:06.942Z",
+      "requestedFrom": "net",
+      "status": "confirmed",
+      "taskId": 7,
+      "taskName": "Xử lý 3G-DKG034"
     }
   ],
   "inventory": [
     null,
     {
-      "condition": "available",
+      "condition": "in-use",
       "dateAdded": "2025-10-14T01:57:52.628Z",
       "description": "",
       "id": 1,
       "name": "R8862A S2100",
       "serial": "219446108373",
       "source": "Nhận DHI",
-      "warehouse": "net"
+      "taskId": 7,
+      "warehouse": "infrastructure"
     },
     {
       "condition": "available",
@@ -177,8 +253,7 @@
       "name": "R8862A S2100",
       "serial": "219531983889",
       "source": "Nhận từ kho TT Net3",
-      "taskId": 2,
-      "warehouse": "infrastructure"
+      "warehouse": "net"
     },
     {
       "condition": "in-use",
@@ -356,8 +431,7 @@
       "name": "BPC",
       "serial": "249878301157",
       "source": "Thu hồi trạm GU-HLG021M",
-      "taskId": 6,
-      "warehouse": "infrastructure"
+      "warehouse": "net"
     },
     {
       "condition": "available",
@@ -367,8 +441,7 @@
       "name": "FS0",
       "serial": "248805800538",
       "source": "Thu hồi trạm GU-HLG021M",
-      "taskId": 6,
-      "warehouse": "infrastructure"
+      "warehouse": "net"
     },
     {
       "condition": "available",
@@ -378,8 +451,7 @@
       "name": "FAN",
       "serial": "210040061797",
       "source": "Thu hồi trạm GU-HLG021M",
-      "taskId": 6,
-      "warehouse": "infrastructure"
+      "warehouse": "net"
     },
     {
       "condition": "available",
@@ -389,8 +461,7 @@
       "name": "PM0",
       "serial": "249219300825",
       "source": "Thu hồi trạm GU-HLG021M",
-      "taskId": 6,
-      "warehouse": "infrastructure"
+      "warehouse": "net"
     },
     {
       "condition": "damaged",
@@ -400,7 +471,124 @@
       "name": "DCPD10B",
       "serial": "ZG5622273320",
       "source": "Thu hồi trạm SR-GLH004M",
-      "taskId": 5,
+      "warehouse": "net"
+    },
+    {
+      "condition": "in-use",
+      "dateAdded": "2025-10-26T04:20:55.629Z",
+      "description": "Anh Sơn nhận xử lý 3G-HLG021M_QTI; TTS 7152546\n",
+      "id": 26,
+      "name": "FA3C",
+      "serial": "219521191128",
+      "source": "Nhận theo 1366/TTr-KT ngày 21/08/2024 Về việc Điều chuyển vật tư dự phòng cho VNPT tỉnh/thành phục vụ xử lý lỗi thiết bị vô tuyến di động dịp Lễ Quốc khánh 2/9 năm 2024",
+      "taskId": 6,
+      "warehouse": "infrastructure"
+    },
+    {
+      "condition": "in-use",
+      "dateAdded": "2025-10-26T04:21:48.175Z",
+      "description": "Anh Sơn nhận xử lý 3G-HLG021M_QTI; TTS 7152546\n",
+      "id": 27,
+      "name": "PM5+cáp nguồn",
+      "serial": "766834600541",
+      "source": "Nhận theo 1445 TTR-KT ngày 19/08/2025 Về việc bàn giao vật tư cho VNPT Tỉnh/Tp thực hiện swap card các trạm ZTE và swap BBU các trạm Ericsson theo SVĐ 1067/ĐH-KTM/VNPT Net",
+      "taskId": 6,
+      "warehouse": "infrastructure"
+    },
+    {
+      "condition": "in-use",
+      "dateAdded": "2025-10-26T04:22:26.620Z",
+      "description": "Anh Sơn nhận xử lý 3G-HLG021M_QTI; TTS 7152546\n",
+      "id": 28,
+      "name": "BPQ7",
+      "serial": "771227400061",
+      "source": "Nhận theo 1645 TTr-KT ngày 22/09/2025 Về việc điều chuyển vật tư dự phòng cho VNPT tỉnh/thành phục vụ xử lý lỗi thiết bị vô tuyến di động (đợt tháng 09/2025)",
+      "taskId": 6,
+      "warehouse": "infrastructure"
+    },
+    {
+      "condition": "in-use",
+      "dateAdded": "2025-10-26T04:23:01.046Z",
+      "description": "Anh Sơn nhận xử lý 3G-HLG021M_QTI; TTS 7152546\n",
+      "id": 29,
+      "name": "FS5A",
+      "serial": "771781000082",
+      "source": "Thu hồi 1645 TTr-KT ngày 22/09/2025 Về việc điều chuyển vật tư dự phòng cho VNPT tỉnh/thành phục vụ xử lý lỗi thiết bị vô tuyến di động (đợt tháng 09/2025)",
+      "taskId": 6,
+      "warehouse": "infrastructure"
+    },
+    {
+      "condition": "damaged",
+      "dateAdded": "2025-11-01T04:23:39.822Z",
+      "description": "Thu hồi trạm 4G-HHA528, hỏng trước swap.",
+      "id": 30,
+      "name": "RRU8854",
+      "serial": "219121985627",
+      "source": "Thu hồi trạm 4G-HLG528",
+      "warehouse": "net"
+    },
+    {
+      "condition": "available",
+      "dateAdded": "2025-11-03T14:56:39.919Z",
+      "description": "Giao Anh Sơn xử lý GU-HLG008M; TTS 7236529\n",
+      "id": 31,
+      "name": "BPC",
+      "serial": "254177300308",
+      "source": "1868 TTr-KT ngày 23/10/2025",
+      "warehouse": "net"
+    },
+    {
+      "condition": "available",
+      "dateAdded": "2025-11-03T14:57:23.366Z",
+      "description": "Giao Anh Sơn xử lý GU-HLG008M; TTS 7236529\n",
+      "id": 32,
+      "name": "BPC",
+      "serial": "246771400022",
+      "source": "Nhận 1868 TTr-KT ngày 23/10/2025",
+      "warehouse": "net"
+    },
+    {
+      "condition": "damaged",
+      "dateAdded": "2025-11-04T06:42:34.413Z",
+      "description": "Việt thu ngày 4/11/2025",
+      "id": 33,
+      "name": "RRU 8840",
+      "serial": "219997720269",
+      "source": "Thu hồi trạm DKG034 hỏng",
+      "taskId": 7,
+      "warehouse": "infrastructure"
+    },
+    {
+      "condition": "available",
+      "dateAdded": "2025-11-04T06:44:11.941Z",
+      "description": "Việt thu hồi do swap RRU 8862 ngày 4/11/2025",
+      "id": 34,
+      "name": "RRU 8840",
+      "serial": "219997357958",
+      "source": "Thu hồi trạm DKG034M",
+      "taskId": 7,
+      "warehouse": "infrastructure"
+    },
+    {
+      "condition": "damaged",
+      "dateAdded": "2025-11-04T06:47:04.177Z",
+      "description": "Đại thu hồi card hỏng trạm HLG008M",
+      "id": 35,
+      "name": "BPC",
+      "serial": "254315300952",
+      "source": "Thu hồi card hỏng trạm HLG008M",
+      "taskId": 8,
+      "warehouse": "infrastructure"
+    },
+    {
+      "condition": "damaged",
+      "dateAdded": "2025-11-04T11:12:07.047Z",
+      "description": "Dương thu hồi ngày 4/11/2025",
+      "id": 36,
+      "name": "BPC",
+      "serial": "254315301492",
+      "source": "Thu hồi vật tư hỏng trạm UL-HHA046M",
+      "taskId": 9,
       "warehouse": "infrastructure"
     }
   ],
@@ -989,6 +1177,374 @@
       "timestamp": "2025-10-23T07:24:43.651Z",
       "type": "inventory",
       "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: FA3C vào Kho Net",
+      "id": 74,
+      "timestamp": "2025-10-26T04:20:55.948Z",
+      "type": "inventory",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: PM5+cáp nguồn vào Kho Net",
+      "id": 75,
+      "timestamp": "2025-10-26T04:21:48.426Z",
+      "type": "inventory",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: BPQ7 vào Kho Net",
+      "id": 76,
+      "timestamp": "2025-10-26T04:22:26.867Z",
+      "type": "inventory",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: FS5A vào Kho Net",
+      "id": 77,
+      "timestamp": "2025-10-26T04:23:01.303Z",
+      "type": "inventory",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Yêu cầu giao vật tư",
+      "details": "Tạo yêu cầu giao vật tư 219521191128 - FA3C cho sự vụ \"Xử lý 3G-HLG021M\"",
+      "id": 78,
+      "timestamp": "2025-10-26T04:23:19.131Z",
+      "type": "delivery-request",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Yêu cầu giao vật tư",
+      "details": "Tạo yêu cầu giao vật tư 766834600541 - PM5+cáp nguồn cho sự vụ \"Xử lý 3G-HLG021M\". Ghi chú: Anh Sơn nhận xử lý 3G-HLG021M_QTI; TTS 7152546\n",
+      "id": 79,
+      "timestamp": "2025-10-26T04:23:30.736Z",
+      "type": "delivery-request",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Yêu cầu giao vật tư",
+      "details": "Tạo yêu cầu giao vật tư 771227400061 - BPQ7 cho sự vụ \"Xử lý 3G-HLG021M\". Ghi chú: Anh Sơn nhận xử lý 3G-HLG021M_QTI; TTS 7152546\n",
+      "id": 80,
+      "timestamp": "2025-10-26T04:23:39.567Z",
+      "type": "delivery-request",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Yêu cầu giao vật tư",
+      "details": "Tạo yêu cầu giao vật tư 771781000082 - FS5A cho sự vụ \"Xử lý 3G-HLG021M\". Ghi chú: Anh Sơn nhận xử lý 3G-HLG021M_QTI; TTS 7152546\n",
+      "id": 81,
+      "timestamp": "2025-10-26T04:23:50.088Z",
+      "type": "delivery-request",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Xác nhận giao vật tư",
+      "details": "Xác nhận nhận vật tư 219521191128 - FA3C cho sự vụ \"Xử lý 3G-HLG021M\" (Yêu cầu bởi: Bùi Thị Thúy Vân)",
+      "id": 82,
+      "timestamp": "2025-10-27T00:44:34.513Z",
+      "type": "delivery-confirmed",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Xác nhận giao vật tư",
+      "details": "Xác nhận nhận vật tư 766834600541 - PM5+cáp nguồn cho sự vụ \"Xử lý 3G-HLG021M\" (Yêu cầu bởi: Bùi Thị Thúy Vân)",
+      "id": 83,
+      "timestamp": "2025-10-27T00:44:37.332Z",
+      "type": "delivery-confirmed",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Xác nhận giao vật tư",
+      "details": "Xác nhận nhận vật tư 771227400061 - BPQ7 cho sự vụ \"Xử lý 3G-HLG021M\" (Yêu cầu bởi: Bùi Thị Thúy Vân)",
+      "id": 84,
+      "timestamp": "2025-10-27T00:44:40.051Z",
+      "type": "delivery-confirmed",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Xác nhận giao vật tư",
+      "details": "Xác nhận nhận vật tư 771781000082 - FS5A cho sự vụ \"Xử lý 3G-HLG021M\" (Yêu cầu bởi: Bùi Thị Thúy Vân)",
+      "id": 85,
+      "timestamp": "2025-10-27T00:44:42.285Z",
+      "type": "delivery-confirmed",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Yêu cầu chuyển trả",
+      "details": "Tạo yêu cầu chuyển trả vật tư 249878301157 - BPC (Hỏng) từ Kho Hạ Tầng về Kho Net",
+      "id": 86,
+      "timestamp": "2025-10-27T00:45:40.855Z",
+      "type": "return-request",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Yêu cầu chuyển trả",
+      "details": "Tạo yêu cầu chuyển trả vật tư 248805800538 - FS0 (Sẵn sàng) từ Kho Hạ Tầng về Kho Net",
+      "id": 87,
+      "timestamp": "2025-10-27T00:45:50.008Z",
+      "type": "return-request",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Yêu cầu chuyển trả",
+      "details": "Tạo yêu cầu chuyển trả vật tư 210040061797 - FAN (Sẵn sàng) từ Kho Hạ Tầng về Kho Net",
+      "id": 88,
+      "timestamp": "2025-10-27T00:45:52.889Z",
+      "type": "return-request",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Yêu cầu chuyển trả",
+      "details": "Tạo yêu cầu chuyển trả vật tư 249219300825 - PM0 (Sẵn sàng) từ Kho Hạ Tầng về Kho Net",
+      "id": 89,
+      "timestamp": "2025-10-27T00:45:58.143Z",
+      "type": "return-request",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Yêu cầu chuyển trả",
+      "details": "Tạo yêu cầu chuyển trả vật tư ZG5622273320 - DCPD10B (Hỏng) từ Kho Hạ Tầng về Kho Net",
+      "id": 90,
+      "timestamp": "2025-10-27T00:46:06.071Z",
+      "type": "return-request",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Yêu cầu chuyển trả",
+      "details": "Tạo yêu cầu chuyển trả vật tư 219531983889 - R8862A S2100 (Đang sử dụng) từ Kho Hạ Tầng về Kho Net",
+      "id": 91,
+      "timestamp": "2025-10-27T00:47:28.832Z",
+      "type": "return-request",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Xác nhận nhận trả",
+      "details": "Xác nhận nhận trả vật tư 219531983889 - R8862A S2100 (Đang sử dụng) từ Kho Hạ Tầng (Yêu cầu bởi: Tạ Bắc Sơn)",
+      "id": 92,
+      "timestamp": "2025-10-27T07:40:20.172Z",
+      "type": "return-confirmed",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Xác nhận nhận trả",
+      "details": "Xác nhận nhận trả vật tư 249219300825 - PM0 (Sẵn sàng) từ Kho Hạ Tầng (Yêu cầu bởi: Tạ Bắc Sơn)",
+      "id": 93,
+      "timestamp": "2025-10-27T07:41:56.493Z",
+      "type": "return-confirmed",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Xác nhận nhận trả",
+      "details": "Xác nhận nhận trả vật tư 210040061797 - FAN (Sẵn sàng) từ Kho Hạ Tầng (Yêu cầu bởi: Tạ Bắc Sơn)",
+      "id": 94,
+      "timestamp": "2025-10-27T07:42:10.440Z",
+      "type": "return-confirmed",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Xác nhận nhận trả",
+      "details": "Xác nhận nhận trả vật tư 248805800538 - FS0 (Sẵn sàng) từ Kho Hạ Tầng (Yêu cầu bởi: Tạ Bắc Sơn)",
+      "id": 95,
+      "timestamp": "2025-10-27T07:42:23.923Z",
+      "type": "return-confirmed",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Xác nhận nhận trả",
+      "details": "Xác nhận nhận trả vật tư 249878301157 - BPC (Hỏng) từ Kho Hạ Tầng (Yêu cầu bởi: Tạ Bắc Sơn)",
+      "id": 96,
+      "timestamp": "2025-10-27T07:42:40.624Z",
+      "type": "return-confirmed",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Xác nhận nhận trả",
+      "details": "Xác nhận nhận trả vật tư ZG5622273320 - DCPD10B (Hỏng) từ Kho Hạ Tầng (Yêu cầu bởi: Tạ Bắc Sơn)",
+      "id": 97,
+      "timestamp": "2025-10-27T07:42:56.410Z",
+      "type": "return-confirmed",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Đóng sự vụ",
+      "details": "Đóng sự vụ: Xử lý 3G-HLG021M",
+      "id": 98,
+      "timestamp": "2025-10-27T08:41:45.096Z",
+      "type": "task",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Đóng sự vụ",
+      "details": "Đóng sự vụ: Xử lý SR-GLH004M",
+      "id": 99,
+      "timestamp": "2025-10-27T08:42:05.806Z",
+      "type": "task",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Đóng sự vụ",
+      "details": "Đóng sự vụ: Xử lý UL-HLG549",
+      "id": 100,
+      "timestamp": "2025-10-27T08:42:23.133Z",
+      "type": "task",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Tạo sự vụ",
+      "details": "Tạo sự vụ: Xử lý 3G-HHA031M",
+      "id": 101,
+      "timestamp": "2025-10-31T04:49:08.852Z",
+      "type": "task",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: RRU8854 vào Kho Hạ Tầng",
+      "id": 102,
+      "timestamp": "2025-11-01T04:23:40.085Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Cập nhật vật tư",
+      "details": "Cập nhật vật tư: RRU8854",
+      "id": 103,
+      "timestamp": "2025-11-01T04:24:11.120Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Yêu cầu chuyển trả",
+      "details": "Tạo yêu cầu chuyển trả vật tư 219121985627 - RRU8854 (Hỏng) từ Kho Hạ Tầng về Kho Net",
+      "id": 104,
+      "timestamp": "2025-11-01T04:24:20.462Z",
+      "type": "return-request",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Xác nhận nhận trả",
+      "details": "Xác nhận nhận trả vật tư 219121985627 - RRU8854 (Hỏng) từ Kho Hạ Tầng (Yêu cầu bởi: Tạ Bắc Sơn)",
+      "id": 105,
+      "timestamp": "2025-11-03T14:51:09.731Z",
+      "type": "return-confirmed",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: BPC vào Kho Net",
+      "id": 106,
+      "timestamp": "2025-11-03T14:56:40.131Z",
+      "type": "inventory",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: BPC vào Kho Net",
+      "id": 107,
+      "timestamp": "2025-11-03T14:57:23.575Z",
+      "type": "inventory",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Đóng sự vụ",
+      "details": "Đóng sự vụ: SVĐ 1254 ĐH/KTM-VNPT NET",
+      "id": 108,
+      "timestamp": "2025-11-03T15:00:58.196Z",
+      "type": "task",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Yêu cầu giao vật tư",
+      "details": "Tạo yêu cầu giao vật tư 219446108373 - R8862A S2100 cho sự vụ \"Xử lý 3G-DKG034\". Ghi chú: Giao Anh Sơn xử lý DKG034M,  7214547\n",
+      "id": 109,
+      "timestamp": "2025-11-03T15:03:07.167Z",
+      "type": "delivery-request",
+      "user": "Kho Net"
+    },
+    {
+      "action": "Xác nhận giao vật tư",
+      "details": "Xác nhận nhận vật tư 219446108373 - R8862A S2100 cho sự vụ \"Xử lý 3G-DKG034\" (Yêu cầu bởi: Bùi Thị Thúy Vân)",
+      "id": 110,
+      "timestamp": "2025-11-03T15:08:24.574Z",
+      "type": "delivery-confirmed",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Tạo sự vụ",
+      "details": "Tạo sự vụ: Xử lý GU-HLG008M",
+      "id": 111,
+      "timestamp": "2025-11-04T01:41:10.429Z",
+      "type": "task",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Tạo sự vụ",
+      "details": "Tạo sự vụ: Xử lý UL-HHA046M",
+      "id": 112,
+      "timestamp": "2025-11-04T01:42:13.310Z",
+      "type": "task",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: RRU 8840 vào Kho Hạ Tầng",
+      "id": 113,
+      "timestamp": "2025-11-04T06:42:34.615Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: RRU 8840 vào Kho Hạ Tầng",
+      "id": 114,
+      "timestamp": "2025-11-04T06:44:12.143Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: BPC vào Kho Hạ Tầng",
+      "id": 115,
+      "timestamp": "2025-11-04T06:47:04.388Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Thêm vật tư",
+      "details": "Thêm vật tư: BPC vào Kho Hạ Tầng",
+      "id": 116,
+      "timestamp": "2025-11-04T11:12:07.241Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Cập nhật vật tư",
+      "details": "Cập nhật vật tư: BPC",
+      "id": 117,
+      "timestamp": "2025-11-04T11:12:38.968Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Cập nhật vật tư",
+      "details": "Cập nhật vật tư: RRU 8840",
+      "id": 118,
+      "timestamp": "2025-11-04T11:13:21.407Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
+    },
+    {
+      "action": "Cập nhật vật tư",
+      "details": "Cập nhật vật tư: RRU 8840",
+      "id": 119,
+      "timestamp": "2025-11-04T11:14:01.017Z",
+      "type": "inventory",
+      "user": "Kho Hạ Tầng"
     }
   ],
   "returnRequests": [
@@ -1104,6 +1660,118 @@
       "status": "confirmed",
       "taskId": 3,
       "taskName": "Xử lý UL-VLH004M"
+    },
+    {
+      "confirmedBy": "Bùi Thị Thúy Vân",
+      "confirmedDate": "2025-10-27T07:42:40.379Z",
+      "id": 8,
+      "itemCondition": "damaged",
+      "itemId": 21,
+      "itemName": "BPC",
+      "itemSerial": "249878301157",
+      "notes": "Chuyển trả vật tư hỏng",
+      "requestedBy": "Tạ Bắc Sơn",
+      "requestedDate": "2025-10-27T00:45:40.604Z",
+      "requestedFrom": "infrastructure",
+      "status": "confirmed",
+      "taskId": 6,
+      "taskName": "Xử lý 3G-HLG021M"
+    },
+    {
+      "confirmedBy": "Bùi Thị Thúy Vân",
+      "confirmedDate": "2025-10-27T07:42:23.679Z",
+      "id": 9,
+      "itemCondition": "available",
+      "itemId": 22,
+      "itemName": "FS0",
+      "itemSerial": "248805800538",
+      "notes": "Chuyển trả vật tư sẵn sàng",
+      "requestedBy": "Tạ Bắc Sơn",
+      "requestedDate": "2025-10-27T00:45:49.757Z",
+      "requestedFrom": "infrastructure",
+      "status": "confirmed",
+      "taskId": 6,
+      "taskName": "Xử lý 3G-HLG021M"
+    },
+    {
+      "confirmedBy": "Bùi Thị Thúy Vân",
+      "confirmedDate": "2025-10-27T07:42:10.195Z",
+      "id": 10,
+      "itemCondition": "available",
+      "itemId": 23,
+      "itemName": "FAN",
+      "itemSerial": "210040061797",
+      "notes": "Chuyển trả vật tư sẵn sàng",
+      "requestedBy": "Tạ Bắc Sơn",
+      "requestedDate": "2025-10-27T00:45:52.638Z",
+      "requestedFrom": "infrastructure",
+      "status": "confirmed",
+      "taskId": 6,
+      "taskName": "Xử lý 3G-HLG021M"
+    },
+    {
+      "confirmedBy": "Bùi Thị Thúy Vân",
+      "confirmedDate": "2025-10-27T07:41:56.248Z",
+      "id": 11,
+      "itemCondition": "available",
+      "itemId": 24,
+      "itemName": "PM0",
+      "itemSerial": "249219300825",
+      "notes": "Chuyển trả vật tư sẵn sàng",
+      "requestedBy": "Tạ Bắc Sơn",
+      "requestedDate": "2025-10-27T00:45:57.892Z",
+      "requestedFrom": "infrastructure",
+      "status": "confirmed",
+      "taskId": 6,
+      "taskName": "Xử lý 3G-HLG021M"
+    },
+    {
+      "confirmedBy": "Bùi Thị Thúy Vân",
+      "confirmedDate": "2025-10-27T07:42:56.165Z",
+      "id": 12,
+      "itemCondition": "damaged",
+      "itemId": 25,
+      "itemName": "DCPD10B",
+      "itemSerial": "ZG5622273320",
+      "notes": "Chuyển trả vật tư hỏng",
+      "requestedBy": "Tạ Bắc Sơn",
+      "requestedDate": "2025-10-27T00:46:05.821Z",
+      "requestedFrom": "infrastructure",
+      "status": "confirmed",
+      "taskId": 5,
+      "taskName": "Xử lý SR-GLH004M"
+    },
+    {
+      "confirmedBy": "Bùi Thị Thúy Vân",
+      "confirmedDate": "2025-10-27T07:40:19.920Z",
+      "id": 13,
+      "itemCondition": "in-use",
+      "itemId": 4,
+      "itemName": "R8862A S2100",
+      "itemSerial": "219531983889",
+      "notes": "Chuyển trả vật tư đang sử dụng",
+      "requestedBy": "Tạ Bắc Sơn",
+      "requestedDate": "2025-10-27T00:47:28.581Z",
+      "requestedFrom": "infrastructure",
+      "status": "confirmed",
+      "taskId": 2,
+      "taskName": "Xử lý UL-HLG549"
+    },
+    {
+      "confirmedBy": "Bùi Thị Thúy Vân",
+      "confirmedDate": "2025-11-03T14:51:09.518Z",
+      "id": 14,
+      "itemCondition": "damaged",
+      "itemId": 30,
+      "itemName": "RRU8854",
+      "itemSerial": "219121985627",
+      "notes": "Chuyển trả vật tư hỏng",
+      "requestedBy": "Tạ Bắc Sơn",
+      "requestedDate": "2025-11-01T04:24:20.210Z",
+      "requestedFrom": "infrastructure",
+      "status": "confirmed",
+      "taskId": 4,
+      "taskName": "SVĐ 1254 ĐH/KTM-VNPT NET"
     }
   ],
   "tasks": [
@@ -1132,6 +1800,7 @@
       "assignedItems": [
         4
       ],
+      "completedBy": "Tạ Bắc Sơn",
       "createdBy": "Tạ Bắc Sơn",
       "createdByWarehouse": "Kho Hạ Tầng",
       "createdDate": "2025-10-15T23:43:17.949Z",
@@ -1140,7 +1809,7 @@
       "location": "Hải Lăng",
       "name": "Xử lý UL-HLG549",
       "priority": "medium",
-      "status": "pending",
+      "status": "completed",
       "type": "xuly"
     },
     {
@@ -1164,6 +1833,7 @@
       "assignedItems": [
         19
       ],
+      "completedBy": "Tạ Bắc Sơn",
       "createdBy": "Tạ Bắc Sơn",
       "createdByWarehouse": "Kho Hạ Tầng",
       "createdDate": "2025-10-16T09:06:23.881Z",
@@ -1172,10 +1842,11 @@
       "location": "Hướng Hóa",
       "name": "SVĐ 1254 ĐH/KTM-VNPT NET",
       "priority": "low",
-      "status": "pending",
+      "status": "completed",
       "type": "swap"
     },
     {
+      "completedBy": "Tạ Bắc Sơn",
       "createdBy": "Tạ Bắc Sơn",
       "createdByWarehouse": "Kho Hạ Tầng",
       "createdDate": "2025-10-23T00:21:20.855Z",
@@ -1184,10 +1855,17 @@
       "location": "Gio Linh",
       "name": "Xử lý SR-GLH004M",
       "priority": "high",
-      "status": "pending",
+      "status": "completed",
       "type": "xuly"
     },
     {
+      "assignedItems": [
+        26,
+        27,
+        28,
+        29
+      ],
+      "completedBy": "Tạ Bắc Sơn",
       "createdBy": "Tạ Bắc Sơn",
       "createdByWarehouse": "Kho Hạ Tầng",
       "createdDate": "2025-10-23T01:00:16.310Z",
@@ -1195,6 +1873,45 @@
       "id": 6,
       "location": "Hải Lăng",
       "name": "Xử lý 3G-HLG021M",
+      "priority": "medium",
+      "status": "completed",
+      "type": "xuly"
+    },
+    {
+      "assignedItems": [
+        1
+      ],
+      "createdBy": "Tạ Bắc Sơn",
+      "createdByWarehouse": "Kho Hạ Tầng",
+      "createdDate": "2025-10-31T04:49:08.586Z",
+      "description": "Xử lý hỏng RRU8840 trạm 3G-DKG034 Sa Trầm",
+      "id": 7,
+      "location": "Đakrông",
+      "name": "Xử lý 3G-DKG034",
+      "priority": "medium",
+      "status": "pending",
+      "type": "xuly"
+    },
+    {
+      "createdBy": "Tạ Bắc Sơn",
+      "createdByWarehouse": "Kho Hạ Tầng",
+      "createdDate": "2025-11-04T01:41:10.227Z",
+      "description": "Hỏng BPC mll Cell, Phiếu TTS 7236529",
+      "id": 8,
+      "location": "Hải Lăng",
+      "name": "Xử lý GU-HLG008M",
+      "priority": "medium",
+      "status": "pending",
+      "type": "xuly"
+    },
+    {
+      "createdBy": "Tạ Bắc Sơn",
+      "createdByWarehouse": "Kho Hạ Tầng",
+      "createdDate": "2025-11-04T01:42:13.114Z",
+      "description": "Hỏng BPC Mll cell 3G, phiếu TTS 7239765",
+      "id": 9,
+      "location": "Hướng Hóa",
+      "name": "Xử lý UL-HHA046M",
       "priority": "medium",
       "status": "pending",
       "type": "xuly"

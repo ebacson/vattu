@@ -2017,6 +2017,11 @@ function handleWarehouseChange() {
     
     const selectedWarehouse = warehouseSelect.value;
     
+    // Check if editing an item that has a task
+    const currentTask = currentEditingItem ? tasksData.find(t => 
+        t.assignedItems && t.assignedItems.includes(currentEditingItem.id)
+    ) : null;
+    
     if (selectedWarehouse === 'infrastructure') {
         // Show task field for Hạ Tầng warehouse (recovered equipment)
         taskGroup.style.display = 'block';
@@ -2032,8 +2037,14 @@ function handleWarehouseChange() {
             taskSelect.innerHTML += '<option value="" disabled>Chưa có sự vụ đang hoạt động</option>';
         } else {
             availableTasks.forEach(task => {
-                taskSelect.innerHTML += `<option value="${task.id}">${task.name} (${getTaskTypeText(task.type)}) - ${task.location}</option>`;
+                const isSelected = currentTask && task.id === currentTask.id;
+                taskSelect.innerHTML += `<option value="${task.id}" ${isSelected ? 'selected' : ''}>${task.name} (${getTaskTypeText(task.type)}) - ${task.location}</option>`;
             });
+        }
+        
+        // Set current task if editing and task exists
+        if (currentTask && availableTasks.find(t => t.id === currentTask.id)) {
+            taskSelect.value = currentTask.id;
         }
         
         console.log('📋 Available tasks for item assignment:', availableTasks.length);
@@ -2427,6 +2438,11 @@ async function handleItemSubmit(e) {
             // UPDATE existing item
             console.log('📝 Updating existing item:', currentEditingItem.id);
             
+            // Find old task (if item was assigned to a task)
+            const oldTask = tasksData.find(t => 
+                t.assignedItems && t.assignedItems.includes(currentEditingItem.id)
+            );
+            
             const updatedItem = {
                 ...currentEditingItem,
                 ...formData,
@@ -2434,6 +2450,47 @@ async function handleItemSubmit(e) {
             };
             
             console.log('📦 Updated item:', updatedItem);
+            console.log('🔍 Old task:', oldTask ? oldTask.id : 'none');
+            console.log('🔍 New task:', formData.taskId || 'none');
+            
+            // Handle task assignment changes
+            if (oldTask && oldTask.id !== formData.taskId) {
+                // Remove from old task
+                if (oldTask.assignedItems) {
+                    const itemIndex = oldTask.assignedItems.indexOf(currentEditingItem.id);
+                    if (itemIndex > -1) {
+                        oldTask.assignedItems.splice(itemIndex, 1);
+                        console.log('➖ Removed item from old task:', oldTask.id);
+                        
+                        // Save old task to Firebase
+                        if (typeof window.saveTaskToFirebase === 'function') {
+                            await window.saveTaskToFirebase(oldTask);
+                        }
+                    }
+                }
+            }
+            
+            // Add to new task (if taskId is provided and different from old)
+            if (formData.taskId && (!oldTask || oldTask.id !== formData.taskId)) {
+                const newTask = tasksData.find(t => t.id === formData.taskId);
+                if (newTask) {
+                    if (!newTask.assignedItems) {
+                        newTask.assignedItems = [];
+                    }
+                    if (!newTask.assignedItems.includes(currentEditingItem.id)) {
+                        newTask.assignedItems.push(currentEditingItem.id);
+                        console.log('➕ Added item to new task:', newTask.id);
+                        
+                        // Save new task to Firebase
+                        if (typeof window.saveTaskToFirebase === 'function') {
+                            await window.saveTaskToFirebase(newTask);
+                        }
+                    }
+                }
+            } else if (!formData.taskId && oldTask) {
+                // Task was removed - already handled above
+                console.log('🗑️ Task removed from item');
+            }
             
             // Save to Firebase
             if (typeof window.saveInventoryToFirebase === 'function') {
@@ -2462,6 +2519,26 @@ async function handleItemSubmit(e) {
             };
             
             console.log('📦 New item created:', newItem);
+            
+            // Add to task if taskId is provided
+            if (formData.taskId) {
+                const task = tasksData.find(t => t.id === formData.taskId);
+                if (task) {
+                    if (!task.assignedItems) {
+                        task.assignedItems = [];
+                    }
+                    if (!task.assignedItems.includes(newItem.id)) {
+                        task.assignedItems.push(newItem.id);
+                        console.log('➕ Added new item to task:', task.id);
+                        
+                        // Save task to Firebase
+                        if (typeof window.saveTaskToFirebase === 'function') {
+                            await window.saveTaskToFirebase(task);
+                        }
+                    }
+                }
+            }
+            
             console.log('🔥 Checking Firebase functions...');
             console.log('saveInventoryToFirebase available:', typeof window.saveInventoryToFirebase);
             
@@ -3541,6 +3618,48 @@ function editItem(itemId) {
     document.getElementById('itemSource').value = item.source || '';
     document.getElementById('itemCondition').value = item.condition;
     document.getElementById('itemDescription').value = item.description || '';
+    
+    // Handle task field - show if item has task or if infrastructure warehouse
+    const taskGroup = document.getElementById('itemTaskGroup');
+    const taskSelect = document.getElementById('itemTask');
+    
+    // Find current task for this item
+    const currentTask = tasksData.find(t => 
+        t.assignedItems && t.assignedItems.includes(item.id)
+    );
+    
+    // Show task field if infrastructure warehouse OR if item has a task
+    if (item.warehouse === 'infrastructure' || currentTask) {
+        taskGroup.style.display = 'block';
+        
+        // Populate with ACTIVE tasks (for infrastructure) or ALL tasks (if item already has task)
+        taskSelect.innerHTML = '<option value="">Không gán sự vụ</option>';
+        const availableTasks = tasksData.filter(task => {
+            // For infrastructure, only show active tasks
+            if (item.warehouse === 'infrastructure') {
+                return task.status === 'pending' || task.status === 'in-progress';
+            }
+            // If item already has task, show all tasks (including current one)
+            return true;
+        });
+        
+        if (availableTasks.length === 0) {
+            taskSelect.innerHTML += '<option value="" disabled>Chưa có sự vụ</option>';
+        } else {
+            availableTasks.forEach(task => {
+                const isSelected = currentTask && task.id === currentTask.id;
+                taskSelect.innerHTML += `<option value="${task.id}" ${isSelected ? 'selected' : ''}>${task.name} (${getTaskTypeText(task.type)}) - ${task.location}${task.status === 'completed' ? ' [Đã hoàn thành]' : ''}</option>`;
+            });
+        }
+        
+        // Set current task if exists
+        if (currentTask) {
+            taskSelect.value = currentTask.id;
+        }
+    } else {
+        taskGroup.style.display = 'none';
+        taskSelect.value = '';
+    }
     
     // Change button text to "Lưu" for editing
     const submitBtn = document.querySelector('#itemModal .modal-footer button[type="submit"]');
