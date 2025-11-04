@@ -620,7 +620,7 @@ function renderTasksList() {
     }
 
     tasksList.innerHTML = filteredTasks.map(task => `
-        <div class="task-card" onclick="viewTask(${task.id})" style="cursor: pointer; position: relative;">
+        <div class="task-card task-card-clickable" data-task-id="${task.id}" style="cursor: pointer; position: relative;">
             <div class="task-header">
                 <h3>${task.name}</h3>
                 <div class="task-status">
@@ -651,6 +651,20 @@ function renderTasksList() {
             </div>
         </div>
     `).join('');
+    
+    // Add click event listeners to task cards
+    tasksList.querySelectorAll('.task-card-clickable').forEach(card => {
+        card.addEventListener('click', function(e) {
+            // Don't trigger if clicking on buttons or their parent
+            if (e.target.closest('.task-actions')) {
+                return;
+            }
+            const taskId = parseInt(this.dataset.taskId);
+            if (taskId && typeof viewTask === 'function') {
+                viewTask(taskId);
+            }
+        });
+    });
 }
 
 // Transfers Management
