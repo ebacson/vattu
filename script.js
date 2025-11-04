@@ -620,7 +620,7 @@ function renderTasksList() {
     }
 
     tasksList.innerHTML = filteredTasks.map(task => `
-        <div class="task-card">
+        <div class="task-card" onclick="viewTask(${task.id})" style="cursor: pointer; position: relative;">
             <div class="task-header">
                 <h3>${task.name}</h3>
                 <div class="task-status">
@@ -641,13 +641,13 @@ function renderTasksList() {
             <div class="task-description">
                 <p>${task.description}</p>
             </div>
-            <div class="task-actions">
-                <button class="btn btn-sm btn-primary" onclick="viewTask(${task.id})">Xem chi tiết</button>
+            <div class="task-actions" onclick="event.stopPropagation();">
+                <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); viewTask(${task.id})">Xem chi tiết</button>
                 ${task.status !== 'completed' ? `
-                    <button class="btn btn-sm btn-success" onclick="requestItems(${task.id})">Yêu cầu vật tư</button>
-                    <button class="btn btn-sm btn-danger" onclick="closeTask(${task.id})">Đóng sự vụ</button>
+                    <button class="btn btn-sm btn-success" onclick="event.stopPropagation(); requestItems(${task.id})">Yêu cầu vật tư</button>
+                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); closeTask(${task.id})">Đóng sự vụ</button>
                 ` : ''}
-                <button class="btn btn-sm btn-info" onclick="viewTaskLogs(${task.id})">Lịch sử</button>
+                <button class="btn btn-sm btn-info" onclick="event.stopPropagation(); viewTaskLogs(${task.id})">Lịch sử</button>
             </div>
         </div>
     `).join('');
