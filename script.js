@@ -2309,9 +2309,15 @@ window.exportReportToExcel = exportReportToExcel;
 // Logs Management
 function renderLogsList() {
     const logsList = document.getElementById('logsList');
-    const typeFilter = document.getElementById('logTypeFilter').value;
-    const dateFilter = document.getElementById('logDateFilter').value;
-    const searchTerm = document.getElementById('logSearchInput').value.toLowerCase();
+    if (!logsList) return; // Exit if element doesn't exist
+    
+    const typeFilterEl = document.getElementById('logTypeFilter');
+    const dateFilterEl = document.getElementById('logDateFilter');
+    const searchInputEl = document.getElementById('logSearchInput');
+    
+    const typeFilter = typeFilterEl ? typeFilterEl.value : 'all';
+    const dateFilter = dateFilterEl ? dateFilterEl.value : '';
+    const searchTerm = searchInputEl ? searchInputEl.value.toLowerCase() : '';
 
     let filteredLogs = logsData.filter(log => {
         const matchesType = typeFilter === 'all' || log.type === typeFilter;

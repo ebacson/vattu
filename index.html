@@ -10,34 +10,46 @@
     
     <!-- SheetJS for Excel export - Load synchronously in head to ensure availability -->
     <script>
-        // Load XLSX library with multiple fallback CDNs
+        // Load XLSX library with multiple fallback CDNs and versions
         (function() {
             const cdnUrls = [
-                'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js',
-                'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.1/xlsx.full.min.js',
-                'https://unpkg.com/xlsx@0.20.1/dist/xlsx.full.min.js'
+                'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
+                'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+                'https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js',
+                'https://cdn.jsdelivr.net/npm/xlsx@latest/dist/xlsx.full.min.js'
             ];
             
             let currentIndex = 0;
             
             function loadXLSX(index) {
                 if (index >= cdnUrls.length) {
-                    console.error('❌ Failed to load XLSX from all CDNs');
+                    console.error('❌ Failed to load XLSX from all CDNs. Excel export will not work.');
                     window.XLSXReady = false;
+                    // Show user-friendly message
+                    setTimeout(() => {
+                        if (typeof showToast === 'function') {
+                            showToast('warning', 'Thư viện Excel chưa tải', 'Vui lòng kiểm tra kết nối mạng và tải lại trang.');
+                        }
+                    }, 2000);
                     return;
                 }
                 
                 const script = document.createElement('script');
                 script.src = cdnUrls[index];
+                script.async = false; // Load synchronously
                 script.onload = function() {
-                    if (typeof XLSX !== 'undefined' && typeof XLSX.utils !== 'undefined') {
-                        console.log('✅ XLSX library loaded successfully from:', cdnUrls[index]);
-                        window.XLSXReady = true;
-                        window.XLSXLoaded = true;
-                    } else {
-                        console.warn('⚠️ XLSX loaded but not properly initialized, trying next CDN...');
-                        loadXLSX(index + 1);
-                    }
+                    // Wait a bit for XLSX to initialize
+                    setTimeout(() => {
+                        if (typeof XLSX !== 'undefined' && typeof XLSX.utils !== 'undefined') {
+                            console.log('✅ XLSX library loaded successfully from:', cdnUrls[index]);
+                            window.XLSXReady = true;
+                            window.XLSXLoaded = true;
+                        } else {
+                            console.warn('⚠️ XLSX loaded but not properly initialized, trying next CDN...');
+                            loadXLSX(index + 1);
+                        }
+                    }, 100);
                 };
                 script.onerror = function() {
                     console.warn('⚠️ Failed to load from:', cdnUrls[index], 'trying next...');
