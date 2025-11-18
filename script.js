@@ -953,8 +953,12 @@ function renderInventoryListReport(dateRange, container) {
 }
 
 function renderInventoryByStatusReport(dateRange, container, selectedStatus = 'all') {
-    // Get all items (not filtered by date, as status is current state)
-    let allItems = inventoryData;
+    // Filter by date range first (based on dateAdded)
+    let allItems = inventoryData.filter(item => {
+        if (!item.dateAdded) return false;
+        const itemDate = item.dateAdded instanceof Date ? item.dateAdded : new Date(item.dateAdded);
+        return itemDate >= dateRange.start && itemDate <= dateRange.end;
+    });
     
     // Filter by selected status if not 'all'
     if (selectedStatus !== 'all') {
@@ -2083,8 +2087,15 @@ function exportInventoryByStatusToExcel(workbook, dateRange, selectedStatus = 'a
         console.log('📊 XLSX available:', typeof XLSX !== 'undefined', typeof XLSX.utils !== 'undefined');
         console.log('📊 workbook type:', typeof workbook, workbook);
         console.log('📊 selectedStatus:', selectedStatus);
+        console.log('📊 dateRange:', dateRange);
         
-        let allItems = inventoryData;
+        // Filter by date range first (based on dateAdded)
+        let allItems = inventoryData.filter(item => {
+            if (!item.dateAdded) return false;
+            const itemDate = item.dateAdded instanceof Date ? item.dateAdded : new Date(item.dateAdded);
+            return itemDate >= dateRange.start && itemDate <= dateRange.end;
+        });
+        console.log('📊 Items after date filter:', allItems.length);
         
         // Filter by selected status if not 'all'
         if (selectedStatus !== 'all') {
