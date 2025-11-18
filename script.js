@@ -2039,8 +2039,26 @@ function exportInventoryByStatusToExcel(workbook, dateRange) {
     XLSX.utils.book_append_sheet(workbook, summaryWs, 'Tổng Kết');
 }
 
-// Make function global
-window.exportInventoryByStatusToExcel = exportInventoryByStatusToExcel;
+// Wrapper function for button click (no parameters needed)
+function exportInventoryByStatusToExcelWrapper() {
+    if (typeof XLSX === 'undefined') {
+        showToast('error', 'Lỗi!', 'Thư viện Excel chưa được tải.');
+        return;
+    }
+    
+    const period = document.getElementById('reportPeriodSelect')?.value || 'all';
+    const dateRange = getDateRange(period);
+    const workbook = XLSX.utils.book_new();
+    
+    exportInventoryByStatusToExcel(workbook, dateRange);
+    
+    const fileName = `BaoCao_VatTuTheoTrangThai_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+    showToast('success', 'Xuất Excel thành công!', `File đã được tải: ${fileName}`);
+}
+
+// Make functions global
+window.exportInventoryByStatusToExcel = exportInventoryByStatusToExcelWrapper;
 
 function exportTasksToExcel(workbook, dateRange) {
     const filteredTasks = tasksData.filter(task => 
