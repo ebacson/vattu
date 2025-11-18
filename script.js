@@ -802,6 +802,9 @@ function generateReport() {
         case 'inventory-list':
             renderInventoryListReport(dateRange, reportContent);
             break;
+        case 'inventory-by-status':
+            renderInventoryByStatusReport(dateRange, reportContent);
+            break;
         case 'tasks':
             renderTasksReport(dateRange, reportContent);
             break;
@@ -927,6 +930,188 @@ function renderInventoryListReport(dateRange, container) {
     html += `
                 </tbody>
             </table>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+function renderInventoryByStatusReport(dateRange, container) {
+    // Get all items (not filtered by date, as status is current state)
+    const allItems = inventoryData;
+    
+    // Group items by condition/status
+    const itemsByStatus = {
+        'available': allItems.filter(i => i.condition === 'available'),
+        'in-use': allItems.filter(i => i.condition === 'in-use'),
+        'maintenance': allItems.filter(i => i.condition === 'maintenance'),
+        'damaged': allItems.filter(i => i.condition === 'damaged')
+    };
+    
+    // Calculate totals
+    const totalItems = allItems.length;
+    const totalByStatus = {
+        'available': itemsByStatus.available.length,
+        'in-use': itemsByStatus['in-use'].length,
+        'maintenance': itemsByStatus.maintenance.length,
+        'damaged': itemsByStatus.damaged.length
+    };
+    
+    // Calculate by warehouse
+    const netByStatus = {
+        'available': itemsByStatus.available.filter(i => i.warehouse === 'net').length,
+        'in-use': itemsByStatus['in-use'].filter(i => i.warehouse === 'net').length,
+        'maintenance': itemsByStatus.maintenance.filter(i => i.warehouse === 'net').length,
+        'damaged': itemsByStatus.damaged.filter(i => i.warehouse === 'net').length
+    };
+    
+    const infraByStatus = {
+        'available': itemsByStatus.available.filter(i => i.warehouse === 'infrastructure').length,
+        'in-use': itemsByStatus['in-use'].filter(i => i.warehouse === 'infrastructure').length,
+        'maintenance': itemsByStatus.maintenance.filter(i => i.warehouse === 'infrastructure').length,
+        'damaged': itemsByStatus.damaged.filter(i => i.warehouse === 'infrastructure').length
+    };
+    
+    let html = `
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin-top: 0;">
+                <i class="fas fa-clipboard-list"></i> Báo Cáo Vật Tư Theo Trạng Thái
+            </h3>
+            <p style="color: #7f8c8d; margin: 10px 0;">
+                Thống kê vật tư theo từng trạng thái hiện tại trong hệ thống.
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 15px;">
+                <div style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%); padding: 15px; border-radius: 8px; text-align: center; color: white;">
+                    <div style="font-size: 2rem; font-weight: bold;">${totalByStatus.available}</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">Sẵn sàng</div>
+                </div>
+                <div style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); padding: 15px; border-radius: 8px; text-align: center; color: white;">
+                    <div style="font-size: 2rem; font-weight: bold;">${totalByStatus['in-use']}</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">Đang sử dụng</div>
+                </div>
+                <div style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); padding: 15px; border-radius: 8px; text-align: center; color: white;">
+                    <div style="font-size: 2rem; font-weight: bold;">${totalByStatus.maintenance}</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">Bảo trì</div>
+                </div>
+                <div style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); padding: 15px; border-radius: 8px; text-align: center; color: white;">
+                    <div style="font-size: 2rem; font-weight: bold;">${totalByStatus.damaged}</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">Hỏng</div>
+                </div>
+            </div>
+            <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
+                <button onclick="exportInventoryByStatusToExcel()" class="btn btn-success">
+                    <i class="fas fa-file-excel"></i> Xuất Excel
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // Render each status section
+    const statusConfig = [
+        { key: 'available', label: 'Sẵn Sàng', color: '#27ae60', bgColor: '#d4edda' },
+        { key: 'in-use', label: 'Đang Sử Dụng', color: '#3498db', bgColor: '#d1ecf1' },
+        { key: 'maintenance', label: 'Bảo Trì', color: '#f39c12', bgColor: '#fff3cd' },
+        { key: 'damaged', label: 'Hỏng', color: '#e74c3c', bgColor: '#f8d7da' }
+    ];
+    
+    statusConfig.forEach(status => {
+        const items = itemsByStatus[status.key];
+        
+        html += `
+            <div style="background: white; border-radius: 8px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div style="background: ${status.bgColor}; padding: 15px; border-left: 5px solid ${status.color};">
+                    <h3 style="margin: 0; color: ${status.color}; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-circle" style="font-size: 0.8rem;"></i>
+                        ${status.label} (${items.length} vật tư)
+                    </h3>
+                    <div style="margin-top: 10px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 0.9rem;">
+                        <div>
+                            <strong>Kho Net:</strong> ${status.key === 'available' ? netByStatus.available : status.key === 'in-use' ? netByStatus['in-use'] : status.key === 'maintenance' ? netByStatus.maintenance : netByStatus.damaged}
+                        </div>
+                        <div>
+                            <strong>Kho Hạ Tầng:</strong> ${status.key === 'available' ? infraByStatus.available : status.key === 'in-use' ? infraByStatus['in-use'] : status.key === 'maintenance' ? infraByStatus.maintenance : infraByStatus.damaged}
+                        </div>
+                    </div>
+                </div>
+        `;
+        
+        if (items.length === 0) {
+            html += `
+                <div style="padding: 30px; text-align: center; color: #95a5a6;">
+                    <i class="fas fa-inbox" style="font-size: 2rem; opacity: 0.5;"></i>
+                    <p style="margin: 10px 0 0 0;">Không có vật tư nào ở trạng thái này</p>
+                </div>
+            `;
+        } else {
+            html += `
+                <div style="padding: 15px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                        <thead>
+                            <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                                <th style="padding: 10px; text-align: left;">STT</th>
+                                <th style="padding: 10px; text-align: left;">Serial</th>
+                                <th style="padding: 10px; text-align: left;">Tên Vật Tư</th>
+                                <th style="padding: 10px; text-align: center;">Kho</th>
+                                <th style="padding: 10px; text-align: left;">Sự Vụ</th>
+                                <th style="padding: 10px; text-align: left;">Ngày Nhập</th>
+                                <th style="padding: 10px; text-align: left;">Nguồn Gốc</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            items.forEach((item, index) => {
+                const task = item.taskId ? tasksData.find(t => t.id === item.taskId) : null;
+                html += `
+                    <tr style="border-bottom: 1px solid #f0f0f0; ${item.condition === 'damaged' ? 'background: #ffebee;' : ''}">
+                        <td style="padding: 10px;">${index + 1}</td>
+                        <td style="padding: 10px;"><strong>${item.serial}</strong></td>
+                        <td style="padding: 10px;">${item.name}</td>
+                        <td style="padding: 10px; text-align: center;">
+                            <span class="warehouse-badge ${item.warehouse}">${getWarehouseName(item.warehouse)}</span>
+                        </td>
+                        <td style="padding: 10px;">${task ? task.name : '-'}</td>
+                        <td style="padding: 10px;">${formatDate(item.dateAdded)}</td>
+                        <td style="padding: 10px;">${item.source || '-'}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        html += `</div>`;
+    });
+    
+    // Summary section
+    html += `
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; color: white; margin-top: 20px;">
+            <h3 style="margin: 0 0 15px 0;">
+                <i class="fas fa-chart-bar"></i> Tổng Kết
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                <div>
+                    <strong>Tổng Quan:</strong>
+                    <ul style="margin: 5px 0; padding-left: 20px; opacity: 0.95;">
+                        <li>Tổng vật tư: ${totalItems}</li>
+                        <li>Sẵn sàng: ${totalByStatus.available}</li>
+                        <li>Đang sử dụng: ${totalByStatus['in-use']}</li>
+                        <li>Bảo trì: ${totalByStatus.maintenance}</li>
+                        <li>Hỏng: ${totalByStatus.damaged}</li>
+                    </ul>
+                </div>
+                <div>
+                    <strong>Phân Bố Theo Kho:</strong>
+                    <ul style="margin: 5px 0; padding-left: 20px; opacity: 0.95;">
+                        <li>Kho Net: ${allItems.filter(i => i.warehouse === 'net').length}</li>
+                        <li>Kho Hạ Tầng: ${allItems.filter(i => i.warehouse === 'infrastructure').length}</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     `;
     
@@ -1682,6 +1867,10 @@ function exportReportToExcel() {
             exportInventoryListToExcel(workbook, dateRange);
             fileName = `BaoCao_DanhSachVatTu_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
             break;
+        case 'inventory-by-status':
+            exportInventoryByStatusToExcel(workbook, dateRange);
+            fileName = `BaoCao_VatTuTheoTrangThai_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
+            break;
         case 'tasks':
             exportTasksToExcel(workbook, dateRange);
             fileName = `BaoCao_SuVu_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
@@ -1755,6 +1944,103 @@ function exportInventoryListToExcel(workbook, dateRange) {
     
     XLSX.utils.book_append_sheet(workbook, ws, 'Danh Sách Vật Tư');
 }
+
+function exportInventoryByStatusToExcel(workbook, dateRange) {
+    const allItems = inventoryData;
+    
+    // Group items by condition/status
+    const itemsByStatus = {
+        'available': allItems.filter(i => i.condition === 'available'),
+        'in-use': allItems.filter(i => i.condition === 'in-use'),
+        'maintenance': allItems.filter(i => i.condition === 'maintenance'),
+        'damaged': allItems.filter(i => i.condition === 'damaged')
+    };
+    
+    const statusConfig = [
+        { key: 'available', label: 'Sẵn Sàng' },
+        { key: 'in-use', label: 'Đang Sử Dụng' },
+        { key: 'maintenance', label: 'Bảo Trì' },
+        { key: 'damaged', label: 'Hỏng' }
+    ];
+    
+    // Create a sheet for each status
+    statusConfig.forEach(status => {
+        const items = itemsByStatus[status.key];
+        const wsData = [];
+        
+        // Title
+        wsData.push([`BÁO CÁO VẬT TƯ - TRẠNG THÁI: ${status.label.toUpperCase()}`]);
+        wsData.push([`Ngày tạo báo cáo: ${formatDate(new Date())}`]);
+        wsData.push([]);
+        
+        // Summary
+        wsData.push(['TỔNG KẾT:']);
+        wsData.push(['Tổng số vật tư:', items.length]);
+        wsData.push(['Kho Net:', items.filter(i => i.warehouse === 'net').length]);
+        wsData.push(['Kho Hạ Tầng:', items.filter(i => i.warehouse === 'infrastructure').length]);
+        wsData.push([]);
+        
+        // Table header
+        wsData.push(['STT', 'Serial', 'Tên Vật Tư', 'Kho', 'Sự Vụ', 'Ngày Nhập', 'Nguồn Gốc', 'Mô Tả']);
+        
+        // Table data
+        items.forEach((item, index) => {
+            const task = item.taskId ? tasksData.find(t => t.id === item.taskId) : null;
+            wsData.push([
+                index + 1,
+                item.serial,
+                item.name,
+                getWarehouseName(item.warehouse),
+                task ? task.name : '-',
+                formatDate(item.dateAdded),
+                item.source || '-',
+                item.description || '-'
+            ]);
+        });
+        
+        // Create worksheet
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        
+        // Set column widths
+        ws['!cols'] = [
+            {wch: 5}, {wch: 15}, {wch: 30}, {wch: 12}, {wch: 30}, {wch: 12}, {wch: 30}, {wch: 40}
+        ];
+        
+        // Add sheet to workbook
+        XLSX.utils.book_append_sheet(workbook, ws, status.label);
+    });
+    
+    // Create summary sheet
+    const summaryData = [
+        ['BÁO CÁO TỔNG KẾT VẬT TƯ THEO TRẠNG THÁI'],
+        [`Ngày tạo báo cáo: ${formatDate(new Date())}`],
+        [],
+        ['TRẠNG THÁI', 'TỔNG SỐ', 'KHO NET', 'KHO HẠ TẦNG']
+    ];
+    
+    statusConfig.forEach(status => {
+        const items = itemsByStatus[status.key];
+        summaryData.push([
+            status.label,
+            items.length,
+            items.filter(i => i.warehouse === 'net').length,
+            items.filter(i => i.warehouse === 'infrastructure').length
+        ]);
+    });
+    
+    summaryData.push([]);
+    summaryData.push(['TỔNG CỘNG', allItems.length, 
+        allItems.filter(i => i.warehouse === 'net').length,
+        allItems.filter(i => i.warehouse === 'infrastructure').length
+    ]);
+    
+    const summaryWs = XLSX.utils.aoa_to_sheet(summaryData);
+    summaryWs['!cols'] = [{wch: 20}, {wch: 12}, {wch: 12}, {wch: 12}];
+    XLSX.utils.book_append_sheet(workbook, summaryWs, 'Tổng Kết');
+}
+
+// Make function global
+window.exportInventoryByStatusToExcel = exportInventoryByStatusToExcel;
 
 function exportTasksToExcel(workbook, dateRange) {
     const filteredTasks = tasksData.filter(task => 
