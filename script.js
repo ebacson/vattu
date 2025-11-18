@@ -1713,11 +1713,10 @@ function exportItemsByTaskToExcel() {
             if (typeof XLSX !== 'undefined' && typeof XLSX.utils !== 'undefined') {
                 clearInterval(checkInterval);
                 console.log('✅ XLSX ready after', attempts, 'attempts');
-                isExportingItemsByTask = false; // Reset flag before retry
+                // Don't set flag here - let the retry handle it
                 exportItemsByTaskToExcel(); // Retry
             } else if (attempts >= maxAttempts) {
                 clearInterval(checkInterval);
-                isExportingItemsByTask = false; // Reset flag on failure
                 showToast('error', 'Lỗi!', 'Thư viện Excel chưa được tải. Vui lòng tải lại trang.');
             }
         }, 200);
@@ -1727,29 +1726,39 @@ function exportItemsByTaskToExcel() {
     // Set flag to prevent concurrent calls
     isExportingItemsByTask = true;
     
-    const selectedTaskId = document.getElementById('taskFilterSelect').value;
-    const period = document.getElementById('reportPeriodSelect').value;
-    const dateRange = getDateRange(period);
-    
-    // Create workbook
-    const wb = XLSX.utils.book_new();
-    
-    // Use helper function
-    exportItemsByTaskToExcelHelper(wb, dateRange);
-    
-    // Generate filename
-    const tasksToExport = tasksData.filter(task => 
-        task.createdDate >= dateRange.start && task.createdDate <= dateRange.end
-    );
-    const taskName = selectedTaskId === 'all' ? 'Tat-Ca' : tasksToExport[0]?.name.replace(/[^a-zA-Z0-9]/g, '-') || 'Task';
-    const filename = `Vat-Tu-Theo-Su-Vu_${taskName}_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
-    
-    // Download
-    XLSX.writeFile(wb, filename);
-    showToast('success', 'Xuất Excel thành công!', `File đã được tải: ${filename}`);
-    
-    // Reset flag after completion
-    isExportingItemsByTask = false;
+    try {
+        const selectedTaskId = document.getElementById('taskFilterSelect').value;
+        const period = document.getElementById('reportPeriodSelect').value;
+        const dateRange = getDateRange(period);
+        
+        // Create workbook
+        const wb = XLSX.utils.book_new();
+        
+        // Use helper function
+        exportItemsByTaskToExcelHelper(wb, dateRange);
+        
+        // Check if workbook has sheets
+        if (!wb.SheetNames || wb.SheetNames.length === 0) {
+            throw new Error('Workbook is empty - no sheets were added');
+        }
+        
+        // Generate filename
+        const tasksToExport = tasksData.filter(task => 
+            task.createdDate >= dateRange.start && task.createdDate <= dateRange.end
+        );
+        const taskName = selectedTaskId === 'all' ? 'Tat-Ca' : tasksToExport[0]?.name.replace(/[^a-zA-Z0-9]/g, '-') || 'Task';
+        const filename = `Vat-Tu-Theo-Su-Vu_${taskName}_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
+        
+        // Download
+        XLSX.writeFile(wb, filename);
+        showToast('success', 'Xuất Excel thành công!', `File đã được tải: ${filename}`);
+    } catch (error) {
+        console.error('❌ Error exporting to Excel:', error);
+        showToast('error', 'Lỗi!', `Không thể xuất Excel: ${error.message || 'Lỗi không xác định'}`);
+    } finally {
+        // Always reset flag after completion or error
+        isExportingItemsByTask = false;
+    }
 }
 
 // Make function global
@@ -1922,11 +1931,10 @@ function exportReportToExcel() {
             if (typeof XLSX !== 'undefined' && typeof XLSX.utils !== 'undefined') {
                 clearInterval(checkInterval);
                 console.log('✅ XLSX ready after', attempts, 'attempts');
-                isExportingReport = false; // Reset flag before retry
+                // Don't set flag here - let the retry handle it
                 exportReportToExcel(); // Retry
             } else if (attempts >= maxAttempts) {
                 clearInterval(checkInterval);
-                isExportingReport = false; // Reset flag on failure
                 showToast('error', 'Lỗi!', 'Thư viện Excel chưa được tải. Vui lòng tải lại trang.');
                 console.error('❌ XLSX library not loaded after', maxAttempts, 'attempts. Check network connection and CDN availability.');
             }
@@ -1937,47 +1945,57 @@ function exportReportToExcel() {
     // Set flag to prevent concurrent calls
     isExportingReport = true;
     
-    const dateRange = getDateRange(period);
-    
-    let workbook = XLSX.utils.book_new();
-    let fileName = '';
-    
-    switch(reportType) {
-        case 'inventory-list':
-            exportInventoryListToExcel(workbook, dateRange);
-            fileName = `BaoCao_DanhSachVatTu_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
-            break;
-        case 'inventory-by-status':
-            exportInventoryByStatusToExcel(workbook, dateRange);
-            fileName = `BaoCao_VatTuTheoTrangThai_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
-            break;
-        case 'tasks':
-            exportTasksToExcel(workbook, dateRange);
-            fileName = `BaoCao_SuVu_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
-            break;
-        case 'items-by-task':
-            exportItemsByTaskToExcelHelper(workbook, dateRange);
-            fileName = `BaoCao_VatTuTheoSuVu_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
-            break;
-        case 'inventory-changes':
-            exportInventoryChangesToExcel(workbook, dateRange);
-            fileName = `BaoCao_BienDongVatTu_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
-            break;
-        case 'activity-logs':
-            exportActivityLogsToExcel(workbook, dateRange);
-            fileName = `BaoCao_LichSuHoatDong_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
-            break;
-        default:
-            showToast('error', 'Lỗi!', 'Vui lòng chọn loại báo cáo trước.');
-            return;
+    try {
+        const dateRange = getDateRange(period);
+        
+        let workbook = XLSX.utils.book_new();
+        let fileName = '';
+        
+        switch(reportType) {
+            case 'inventory-list':
+                exportInventoryListToExcel(workbook, dateRange);
+                fileName = `BaoCao_DanhSachVatTu_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
+                break;
+            case 'inventory-by-status':
+                exportInventoryByStatusToExcel(workbook, dateRange);
+                fileName = `BaoCao_VatTuTheoTrangThai_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
+                break;
+            case 'tasks':
+                exportTasksToExcel(workbook, dateRange);
+                fileName = `BaoCao_SuVu_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
+                break;
+            case 'items-by-task':
+                exportItemsByTaskToExcelHelper(workbook, dateRange);
+                fileName = `BaoCao_VatTuTheoSuVu_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
+                break;
+            case 'inventory-changes':
+                exportInventoryChangesToExcel(workbook, dateRange);
+                fileName = `BaoCao_BienDongVatTu_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
+                break;
+            case 'activity-logs':
+                exportActivityLogsToExcel(workbook, dateRange);
+                fileName = `BaoCao_LichSuHoatDong_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
+                break;
+            default:
+                showToast('error', 'Lỗi!', 'Vui lòng chọn loại báo cáo trước.');
+                return;
+        }
+        
+        // Check if workbook has sheets
+        if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+            throw new Error('Workbook is empty - no sheets were added');
+        }
+        
+        // Save file
+        XLSX.writeFile(workbook, fileName);
+        showToast('success', 'Xuất Excel thành công!', `File đã được tải: ${fileName}`);
+    } catch (error) {
+        console.error('❌ Error exporting to Excel:', error);
+        showToast('error', 'Lỗi!', `Không thể xuất Excel: ${error.message || 'Lỗi không xác định'}`);
+    } finally {
+        // Always reset flag after completion or error
+        isExportingReport = false;
     }
-    
-    // Save file
-    XLSX.writeFile(workbook, fileName);
-    showToast('success', 'Xuất Excel thành công!', `File đã được tải: ${fileName}`);
-    
-    // Reset flag after completion
-    isExportingReport = false;
 }
 
 function exportInventoryListToExcel(workbook, dateRange) {
@@ -2144,11 +2162,10 @@ function exportInventoryByStatusToExcelWrapper() {
             if (typeof XLSX !== 'undefined' && typeof XLSX.utils !== 'undefined') {
                 clearInterval(checkInterval);
                 console.log('✅ XLSX ready after', attempts, 'attempts');
-                isExportingInventoryByStatus = false; // Reset flag before retry
+                // Don't set flag here - let the retry handle it
                 exportInventoryByStatusToExcelWrapper(); // Retry
             } else if (attempts >= maxAttempts) {
                 clearInterval(checkInterval);
-                isExportingInventoryByStatus = false; // Reset flag on failure
                 showToast('error', 'Lỗi!', 'Thư viện Excel chưa được tải. Vui lòng tải lại trang.');
             }
         }, 200);
@@ -2158,18 +2175,28 @@ function exportInventoryByStatusToExcelWrapper() {
     // Set flag to prevent concurrent calls
     isExportingInventoryByStatus = true;
     
-    const period = document.getElementById('reportPeriodSelect')?.value || 'all';
-    const dateRange = getDateRange(period);
-    const workbook = XLSX.utils.book_new();
-    
-    exportInventoryByStatusToExcel(workbook, dateRange);
-    
-    const fileName = `BaoCao_VatTuTheoTrangThai_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
-    XLSX.writeFile(workbook, fileName);
-    showToast('success', 'Xuất Excel thành công!', `File đã được tải: ${fileName}`);
-    
-    // Reset flag after completion
-    isExportingInventoryByStatus = false;
+    try {
+        const period = document.getElementById('reportPeriodSelect')?.value || 'all';
+        const dateRange = getDateRange(period);
+        const workbook = XLSX.utils.book_new();
+        
+        exportInventoryByStatusToExcel(workbook, dateRange);
+        
+        // Check if workbook has sheets
+        if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+            throw new Error('Workbook is empty - no sheets were added');
+        }
+        
+        const fileName = `BaoCao_VatTuTheoTrangThai_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
+        XLSX.writeFile(workbook, fileName);
+        showToast('success', 'Xuất Excel thành công!', `File đã được tải: ${fileName}`);
+    } catch (error) {
+        console.error('❌ Error exporting to Excel:', error);
+        showToast('error', 'Lỗi!', `Không thể xuất Excel: ${error.message || 'Lỗi không xác định'}`);
+    } finally {
+        // Always reset flag after completion or error
+        isExportingInventoryByStatus = false;
+    }
 }
 
 // Make functions global
