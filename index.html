@@ -8,30 +8,47 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- SheetJS for Excel export - Load in head to ensure availability -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <!-- SheetJS for Excel export - Load synchronously in head to ensure availability -->
     <script>
-        // Verify XLSX is loaded
-        window.addEventListener('DOMContentLoaded', function() {
-            if (typeof XLSX !== 'undefined' && typeof XLSX.utils !== 'undefined') {
-                console.log('✅ XLSX library ready');
-                window.XLSXReady = true;
-            } else {
-                console.warn('⚠️ XLSX library not loaded, trying fallback...');
-                // Fallback CDN
-                const fallbackScript = document.createElement('script');
-                fallbackScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.1/xlsx.full.min.js';
-                fallbackScript.onload = function() {
-                    console.log('✅ XLSX library loaded from fallback CDN');
-                    window.XLSXReady = true;
-                };
-                fallbackScript.onerror = function() {
+        // Load XLSX library with multiple fallback CDNs
+        (function() {
+            const cdnUrls = [
+                'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.1/xlsx.full.min.js',
+                'https://unpkg.com/xlsx@0.20.1/dist/xlsx.full.min.js'
+            ];
+            
+            let currentIndex = 0;
+            
+            function loadXLSX(index) {
+                if (index >= cdnUrls.length) {
                     console.error('❌ Failed to load XLSX from all CDNs');
                     window.XLSXReady = false;
+                    return;
+                }
+                
+                const script = document.createElement('script');
+                script.src = cdnUrls[index];
+                script.onload = function() {
+                    if (typeof XLSX !== 'undefined' && typeof XLSX.utils !== 'undefined') {
+                        console.log('✅ XLSX library loaded successfully from:', cdnUrls[index]);
+                        window.XLSXReady = true;
+                        window.XLSXLoaded = true;
+                    } else {
+                        console.warn('⚠️ XLSX loaded but not properly initialized, trying next CDN...');
+                        loadXLSX(index + 1);
+                    }
                 };
-                document.head.appendChild(fallbackScript);
+                script.onerror = function() {
+                    console.warn('⚠️ Failed to load from:', cdnUrls[index], 'trying next...');
+                    loadXLSX(index + 1);
+                };
+                document.head.appendChild(script);
             }
-        });
+            
+            // Start loading
+            loadXLSX(0);
+        })();
     </script>
 </head>
 <body>

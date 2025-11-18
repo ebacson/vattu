@@ -1885,16 +1885,22 @@ function exportReportToExcel() {
     
     // Check if XLSX is loaded - with retry mechanism
     if (typeof XLSX === 'undefined' || typeof XLSX.utils === 'undefined') {
-        // Try to wait a bit and check again (in case it's still loading)
-        setTimeout(() => {
-            if (typeof XLSX === 'undefined' || typeof XLSX.utils === 'undefined') {
+        console.warn('⚠️ XLSX not ready, waiting...');
+        // Try multiple times with increasing delays
+        let attempts = 0;
+        const maxAttempts = 10;
+        const checkInterval = setInterval(() => {
+            attempts++;
+            if (typeof XLSX !== 'undefined' && typeof XLSX.utils !== 'undefined') {
+                clearInterval(checkInterval);
+                console.log('✅ XLSX ready after', attempts, 'attempts');
+                exportReportToExcel(); // Retry
+            } else if (attempts >= maxAttempts) {
+                clearInterval(checkInterval);
                 showToast('error', 'Lỗi!', 'Thư viện Excel chưa được tải. Vui lòng tải lại trang.');
-                console.error('XLSX library not loaded. Check network connection and CDN availability.');
-            } else {
-                // Retry the export
-                exportReportToExcel();
+                console.error('❌ XLSX library not loaded after', maxAttempts, 'attempts. Check network connection and CDN availability.');
             }
-        }, 500);
+        }, 200);
         return;
     }
     
