@@ -2240,7 +2240,16 @@ function exportInventoryByStatusToExcelWrapper() {
         const workbook = XLSX.utils.book_new();
         
         console.log('📊 Starting export with', inventoryData.length, 'total items');
-        exportInventoryByStatusToExcel(workbook, dateRange);
+        console.log('📊 About to call exportInventoryByStatusToExcel, function exists:', typeof exportInventoryByStatusToExcel === 'function');
+        console.log('📊 Workbook before call:', workbook, 'SheetNames:', workbook.SheetNames);
+        
+        try {
+            exportInventoryByStatusToExcel(workbook, dateRange);
+            console.log('✅ exportInventoryByStatusToExcel returned successfully');
+        } catch (funcError) {
+            console.error('❌ Error in exportInventoryByStatusToExcel:', funcError);
+            throw funcError; // Re-throw to be caught by outer catch
+        }
         
         // Check if workbook has sheets
         console.log('📊 Workbook sheets after export:', workbook.SheetNames ? workbook.SheetNames.length : 0, workbook.SheetNames);
