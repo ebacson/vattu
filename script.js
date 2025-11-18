@@ -1979,7 +1979,8 @@ function exportReportToExcel() {
                 break;
             case 'inventory-by-status':
                 const selectedStatus = document.getElementById('reportStatusFilter')?.value || 'all';
-                exportInventoryByStatusToExcel(workbook, dateRange, selectedStatus);
+                // Use original function, not the wrapper
+                originalExportInventoryByStatusToExcel(workbook, dateRange, selectedStatus);
                 const statusLabel = selectedStatus === 'all' ? 'Tat-Ca-TrangThai' : 
                     selectedStatus === 'available' ? 'San-Sang' :
                     selectedStatus === 'in-use' ? 'Dang-Su-Dung' :
@@ -2319,7 +2320,11 @@ function exportInventoryByStatusToExcelWrapper() {
     }
 }
 
-// Make functions global
+// Save original function before assigning wrapper to window
+// This allows exportReportToExcel to call the original function directly
+const originalExportInventoryByStatusToExcel = exportInventoryByStatusToExcel;
+
+// Make wrapper function global for button clicks
 window.exportInventoryByStatusToExcel = exportInventoryByStatusToExcelWrapper;
 
 function exportTasksToExcel(workbook, dateRange) {
