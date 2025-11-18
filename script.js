@@ -1698,13 +1698,20 @@ function exportItemsByTaskToExcelHelper(workbook, dateRange) {
 // Original function for button click (creates its own workbook)
 function exportItemsByTaskToExcel() {
     if (typeof XLSX === 'undefined' || typeof XLSX.utils === 'undefined') {
-        setTimeout(() => {
-            if (typeof XLSX === 'undefined' || typeof XLSX.utils === 'undefined') {
+        console.warn('⚠️ XLSX not ready, waiting...');
+        let attempts = 0;
+        const maxAttempts = 10;
+        const checkInterval = setInterval(() => {
+            attempts++;
+            if (typeof XLSX !== 'undefined' && typeof XLSX.utils !== 'undefined') {
+                clearInterval(checkInterval);
+                console.log('✅ XLSX ready after', attempts, 'attempts');
+                exportItemsByTaskToExcel(); // Retry
+            } else if (attempts >= maxAttempts) {
+                clearInterval(checkInterval);
                 showToast('error', 'Lỗi!', 'Thư viện Excel chưa được tải. Vui lòng tải lại trang.');
-            } else {
-                exportItemsByTaskToExcel();
             }
-        }, 500);
+        }, 200);
         return;
     }
     
@@ -2091,13 +2098,20 @@ function exportInventoryByStatusToExcel(workbook, dateRange) {
 // Wrapper function for button click (no parameters needed)
 function exportInventoryByStatusToExcelWrapper() {
     if (typeof XLSX === 'undefined' || typeof XLSX.utils === 'undefined') {
-        setTimeout(() => {
-            if (typeof XLSX === 'undefined' || typeof XLSX.utils === 'undefined') {
+        console.warn('⚠️ XLSX not ready, waiting...');
+        let attempts = 0;
+        const maxAttempts = 10;
+        const checkInterval = setInterval(() => {
+            attempts++;
+            if (typeof XLSX !== 'undefined' && typeof XLSX.utils !== 'undefined') {
+                clearInterval(checkInterval);
+                console.log('✅ XLSX ready after', attempts, 'attempts');
+                exportInventoryByStatusToExcelWrapper(); // Retry
+            } else if (attempts >= maxAttempts) {
+                clearInterval(checkInterval);
                 showToast('error', 'Lỗi!', 'Thư viện Excel chưa được tải. Vui lòng tải lại trang.');
-            } else {
-                exportInventoryByStatusToExcelWrapper();
             }
-        }, 500);
+        }, 200);
         return;
     }
     
