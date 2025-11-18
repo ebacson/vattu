@@ -7,6 +7,32 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- SheetJS for Excel export - Load in head to ensure availability -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script>
+        // Verify XLSX is loaded
+        window.addEventListener('DOMContentLoaded', function() {
+            if (typeof XLSX !== 'undefined' && typeof XLSX.utils !== 'undefined') {
+                console.log('✅ XLSX library ready');
+                window.XLSXReady = true;
+            } else {
+                console.warn('⚠️ XLSX library not loaded, trying fallback...');
+                // Fallback CDN
+                const fallbackScript = document.createElement('script');
+                fallbackScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.1/xlsx.full.min.js';
+                fallbackScript.onload = function() {
+                    console.log('✅ XLSX library loaded from fallback CDN');
+                    window.XLSXReady = true;
+                };
+                fallbackScript.onerror = function() {
+                    console.error('❌ Failed to load XLSX from all CDNs');
+                    window.XLSXReady = false;
+                };
+                document.head.appendChild(fallbackScript);
+            }
+        });
+    </script>
 </head>
 <body>
     <div class="container">
@@ -562,9 +588,6 @@
     <div id="authStatus" class="auth-status" style="position: fixed; top: 10px; right: 10px; z-index: 1000; padding: 8px 12px; border-radius: 20px; font-size: 12px; background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.1);">
         <i class="fas fa-spinner fa-spin text-warning"></i> Đang kết nối...
     </div>
-    
-    <!-- SheetJS for Excel export -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     
     <!-- Firebase SDK -->
     <script type="module" src="firebase-config.js"></script>

@@ -1697,8 +1697,14 @@ function exportItemsByTaskToExcelHelper(workbook, dateRange) {
 
 // Original function for button click (creates its own workbook)
 function exportItemsByTaskToExcel() {
-    if (typeof XLSX === 'undefined') {
-        showToast('error', 'Lỗi!', 'Thư viện Excel chưa được tải.');
+    if (typeof XLSX === 'undefined' || typeof XLSX.utils === 'undefined') {
+        setTimeout(() => {
+            if (typeof XLSX === 'undefined' || typeof XLSX.utils === 'undefined') {
+                showToast('error', 'Lỗi!', 'Thư viện Excel chưa được tải. Vui lòng tải lại trang.');
+            } else {
+                exportItemsByTaskToExcel();
+            }
+        }, 500);
         return;
     }
     
@@ -1877,8 +1883,18 @@ function exportReportToExcel() {
     const period = document.getElementById('reportPeriodSelect').value;
     const dateRange = getDateRange(period);
     
-    if (typeof XLSX === 'undefined') {
-        showToast('error', 'Lỗi!', 'Thư viện Excel chưa được tải.');
+    // Check if XLSX is loaded - with retry mechanism
+    if (typeof XLSX === 'undefined' || typeof XLSX.utils === 'undefined') {
+        // Try to wait a bit and check again (in case it's still loading)
+        setTimeout(() => {
+            if (typeof XLSX === 'undefined' || typeof XLSX.utils === 'undefined') {
+                showToast('error', 'Lỗi!', 'Thư viện Excel chưa được tải. Vui lòng tải lại trang.');
+                console.error('XLSX library not loaded. Check network connection and CDN availability.');
+            } else {
+                // Retry the export
+                exportReportToExcel();
+            }
+        }, 500);
         return;
     }
     
@@ -2068,8 +2084,14 @@ function exportInventoryByStatusToExcel(workbook, dateRange) {
 
 // Wrapper function for button click (no parameters needed)
 function exportInventoryByStatusToExcelWrapper() {
-    if (typeof XLSX === 'undefined') {
-        showToast('error', 'Lỗi!', 'Thư viện Excel chưa được tải.');
+    if (typeof XLSX === 'undefined' || typeof XLSX.utils === 'undefined') {
+        setTimeout(() => {
+            if (typeof XLSX === 'undefined' || typeof XLSX.utils === 'undefined') {
+                showToast('error', 'Lỗi!', 'Thư viện Excel chưa được tải. Vui lòng tải lại trang.');
+            } else {
+                exportInventoryByStatusToExcelWrapper();
+            }
+        }, 500);
         return;
     }
     
