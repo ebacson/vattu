@@ -2226,6 +2226,10 @@ function exportInventoryByStatusToExcel(workbook, dateRange, selectedStatus = 'a
     }
 }
 
+// Save original function before assigning wrapper to window
+// This allows exportReportToExcel to call the original function directly
+const originalExportInventoryByStatusToExcel = exportInventoryByStatusToExcel;
+
 // Wrapper function for button click (no parameters needed)
 let isExportingInventoryByStatus = false; // Flag to prevent multiple simultaneous calls
 let exportTimeoutId = null; // Timeout ID for safety reset
@@ -2287,8 +2291,9 @@ function exportInventoryByStatusToExcelWrapper() {
         console.log('📊 About to call exportInventoryByStatusToExcel, function exists:', typeof exportInventoryByStatusToExcel === 'function');
         console.log('📊 Workbook before call:', workbook, 'SheetNames:', workbook.SheetNames);
         
+        // Use original function directly (saved before wrapper assignment)
         try {
-            exportInventoryByStatusToExcel(workbook, dateRange, selectedStatus);
+            originalExportInventoryByStatusToExcel(workbook, dateRange, selectedStatus);
             console.log('✅ exportInventoryByStatusToExcel returned successfully');
         } catch (funcError) {
             console.error('❌ Error in exportInventoryByStatusToExcel:', funcError);
@@ -2319,10 +2324,6 @@ function exportInventoryByStatusToExcelWrapper() {
         console.log('🔓 Reset export flag to false');
     }
 }
-
-// Save original function before assigning wrapper to window
-// This allows exportReportToExcel to call the original function directly
-const originalExportInventoryByStatusToExcel = exportInventoryByStatusToExcel;
 
 // Make wrapper function global for button clicks
 window.exportInventoryByStatusToExcel = exportInventoryByStatusToExcelWrapper;
