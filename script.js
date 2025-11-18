@@ -1543,10 +1543,9 @@ function filterItemsByTask() {
 }
 
 // Export Items by Task report to Excel
-function exportItemsByTaskToExcel() {
-    const selectedTaskId = document.getElementById('taskFilterSelect').value;
-    const period = document.getElementById('reportPeriodSelect').value;
-    const dateRange = getDateRange(period);
+// Helper function for exportReportToExcel (uses provided workbook and dateRange)
+function exportItemsByTaskToExcelHelper(workbook, dateRange) {
+    const selectedTaskId = document.getElementById('taskFilterSelect')?.value || 'all';
     
     // Filter tasks
     let tasksToExport = tasksData.filter(task => 
@@ -1684,8 +1683,7 @@ function exportItemsByTaskToExcel() {
     wsData.push([userWarehouse === 'infrastructure' ? 'Tổng đã nhận:' : 'Tổng đã giao:', totalDelivered]);
     wsData.push([userWarehouse === 'net' ? 'Tổng thu hồi:' : 'Tổng đã trả:', totalReturned]);
     
-    // Create workbook
-    const wb = XLSX.utils.book_new();
+    // Create worksheet
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     
     // Set column widths
@@ -1693,9 +1691,31 @@ function exportItemsByTaskToExcel() {
         { wch: 20 }, { wch: 30 }, { wch: 15 }, { wch: 20 }, { wch: 20 }, { wch: 20 }
     ];
     
-    XLSX.utils.book_append_sheet(wb, ws, 'Vật Tư Theo Sự Vụ');
+    // Add sheet to workbook
+    XLSX.utils.book_append_sheet(workbook, ws, 'Vật Tư Theo Sự Vụ');
+}
+
+// Original function for button click (creates its own workbook)
+function exportItemsByTaskToExcel() {
+    if (typeof XLSX === 'undefined') {
+        showToast('error', 'Lỗi!', 'Thư viện Excel chưa được tải.');
+        return;
+    }
+    
+    const selectedTaskId = document.getElementById('taskFilterSelect').value;
+    const period = document.getElementById('reportPeriodSelect').value;
+    const dateRange = getDateRange(period);
+    
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    
+    // Use helper function
+    exportItemsByTaskToExcelHelper(wb, dateRange);
     
     // Generate filename
+    const tasksToExport = tasksData.filter(task => 
+        task.createdDate >= dateRange.start && task.createdDate <= dateRange.end
+    );
     const taskName = selectedTaskId === 'all' ? 'Tat-Ca' : tasksToExport[0]?.name.replace(/[^a-zA-Z0-9]/g, '-') || 'Task';
     const filename = `Vat-Tu-Theo-Su-Vu_${taskName}_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
     
@@ -1703,6 +1723,9 @@ function exportItemsByTaskToExcel() {
     XLSX.writeFile(wb, filename);
     showToast('success', 'Xuất Excel thành công!', `File đã được tải: ${filename}`);
 }
+
+// Make function global
+window.exportItemsByTaskToExcel = exportItemsByTaskToExcel;
 
 function renderInventoryChangesReport(dateRange, container) {
     // Get all logs related to inventory changes
@@ -1874,6 +1897,10 @@ function exportReportToExcel() {
         case 'tasks':
             exportTasksToExcel(workbook, dateRange);
             fileName = `BaoCao_SuVu_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
+            break;
+        case 'items-by-task':
+            exportItemsByTaskToExcelHelper(workbook, dateRange);
+            fileName = `BaoCao_VatTuTheoSuVu_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
             break;
         case 'inventory-changes':
             exportInventoryChangesToExcel(workbook, dateRange);
