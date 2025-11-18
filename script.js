@@ -2052,6 +2052,7 @@ function exportInventoryListToExcel(workbook, dateRange) {
 
 function exportInventoryByStatusToExcel(workbook, dateRange) {
     const allItems = inventoryData;
+    console.log('📊 exportInventoryByStatusToExcel called with', allItems.length, 'items');
     
     // Group items by condition/status
     const itemsByStatus = {
@@ -2060,6 +2061,13 @@ function exportInventoryByStatusToExcel(workbook, dateRange) {
         'maintenance': allItems.filter(i => i.condition === 'maintenance'),
         'damaged': allItems.filter(i => i.condition === 'damaged')
     };
+    
+    console.log('📊 Items by status:', {
+        available: itemsByStatus.available.length,
+        'in-use': itemsByStatus['in-use'].length,
+        maintenance: itemsByStatus.maintenance.length,
+        damaged: itemsByStatus.damaged.length
+    });
     
     const statusConfig = [
         { key: 'available', label: 'Sẵn Sàng' },
@@ -2113,6 +2121,7 @@ function exportInventoryByStatusToExcel(workbook, dateRange) {
         
         // Add sheet to workbook
         XLSX.utils.book_append_sheet(workbook, ws, status.label);
+        console.log(`✅ Added sheet: ${status.label} with ${items.length} items`);
     });
     
     // Create summary sheet
@@ -2142,6 +2151,7 @@ function exportInventoryByStatusToExcel(workbook, dateRange) {
     const summaryWs = XLSX.utils.aoa_to_sheet(summaryData);
     summaryWs['!cols'] = [{wch: 20}, {wch: 12}, {wch: 12}, {wch: 12}];
     XLSX.utils.book_append_sheet(workbook, summaryWs, 'Tổng Kết');
+    console.log('✅ Added summary sheet. Total sheets:', workbook.SheetNames ? workbook.SheetNames.length : 0);
 }
 
 // Wrapper function for button click (no parameters needed)
@@ -2162,10 +2172,12 @@ function exportInventoryByStatusToExcelWrapper() {
             if (typeof XLSX !== 'undefined' && typeof XLSX.utils !== 'undefined') {
                 clearInterval(checkInterval);
                 console.log('✅ XLSX ready after', attempts, 'attempts');
-                // Don't set flag here - let the retry handle it
+                // Reset flag before retry
+                isExportingInventoryByStatus = false;
                 exportInventoryByStatusToExcelWrapper(); // Retry
             } else if (attempts >= maxAttempts) {
                 clearInterval(checkInterval);
+                isExportingInventoryByStatus = false; // Reset flag on failure
                 showToast('error', 'Lỗi!', 'Thư viện Excel chưa được tải. Vui lòng tải lại trang.');
             }
         }, 200);
@@ -2174,6 +2186,7 @@ function exportInventoryByStatusToExcelWrapper() {
     
     // Set flag to prevent concurrent calls
     isExportingInventoryByStatus = true;
+    console.log('🔐 Set export flag to true');
     
     try {
         const period = document.getElementById('reportPeriodSelect')?.value || 'all';
@@ -2183,12 +2196,15 @@ function exportInventoryByStatusToExcelWrapper() {
         exportInventoryByStatusToExcel(workbook, dateRange);
         
         // Check if workbook has sheets
+        console.log('📊 Workbook sheets after export:', workbook.SheetNames ? workbook.SheetNames.length : 0, workbook.SheetNames);
         if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
-            throw new Error('Workbook is empty - no sheets were added');
+            throw new Error('Workbook is empty - no sheets were added. Có thể không có dữ liệu vật tư.');
         }
         
         const fileName = `BaoCao_VatTuTheoTrangThai_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
+        console.log('💾 Writing file:', fileName);
         XLSX.writeFile(workbook, fileName);
+        console.log('✅ File written successfully');
         showToast('success', 'Xuất Excel thành công!', `File đã được tải: ${fileName}`);
     } catch (error) {
         console.error('❌ Error exporting to Excel:', error);
@@ -2196,6 +2212,7 @@ function exportInventoryByStatusToExcelWrapper() {
     } finally {
         // Always reset flag after completion or error
         isExportingInventoryByStatus = false;
+        console.log('🔓 Reset export flag to false');
     }
 }
 
