@@ -1696,7 +1696,14 @@ function exportItemsByTaskToExcelHelper(workbook, dateRange) {
 }
 
 // Original function for button click (creates its own workbook)
+let isExportingItemsByTask = false; // Flag to prevent multiple simultaneous calls
 function exportItemsByTaskToExcel() {
+    // Prevent multiple simultaneous calls
+    if (isExportingItemsByTask) {
+        console.warn('⚠️ Export already in progress, skipping...');
+        return;
+    }
+    
     if (typeof XLSX === 'undefined' || typeof XLSX.utils === 'undefined') {
         console.warn('⚠️ XLSX not ready, waiting...');
         let attempts = 0;
@@ -1706,14 +1713,19 @@ function exportItemsByTaskToExcel() {
             if (typeof XLSX !== 'undefined' && typeof XLSX.utils !== 'undefined') {
                 clearInterval(checkInterval);
                 console.log('✅ XLSX ready after', attempts, 'attempts');
+                isExportingItemsByTask = false; // Reset flag before retry
                 exportItemsByTaskToExcel(); // Retry
             } else if (attempts >= maxAttempts) {
                 clearInterval(checkInterval);
+                isExportingItemsByTask = false; // Reset flag on failure
                 showToast('error', 'Lỗi!', 'Thư viện Excel chưa được tải. Vui lòng tải lại trang.');
             }
         }, 200);
         return;
     }
+    
+    // Set flag to prevent concurrent calls
+    isExportingItemsByTask = true;
     
     const selectedTaskId = document.getElementById('taskFilterSelect').value;
     const period = document.getElementById('reportPeriodSelect').value;
@@ -1735,6 +1747,9 @@ function exportItemsByTaskToExcel() {
     // Download
     XLSX.writeFile(wb, filename);
     showToast('success', 'Xuất Excel thành công!', `File đã được tải: ${filename}`);
+    
+    // Reset flag after completion
+    isExportingItemsByTask = false;
 }
 
 // Make function global
@@ -1885,10 +1900,16 @@ function renderActivityLogsReport(dateRange, container) {
     container.innerHTML = html;
 }
 
+let isExportingReport = false; // Flag to prevent multiple simultaneous calls
 function exportReportToExcel() {
+    // Prevent multiple simultaneous calls
+    if (isExportingReport) {
+        console.warn('⚠️ Export already in progress, skipping...');
+        return;
+    }
+    
     const reportType = document.getElementById('reportTypeSelect').value;
     const period = document.getElementById('reportPeriodSelect').value;
-    const dateRange = getDateRange(period);
     
     // Check if XLSX is loaded - with retry mechanism
     if (typeof XLSX === 'undefined' || typeof XLSX.utils === 'undefined') {
@@ -1901,15 +1922,22 @@ function exportReportToExcel() {
             if (typeof XLSX !== 'undefined' && typeof XLSX.utils !== 'undefined') {
                 clearInterval(checkInterval);
                 console.log('✅ XLSX ready after', attempts, 'attempts');
+                isExportingReport = false; // Reset flag before retry
                 exportReportToExcel(); // Retry
             } else if (attempts >= maxAttempts) {
                 clearInterval(checkInterval);
+                isExportingReport = false; // Reset flag on failure
                 showToast('error', 'Lỗi!', 'Thư viện Excel chưa được tải. Vui lòng tải lại trang.');
                 console.error('❌ XLSX library not loaded after', maxAttempts, 'attempts. Check network connection and CDN availability.');
             }
         }, 200);
         return;
     }
+    
+    // Set flag to prevent concurrent calls
+    isExportingReport = true;
+    
+    const dateRange = getDateRange(period);
     
     let workbook = XLSX.utils.book_new();
     let fileName = '';
@@ -1947,6 +1975,9 @@ function exportReportToExcel() {
     // Save file
     XLSX.writeFile(workbook, fileName);
     showToast('success', 'Xuất Excel thành công!', `File đã được tải: ${fileName}`);
+    
+    // Reset flag after completion
+    isExportingReport = false;
 }
 
 function exportInventoryListToExcel(workbook, dateRange) {
@@ -2096,7 +2127,14 @@ function exportInventoryByStatusToExcel(workbook, dateRange) {
 }
 
 // Wrapper function for button click (no parameters needed)
+let isExportingInventoryByStatus = false; // Flag to prevent multiple simultaneous calls
 function exportInventoryByStatusToExcelWrapper() {
+    // Prevent multiple simultaneous calls
+    if (isExportingInventoryByStatus) {
+        console.warn('⚠️ Export already in progress, skipping...');
+        return;
+    }
+    
     if (typeof XLSX === 'undefined' || typeof XLSX.utils === 'undefined') {
         console.warn('⚠️ XLSX not ready, waiting...');
         let attempts = 0;
@@ -2106,14 +2144,19 @@ function exportInventoryByStatusToExcelWrapper() {
             if (typeof XLSX !== 'undefined' && typeof XLSX.utils !== 'undefined') {
                 clearInterval(checkInterval);
                 console.log('✅ XLSX ready after', attempts, 'attempts');
+                isExportingInventoryByStatus = false; // Reset flag before retry
                 exportInventoryByStatusToExcelWrapper(); // Retry
             } else if (attempts >= maxAttempts) {
                 clearInterval(checkInterval);
+                isExportingInventoryByStatus = false; // Reset flag on failure
                 showToast('error', 'Lỗi!', 'Thư viện Excel chưa được tải. Vui lòng tải lại trang.');
             }
         }, 200);
         return;
     }
+    
+    // Set flag to prevent concurrent calls
+    isExportingInventoryByStatus = true;
     
     const period = document.getElementById('reportPeriodSelect')?.value || 'all';
     const dateRange = getDateRange(period);
@@ -2124,6 +2167,9 @@ function exportInventoryByStatusToExcelWrapper() {
     const fileName = `BaoCao_VatTuTheoTrangThai_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
     XLSX.writeFile(workbook, fileName);
     showToast('success', 'Xuất Excel thành công!', `File đã được tải: ${fileName}`);
+    
+    // Reset flag after completion
+    isExportingInventoryByStatus = false;
 }
 
 // Make functions global
