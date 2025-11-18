@@ -2051,107 +2051,137 @@ function exportInventoryListToExcel(workbook, dateRange) {
 }
 
 function exportInventoryByStatusToExcel(workbook, dateRange) {
-    const allItems = inventoryData;
-    console.log('📊 exportInventoryByStatusToExcel called with', allItems.length, 'items');
-    
-    // Group items by condition/status
-    const itemsByStatus = {
-        'available': allItems.filter(i => i.condition === 'available'),
-        'in-use': allItems.filter(i => i.condition === 'in-use'),
-        'maintenance': allItems.filter(i => i.condition === 'maintenance'),
-        'damaged': allItems.filter(i => i.condition === 'damaged')
-    };
-    
-    console.log('📊 Items by status:', {
-        available: itemsByStatus.available.length,
-        'in-use': itemsByStatus['in-use'].length,
-        maintenance: itemsByStatus.maintenance.length,
-        damaged: itemsByStatus.damaged.length
-    });
-    
-    const statusConfig = [
-        { key: 'available', label: 'Sẵn Sàng' },
-        { key: 'in-use', label: 'Đang Sử Dụng' },
-        { key: 'maintenance', label: 'Bảo Trì' },
-        { key: 'damaged', label: 'Hỏng' }
-    ];
-    
-    // Create a sheet for each status
-    statusConfig.forEach(status => {
-        const items = itemsByStatus[status.key];
-        const wsData = [];
+    try {
+        console.log('📊 exportInventoryByStatusToExcel START');
+        console.log('📊 XLSX available:', typeof XLSX !== 'undefined', typeof XLSX.utils !== 'undefined');
+        console.log('📊 workbook type:', typeof workbook, workbook);
         
-        // Title
-        wsData.push([`BÁO CÁO VẬT TƯ - TRẠNG THÁI: ${status.label.toUpperCase()}`]);
-        wsData.push([`Ngày tạo báo cáo: ${formatDate(new Date())}`]);
-        wsData.push([]);
+        const allItems = inventoryData;
+        console.log('📊 exportInventoryByStatusToExcel called with', allItems.length, 'items');
         
-        // Summary
-        wsData.push(['TỔNG KẾT:']);
-        wsData.push(['Tổng số vật tư:', items.length]);
-        wsData.push(['Kho Net:', items.filter(i => i.warehouse === 'net').length]);
-        wsData.push(['Kho Hạ Tầng:', items.filter(i => i.warehouse === 'infrastructure').length]);
-        wsData.push([]);
+        if (!allItems || allItems.length === 0) {
+            console.warn('⚠️ No items to export');
+            // Still create empty sheets
+        }
         
-        // Table header
-        wsData.push(['STT', 'Serial', 'Tên Vật Tư', 'Kho', 'Sự Vụ', 'Ngày Nhập', 'Nguồn Gốc', 'Mô Tả']);
+        // Group items by condition/status
+        const itemsByStatus = {
+            'available': allItems.filter(i => i.condition === 'available'),
+            'in-use': allItems.filter(i => i.condition === 'in-use'),
+            'maintenance': allItems.filter(i => i.condition === 'maintenance'),
+            'damaged': allItems.filter(i => i.condition === 'damaged')
+        };
         
-        // Table data
-        items.forEach((item, index) => {
-            const task = item.taskId ? tasksData.find(t => t.id === item.taskId) : null;
-            wsData.push([
-                index + 1,
-                item.serial,
-                item.name,
-                getWarehouseName(item.warehouse),
-                task ? task.name : '-',
-                formatDate(item.dateAdded),
-                item.source || '-',
-                item.description || '-'
+        console.log('📊 Items by status:', {
+            available: itemsByStatus.available.length,
+            'in-use': itemsByStatus['in-use'].length,
+            maintenance: itemsByStatus.maintenance.length,
+            damaged: itemsByStatus.damaged.length
+        });
+        
+        const statusConfig = [
+            { key: 'available', label: 'Sẵn Sàng' },
+            { key: 'in-use', label: 'Đang Sử Dụng' },
+            { key: 'maintenance', label: 'Bảo Trì' },
+            { key: 'damaged', label: 'Hỏng' }
+        ];
+        
+        // Create a sheet for each status
+        statusConfig.forEach((status, idx) => {
+            try {
+                console.log(`📝 Processing status ${idx + 1}/${statusConfig.length}: ${status.label}`);
+                const items = itemsByStatus[status.key];
+                const wsData = [];
+                
+                // Title
+                wsData.push([`BÁO CÁO VẬT TƯ - TRẠNG THÁI: ${status.label.toUpperCase()}`]);
+                wsData.push([`Ngày tạo báo cáo: ${formatDate(new Date())}`]);
+                wsData.push([]);
+                
+                // Summary
+                wsData.push(['TỔNG KẾT:']);
+                wsData.push(['Tổng số vật tư:', items.length]);
+                wsData.push(['Kho Net:', items.filter(i => i.warehouse === 'net').length]);
+                wsData.push(['Kho Hạ Tầng:', items.filter(i => i.warehouse === 'infrastructure').length]);
+                wsData.push([]);
+                
+                // Table header
+                wsData.push(['STT', 'Serial', 'Tên Vật Tư', 'Kho', 'Sự Vụ', 'Ngày Nhập', 'Nguồn Gốc', 'Mô Tả']);
+                
+                // Table data
+                items.forEach((item, index) => {
+                    const task = item.taskId ? tasksData.find(t => t.id === item.taskId) : null;
+                    wsData.push([
+                        index + 1,
+                        item.serial || '',
+                        item.name || '',
+                        getWarehouseName(item.warehouse) || '',
+                        task ? task.name : '-',
+                        item.dateAdded ? formatDate(item.dateAdded) : '-',
+                        item.source || '-',
+                        item.description || '-'
+                    ]);
+                });
+                
+                console.log(`📊 Created wsData for ${status.label}:`, wsData.length, 'rows');
+                
+                // Create worksheet
+                if (typeof XLSX === 'undefined' || typeof XLSX.utils === 'undefined') {
+                    throw new Error('XLSX is not available');
+                }
+                
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+                console.log(`✅ Created worksheet for ${status.label}`);
+                
+                // Set column widths
+                ws['!cols'] = [
+                    {wch: 5}, {wch: 15}, {wch: 30}, {wch: 12}, {wch: 30}, {wch: 12}, {wch: 30}, {wch: 40}
+                ];
+                
+                // Add sheet to workbook
+                XLSX.utils.book_append_sheet(workbook, ws, status.label);
+                console.log(`✅ Added sheet: ${status.label} with ${items.length} items. Workbook now has ${workbook.SheetNames ? workbook.SheetNames.length : 0} sheets`);
+            } catch (error) {
+                console.error(`❌ Error creating sheet for ${status.label}:`, error);
+                throw error;
+            }
+        });
+        
+        // Create summary sheet
+        console.log('📝 Creating summary sheet...');
+        const summaryData = [
+            ['BÁO CÁO TỔNG KẾT VẬT TƯ THEO TRẠNG THÁI'],
+            [`Ngày tạo báo cáo: ${formatDate(new Date())}`],
+            [],
+            ['TRẠNG THÁI', 'TỔNG SỐ', 'KHO NET', 'KHO HẠ TẦNG']
+        ];
+        
+        statusConfig.forEach(status => {
+            const items = itemsByStatus[status.key];
+            summaryData.push([
+                status.label,
+                items.length,
+                items.filter(i => i.warehouse === 'net').length,
+                items.filter(i => i.warehouse === 'infrastructure').length
             ]);
         });
         
-        // Create worksheet
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-        
-        // Set column widths
-        ws['!cols'] = [
-            {wch: 5}, {wch: 15}, {wch: 30}, {wch: 12}, {wch: 30}, {wch: 12}, {wch: 30}, {wch: 40}
-        ];
-        
-        // Add sheet to workbook
-        XLSX.utils.book_append_sheet(workbook, ws, status.label);
-        console.log(`✅ Added sheet: ${status.label} with ${items.length} items`);
-    });
-    
-    // Create summary sheet
-    const summaryData = [
-        ['BÁO CÁO TỔNG KẾT VẬT TƯ THEO TRẠNG THÁI'],
-        [`Ngày tạo báo cáo: ${formatDate(new Date())}`],
-        [],
-        ['TRẠNG THÁI', 'TỔNG SỐ', 'KHO NET', 'KHO HẠ TẦNG']
-    ];
-    
-    statusConfig.forEach(status => {
-        const items = itemsByStatus[status.key];
-        summaryData.push([
-            status.label,
-            items.length,
-            items.filter(i => i.warehouse === 'net').length,
-            items.filter(i => i.warehouse === 'infrastructure').length
+        summaryData.push([]);
+        summaryData.push(['TỔNG CỘNG', allItems.length, 
+            allItems.filter(i => i.warehouse === 'net').length,
+            allItems.filter(i => i.warehouse === 'infrastructure').length
         ]);
-    });
-    
-    summaryData.push([]);
-    summaryData.push(['TỔNG CỘNG', allItems.length, 
-        allItems.filter(i => i.warehouse === 'net').length,
-        allItems.filter(i => i.warehouse === 'infrastructure').length
-    ]);
-    
-    const summaryWs = XLSX.utils.aoa_to_sheet(summaryData);
-    summaryWs['!cols'] = [{wch: 20}, {wch: 12}, {wch: 12}, {wch: 12}];
-    XLSX.utils.book_append_sheet(workbook, summaryWs, 'Tổng Kết');
-    console.log('✅ Added summary sheet. Total sheets:', workbook.SheetNames ? workbook.SheetNames.length : 0);
+        
+        const summaryWs = XLSX.utils.aoa_to_sheet(summaryData);
+        summaryWs['!cols'] = [{wch: 20}, {wch: 12}, {wch: 12}, {wch: 12}];
+        XLSX.utils.book_append_sheet(workbook, summaryWs, 'Tổng Kết');
+        console.log('✅ Added summary sheet. Total sheets:', workbook.SheetNames ? workbook.SheetNames.length : 0);
+        console.log('📊 exportInventoryByStatusToExcel END - Success');
+    } catch (error) {
+        console.error('❌ Error in exportInventoryByStatusToExcel:', error);
+        console.error('❌ Error stack:', error.stack);
+        throw error; // Re-throw to be caught by wrapper
+    }
 }
 
 // Wrapper function for button click (no parameters needed)
