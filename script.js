@@ -2130,7 +2130,7 @@ function exportInventoryByStatusToExcel(workbook, dateRange, selectedStatus = 'a
         // Create a sheet for each status
         statusesToExport.forEach((status, idx) => {
             try {
-                console.log(`📝 Processing status ${idx + 1}/${statusConfig.length}: ${status.label}`);
+                console.log(`📝 Processing status ${idx + 1}/${statusesToExport.length}: ${status.label}`);
                 const items = itemsByStatus[status.key];
                 const wsData = [];
                 
