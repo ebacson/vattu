@@ -298,7 +298,7 @@
                     <i class="fas fa-file-alt"></i> Báo Cáo Hệ Thống
                 </h2>
                 <div class="log-filters" style="margin-top: 15px;">
-                    <select id="reportTypeSelect">
+                    <select id="reportTypeSelect" onchange="handleReportTypeChange()">
                         <option value="inventory-list">Báo Cáo Danh Sách Vật Tư</option>
                         <option value="inventory-by-status">Báo Cáo Vật Tư Theo Trạng Thái</option>
                         <option value="tasks">Báo Cáo Danh Sách Sự Vụ</option>
@@ -312,6 +312,13 @@
                         <option value="month">Tháng này</option>
                         <option value="all">Tất cả thời gian</option>
                         <option value="custom">Tùy chọn</option>
+                    </select>
+                    <select id="reportStatusFilter" style="display: none;">
+                        <option value="all">Tất cả trạng thái</option>
+                        <option value="available">Sẵn sàng</option>
+                        <option value="in-use">Đang sử dụng</option>
+                        <option value="maintenance">Bảo trì</option>
+                        <option value="damaged">Hỏng</option>
                     </select>
                     <input type="date" id="reportStartDate" style="display: none;">
                     <input type="date" id="reportEndDate" style="display: none;">

@@ -787,6 +787,18 @@ function renderPendingRequestsList() {
     }).join('');
 }
 
+// Handle report type change to show/hide status filter
+function handleReportTypeChange() {
+    const reportType = document.getElementById('reportTypeSelect').value;
+    const statusFilter = document.getElementById('reportStatusFilter');
+    
+    if (reportType === 'inventory-by-status') {
+        statusFilter.style.display = 'block';
+    } else {
+        statusFilter.style.display = 'none';
+    }
+}
+
 // Reports Management
 function generateReport() {
     const reportType = document.getElementById('reportTypeSelect').value;
@@ -803,7 +815,8 @@ function generateReport() {
             renderInventoryListReport(dateRange, reportContent);
             break;
         case 'inventory-by-status':
-            renderInventoryByStatusReport(dateRange, reportContent);
+            const selectedStatus = document.getElementById('reportStatusFilter')?.value || 'all';
+            renderInventoryByStatusReport(dateRange, reportContent, selectedStatus);
             break;
         case 'tasks':
             renderTasksReport(dateRange, reportContent);
@@ -821,6 +834,9 @@ function generateReport() {
             reportContent.innerHTML = '<p class="no-data">Chọn loại báo cáo</p>';
     }
 }
+
+// Make function global
+window.handleReportTypeChange = handleReportTypeChange;
 
 function getDateRange(period) {
     const now = new Date();
@@ -936,9 +952,14 @@ function renderInventoryListReport(dateRange, container) {
     container.innerHTML = html;
 }
 
-function renderInventoryByStatusReport(dateRange, container) {
+function renderInventoryByStatusReport(dateRange, container, selectedStatus = 'all') {
     // Get all items (not filtered by date, as status is current state)
-    const allItems = inventoryData;
+    let allItems = inventoryData;
+    
+    // Filter by selected status if not 'all'
+    if (selectedStatus !== 'all') {
+        allItems = allItems.filter(item => item.condition === selectedStatus);
+    }
     
     // Group items by condition/status
     const itemsByStatus = {
@@ -1957,8 +1978,13 @@ function exportReportToExcel() {
                 fileName = `BaoCao_DanhSachVatTu_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
                 break;
             case 'inventory-by-status':
-                exportInventoryByStatusToExcel(workbook, dateRange);
-                fileName = `BaoCao_VatTuTheoTrangThai_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
+                const selectedStatus = document.getElementById('reportStatusFilter')?.value || 'all';
+                exportInventoryByStatusToExcel(workbook, dateRange, selectedStatus);
+                const statusLabel = selectedStatus === 'all' ? 'Tat-Ca-TrangThai' : 
+                    selectedStatus === 'available' ? 'San-Sang' :
+                    selectedStatus === 'in-use' ? 'Dang-Su-Dung' :
+                    selectedStatus === 'maintenance' ? 'Bao-Tri' : 'Hong';
+                fileName = `BaoCao_VatTuTheoTrangThai_${statusLabel}_${formatDate(new Date()).replace(/\//g, '-')}.xlsx`;
                 break;
             case 'tasks':
                 exportTasksToExcel(workbook, dateRange);
@@ -2050,13 +2076,21 @@ function exportInventoryListToExcel(workbook, dateRange) {
     XLSX.utils.book_append_sheet(workbook, ws, 'Danh Sách Vật Tư');
 }
 
-function exportInventoryByStatusToExcel(workbook, dateRange) {
+function exportInventoryByStatusToExcel(workbook, dateRange, selectedStatus = 'all') {
     try {
         console.log('📊 exportInventoryByStatusToExcel START');
         console.log('📊 XLSX available:', typeof XLSX !== 'undefined', typeof XLSX.utils !== 'undefined');
         console.log('📊 workbook type:', typeof workbook, workbook);
+        console.log('📊 selectedStatus:', selectedStatus);
         
-        const allItems = inventoryData;
+        let allItems = inventoryData;
+        
+        // Filter by selected status if not 'all'
+        if (selectedStatus !== 'all') {
+            allItems = allItems.filter(item => item.condition === selectedStatus);
+            console.log('📊 Filtered items by status:', selectedStatus, 'Count:', allItems.length);
+        }
+        
         console.log('📊 exportInventoryByStatusToExcel called with', allItems.length, 'items');
         
         if (!allItems || allItems.length === 0) {
@@ -2086,8 +2120,15 @@ function exportInventoryByStatusToExcel(workbook, dateRange) {
             { key: 'damaged', label: 'Hỏng' }
         ];
         
+        // Filter statusConfig if specific status selected
+        const statusesToExport = selectedStatus === 'all' 
+            ? statusConfig 
+            : statusConfig.filter(s => s.key === selectedStatus);
+        
+        console.log('📊 Statuses to export:', statusesToExport.length, statusesToExport.map(s => s.label));
+        
         // Create a sheet for each status
-        statusConfig.forEach((status, idx) => {
+        statusesToExport.forEach((status, idx) => {
             try {
                 console.log(`📝 Processing status ${idx + 1}/${statusConfig.length}: ${status.label}`);
                 const items = itemsByStatus[status.key];
@@ -2156,7 +2197,7 @@ function exportInventoryByStatusToExcel(workbook, dateRange) {
             ['TRẠNG THÁI', 'TỔNG SỐ', 'KHO NET', 'KHO HẠ TẦNG']
         ];
         
-        statusConfig.forEach(status => {
+        statusesToExport.forEach(status => {
             const items = itemsByStatus[status.key];
             summaryData.push([
                 status.label,
@@ -2239,12 +2280,14 @@ function exportInventoryByStatusToExcelWrapper() {
         const dateRange = getDateRange(period);
         const workbook = XLSX.utils.book_new();
         
+        const selectedStatus = document.getElementById('reportStatusFilter')?.value || 'all';
         console.log('📊 Starting export with', inventoryData.length, 'total items');
+        console.log('📊 Selected status filter:', selectedStatus);
         console.log('📊 About to call exportInventoryByStatusToExcel, function exists:', typeof exportInventoryByStatusToExcel === 'function');
         console.log('📊 Workbook before call:', workbook, 'SheetNames:', workbook.SheetNames);
         
         try {
-            exportInventoryByStatusToExcel(workbook, dateRange);
+            exportInventoryByStatusToExcel(workbook, dateRange, selectedStatus);
             console.log('✅ exportInventoryByStatusToExcel returned successfully');
         } catch (funcError) {
             console.error('❌ Error in exportInventoryByStatusToExcel:', funcError);
