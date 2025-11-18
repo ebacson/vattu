@@ -2156,11 +2156,19 @@ function exportInventoryByStatusToExcel(workbook, dateRange) {
 
 // Wrapper function for button click (no parameters needed)
 let isExportingInventoryByStatus = false; // Flag to prevent multiple simultaneous calls
+let exportTimeoutId = null; // Timeout ID for safety reset
+
 function exportInventoryByStatusToExcelWrapper() {
     // Prevent multiple simultaneous calls
     if (isExportingInventoryByStatus) {
         console.warn('⚠️ Export already in progress, skipping...');
         return;
+    }
+    
+    // Clear any existing timeout
+    if (exportTimeoutId) {
+        clearTimeout(exportTimeoutId);
+        exportTimeoutId = null;
     }
     
     if (typeof XLSX === 'undefined' || typeof XLSX.utils === 'undefined') {
@@ -2172,27 +2180,36 @@ function exportInventoryByStatusToExcelWrapper() {
             if (typeof XLSX !== 'undefined' && typeof XLSX.utils !== 'undefined') {
                 clearInterval(checkInterval);
                 console.log('✅ XLSX ready after', attempts, 'attempts');
-                // Reset flag before retry
-                isExportingInventoryByStatus = false;
+                // Don't set flag here - retry will handle it
                 exportInventoryByStatusToExcelWrapper(); // Retry
             } else if (attempts >= maxAttempts) {
                 clearInterval(checkInterval);
-                isExportingInventoryByStatus = false; // Reset flag on failure
+                // Don't set flag if XLSX not ready
                 showToast('error', 'Lỗi!', 'Thư viện Excel chưa được tải. Vui lòng tải lại trang.');
             }
         }, 200);
-        return;
+        return; // Exit early, don't set flag
     }
     
     // Set flag to prevent concurrent calls
     isExportingInventoryByStatus = true;
     console.log('🔐 Set export flag to true');
     
+    // Safety timeout: reset flag after 30 seconds if something goes wrong
+    exportTimeoutId = setTimeout(() => {
+        if (isExportingInventoryByStatus) {
+            console.warn('⚠️ Export timeout - resetting flag');
+            isExportingInventoryByStatus = false;
+            exportTimeoutId = null;
+        }
+    }, 30000);
+    
     try {
         const period = document.getElementById('reportPeriodSelect')?.value || 'all';
         const dateRange = getDateRange(period);
         const workbook = XLSX.utils.book_new();
         
+        console.log('📊 Starting export with', inventoryData.length, 'total items');
         exportInventoryByStatusToExcel(workbook, dateRange);
         
         // Check if workbook has sheets
@@ -2212,6 +2229,10 @@ function exportInventoryByStatusToExcelWrapper() {
     } finally {
         // Always reset flag after completion or error
         isExportingInventoryByStatus = false;
+        if (exportTimeoutId) {
+            clearTimeout(exportTimeoutId);
+            exportTimeoutId = null;
+        }
         console.log('🔓 Reset export flag to false');
     }
 }
